@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ViewState, NotificationType } from "./types";
-import { Header } from "./components/Header";
+import { Header } from "./components/layout/Header";
 import { RequestRouteForm } from "./components/RequestRouteForm";
 import { storageService } from "./services/storage";
 import { Loader2, Mail } from "lucide-react";
@@ -9,7 +9,7 @@ import { Loader2, Mail } from "lucide-react";
 import { HeroSection } from "./components/homePageComponent/HeroSection";
 import { CategoryGrid } from "./components/homePageComponent/CategoryGrid";
 import { ValueProposition } from "./components/homePageComponent/ValueProposition";
-import { Footer } from "./components/Footer";
+import { Footer } from "./components/layout/Footer";
 import { NotificationToast } from "./components/NotificationToast";
 
 export default function App() {
