@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { User, Phone, Mail, Clock, Send, AlertCircle } from "lucide-react";
-import { AddressInput } from "../../AddressInput";
+import { AddressInput } from "./AddressInput";
 
 interface RequestRouteFormProps {
   onSubmit: (data: any) => void;
