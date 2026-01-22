@@ -10,6 +10,8 @@ import { ViewState, NotificationType } from "./types";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
 import { NotificationToast } from "./components/NotificationToast";
+import { Provider } from "react-redux";
+import { store } from "./redux/store";
 
 // Page Imports
 import { HomePage } from "./pages/HomePage";
