@@ -14,7 +14,9 @@ import { NotificationToast } from "./components/NotificationToast";
 // Page Imports
 import { HomePage } from "./pages/HomePage";
 import { RequestPage } from "./pages/RequestPage";
+import AuthenticationPage from "./pages/AuthenticationPage";
 import TestPage from "./pages/TestPage";
+
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -63,6 +65,7 @@ function AppContent() {
             element={<RequestPage showNotification={showNotification} />}
           />
           <Route path="/test" element={<TestPage />} />
+          <Route path="/auth" element={<AuthenticationPage />} />
         </Routes>
       </main>
 

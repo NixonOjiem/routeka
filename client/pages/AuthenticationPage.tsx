@@ -1,7 +1,7 @@
 import React from "react";
-
+import { AuthenticationComponent } from "../components/authPages/AuthenticationComponent";
 function AuthenticationPage() {
-  return <div>AuthenticationPage</div>;
+  return <AuthenticationComponent />;
 }
 
 export default AuthenticationPage;
