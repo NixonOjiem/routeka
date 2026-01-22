@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 // @ts-ignore
-import "./Auth.css";
+import "./Auth.css"; // You can keep this for basic styling, but layout logic is now in Tailwind below
 
 export const AuthenticationComponent: React.FC = () => {
   const navigate = useNavigate();
@@ -36,12 +36,14 @@ export const AuthenticationComponent: React.FC = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100 font-sans p-4">
       <div
         id="container"
-        className={`auth-wrapper relative overflow-hidden w-full max-w-[768px] min-h-[550px] bg-white rounded-xl shadow-2xl ${
-          isSignUp ? "right-panel-active" : ""
-        }`}
+        className="relative overflow-hidden w-full max-w-[768px] min-h-[550px] bg-white rounded-xl shadow-2xl"
       >
         {/* Sign Up Container */}
-        <div className="form-container sign-up-container absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-1/2 opacity-0 z-[1]">
+        <div
+          className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-1/2 z-[1] ${
+            isSignUp ? "translate-x-full opacity-100 z-[5]" : "opacity-0"
+          }`}
+        >
           <form
             onSubmit={handleRegister}
             className="bg-white flex flex-col items-center justify-center h-full px-8 md:px-12 text-center"
@@ -89,7 +91,11 @@ export const AuthenticationComponent: React.FC = () => {
         </div>
 
         {/* Sign In Container */}
-        <div className="form-container sign-in-container absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-1/2 z-[2]">
+        <div
+          className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-1/2 z-[2] ${
+            isSignUp ? "translate-x-full opacity-0" : "opacity-100"
+          }`}
+        >
           <form
             onSubmit={handleLogin}
             className="bg-white flex flex-col items-center justify-center h-full px-8 md:px-12 text-center"
@@ -125,11 +131,21 @@ export const AuthenticationComponent: React.FC = () => {
           </form>
         </div>
 
-        {/* Overlay Container */}
-        <div className="overlay-container absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-transform duration-700 ease-in-out z-[100]">
-          <div className="overlay bg-gradient-to-r from-blue-500 to-indigo-600 text-white relative -left-full h-full w-[200%] transform translate-x-0 transition-transform duration-700 ease-in-out">
+        {/* Overlay Container - This handles the sliding window */}
+        <div
+          className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-transform duration-700 ease-in-out z-[100] ${
+            isSignUp ? "-translate-x-full" : "translate-x-0"
+          }`}
+        >
+          {/* Overlay Background - This moves opposite to the container */}
+          <div
+            className={`bg-gradient-to-r from-blue-500 to-indigo-600 text-white relative -left-full h-full w-[200%] transform transition-transform duration-700 ease-in-out ${
+              isSignUp ? "translate-x-1/2" : "translate-x-0"
+            }`}
+          >
+            {/* Left Panel (Already a member) */}
             <div
-              className={`overlay-panel overlay-left absolute flex flex-col items-center justify-center h-full w-1/2 px-10 text-center top-0 transition-transform duration-700 ease-in-out ${
+              className={`absolute flex flex-col items-center justify-center top-0 h-full w-1/2 px-10 text-center transition-transform duration-700 ease-in-out ${
                 isSignUp ? "translate-x-0" : "-translate-x-[20%]"
               }`}
             >
@@ -141,14 +157,15 @@ export const AuthenticationComponent: React.FC = () => {
               </p>
               <button
                 onClick={() => setIsSignUp(false)}
-                className="rounded-full border border-white bg-transparent text-white text-xs font-bold py-3 px-11 uppercase tracking-wider transition-transform active:scale-95"
+                className="rounded-full border border-white bg-transparent text-white text-xs font-bold py-3 px-11 uppercase tracking-wider transition-transform active:scale-95 hover:bg-white hover:text-blue-600"
               >
                 Sign In
               </button>
             </div>
 
+            {/* Right Panel (Hello Friend) */}
             <div
-              className={`overlay-panel overlay-right absolute flex flex-col items-center justify-center h-full w-1/2 px-10 text-center top-0 right-0 transition-transform duration-700 ease-in-out ${
+              className={`absolute right-0 flex flex-col items-center justify-center top-0 h-full w-1/2 px-10 text-center transition-transform duration-700 ease-in-out ${
                 isSignUp ? "translate-x-[20%]" : "translate-x-0"
               }`}
             >
@@ -158,7 +175,7 @@ export const AuthenticationComponent: React.FC = () => {
               </p>
               <button
                 onClick={() => setIsSignUp(true)}
-                className="rounded-full border border-white bg-transparent text-white text-xs font-bold py-3 px-11 uppercase tracking-wider transition-transform active:scale-95"
+                className="rounded-full border border-white bg-transparent text-white text-xs font-bold py-3 px-11 uppercase tracking-wider transition-transform active:scale-95 hover:bg-white hover:text-blue-600"
               >
                 Sign Up
               </button>
