@@ -1,0 +1,62 @@
+# --- Laravel (Server) Specifics ---
+server/.env
+server/storage/*.key
+server/vendor/
+server/public/storage
+server/public/hot
+server/storage/framework/cache/data/*
+server/storage/framework/sessions/*
+server/storage/framework/views/*
+server/storage/logs/*
+
+# --- Next.js (Client) Specifics ---
+client/.env
+client/.env.local
+client/.env.development.local
+client/.env.test.local
+client/.env.production.local
+client/.next/
+client/node_modules/
+client/out/
+client/build/
+
+# --- General / OS Specific ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+node_modules/
+
+
+
+
+
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.env.local
+*.env
+*.env.development
+*.log
