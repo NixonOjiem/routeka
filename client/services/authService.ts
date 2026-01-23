@@ -4,7 +4,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export const signin = async (credentials) => {
   const response = await axios.post(`${API_URL}/auth/login`, credentials);
-
   // Save to localStorage if the token exists in the response
   if (response.data.token) {
     localStorage.setItem("token", response.data.token);
@@ -27,12 +26,16 @@ export const signup = async (data) => {
 };
 
 export const signout = async () => {
-  // Clear localStorage on logout
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-
-  const response = await axios.post(`${API_URL}/auth/logout`, {});
-  return response.data;
+  try {
+    // 1. Call server (Interceptor attaches token from localStorage)
+    const response = await axios.post(`${API_URL}/auth/logout`, {});
+    return response.data;
+  } finally {
+    // 2. Clean up regardless of success or failure
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/";
+  }
 };
 
 // axios interceptors
