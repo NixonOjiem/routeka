@@ -87,8 +87,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <provider store={store}>
+      <Router>
+        <AppContent />
+      </Router>
+    </provider>
   );
 }
