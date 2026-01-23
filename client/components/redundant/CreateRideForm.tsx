@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Ride, CommunityGroup } from "../types";
+import { Ride, CommunityGroup } from "../../types";
 import {
   AlertCircle,
   Calendar,
@@ -9,7 +9,7 @@ import {
   Tag,
   FileText,
 } from "lucide-react";
-import { AddressInput } from "./homePageComponent/forms/AddressInput";
+import { AddressInput } from "./AddressInput";
 
 interface CreateRideFormProps {
   onSubmit: (ride: Ride) => void;

@@ -1,6 +1,6 @@
 import React from "react";
 import { CheckCircle2, AlertCircle } from "lucide-react";
-import { NotificationType } from "../types";
+import { NotificationType } from "../../types";
 
 interface NotificationToastProps {
   type: NotificationType;

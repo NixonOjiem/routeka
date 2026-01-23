@@ -9,7 +9,7 @@ import {
 import { ViewState, NotificationType } from "./types";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
-import { NotificationToast } from "./components/NotificationToast";
+import { NotificationToast } from "./components/redundant/NotificationToast";
 import { Provider } from "react-redux";
 import { store } from "./redux/store";
 
