@@ -51,31 +51,6 @@ export const AuthenticationComponent: React.FC = () => {
     dispatch(login({ email: formData.email, password: formData.password }));
   };
 
-  // const [isSignUp, setIsSignUp] = useState(false);
-  // const [formData, setFormData] = useState({
-  //   name: "",
-  //   email: "",
-  //   password: "",
-  // });
-
-  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const { name, value } = e.target;
-  //   setFormData((prev) => ({ ...prev, [name]: value }));
-  // };
-
-  // const handleRegister = (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   console.log("Registration Data:", formData);
-  // };
-
-  // const handleLogin = (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   console.log("Login Data:", {
-  //     email: formData.email,
-  //     password: formData.password,
-  //   });
-  // };
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 font-sans p-4 md:p-8">
       <div

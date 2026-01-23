@@ -5,6 +5,7 @@ export const store = configureStore({
   reducer: {
     auth: authReducer,
   },
+  devTools: import.meta.env.VITE_ENVIRONMENT !== "production",
 
   // storing non-JSON data (like File objects or Dates)
   middleware: (getDefaultMiddleware) =>
