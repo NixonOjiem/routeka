@@ -1,16 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { login, register, reset } from "@/redux/slices/authSlice";
+import { AppDispatch, RootState } from "@/redux/store";
 import { useNavigate } from "react-router-dom";
 // @ts-ignore
 import "./Auth.css";
 
 export const AuthenticationComponent: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+
+  // 1. Grab state from Redux
+  const { user, isLoading, isError, message } = useSelector(
+    (state: RootState) => state.auth,
+  );
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
+
+  // 2. Handle Redirect and Cleanup
+  useEffect(() => {
+    if (user) {
+      navigate("/"); // Redirect to home if login successful
+    }
+
+    if (isError) {
+      alert(message); // Simple error feedback
+      dispatch(reset()); // Clear error state so it doesn't pop up again
+    }
+  }, [user, isError, message, navigate, dispatch]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -19,15 +41,14 @@ export const AuthenticationComponent: React.FC = () => {
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Registration Data:", formData);
+    // 3. Dispatch Register Thunk
+    dispatch(register(formData));
   };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login Data:", {
-      email: formData.email,
-      password: formData.password,
-    });
+    // 4. Dispatch Login Thunk
+    dispatch(login({ email: formData.email, password: formData.password }));
   };
 
   return (
