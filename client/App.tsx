@@ -87,10 +87,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <provider store={store}>
+    <Provider store={store}>
       <Router>
         <AppContent />
       </Router>
-    </provider>
+    </Provider>
   );
 }
