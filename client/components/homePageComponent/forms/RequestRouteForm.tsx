@@ -158,188 +158,194 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
 
       <div className="p-8 md:p-12">
         {/* --- STEP 1: Details --- */}
-        {step === 1 && (
-          <div className="space-y-6 animate-fade-in">
-            {/* Conditional Rendering based on Auth */}
-            {!user ? (
-              <>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
-                      Name
-                    </label>
-                    <input
-                      type="text"
-                      className={inputClasses(!!errors.name)}
-                      value={formData.name}
-                      onChange={(e) => updateField("name", e.target.value)}
-                    />
-                    {errors.name && (
-                      <p className="text-rose-500 text-xs">{errors.name}</p>
-                    )}
+        <div className="h-[450px] flex flex-col overflow-y-auto overflow-x-hidden pr-2">
+          {step === 1 && (
+            <div className="space-y-6 animate-fade-in">
+              {/* Conditional Rendering based on Auth */}
+              {!user ? (
+                <>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        className={inputClasses(!!errors.name)}
+                        value={formData.name}
+                        onChange={(e) => updateField("name", e.target.value)}
+                      />
+                      {errors.name && (
+                        <p className="text-rose-500 text-xs">{errors.name}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
+                        Phone
+                      </label>
+                      <input
+                        type="tel"
+                        className={inputClasses(!!errors.phone)}
+                        value={formData.phone}
+                        onChange={(e) => updateField("phone", e.target.value)}
+                      />
+                      {errors.phone && (
+                        <p className="text-rose-500 text-xs">{errors.phone}</p>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
-                      Phone
+                      Email
                     </label>
                     <input
-                      type="tel"
-                      className={inputClasses(!!errors.phone)}
-                      value={formData.phone}
-                      onChange={(e) => updateField("phone", e.target.value)}
+                      type="email"
+                      className={inputClasses(!!errors.email)}
+                      value={formData.email}
+                      onChange={(e) => updateField("email", e.target.value)}
                     />
-                    {errors.phone && (
-                      <p className="text-rose-500 text-xs">{errors.phone}</p>
+                    {errors.email && (
+                      <p className="text-rose-500 text-xs">{errors.email}</p>
                     )}
                   </div>
+                </>
+              ) : (
+                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center gap-3">
+                  <div className="bg-blue-100 p-2 rounded-full text-blue-600">
+                    <User size={20} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-blue-900">
+                      Logged in as {user.name}
+                    </p>
+                    <p className="text-xs text-blue-700">
+                      We'll use your account details for this request.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
+                    Frequency
+                  </label>
+                  <select
+                    className={inputClasses(!!errors.frequency)}
+                    value={formData.frequency}
+                    onChange={(e) => updateField("frequency", e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="occasional">Occasional</option>
+                  </select>
+                  {errors.frequency && (
+                    <p className="text-rose-500 text-xs">{errors.frequency}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
-                    Email
+                    Time of Commute
                   </label>
                   <input
-                    type="email"
-                    className={inputClasses(!!errors.email)}
-                    value={formData.email}
-                    onChange={(e) => updateField("email", e.target.value)}
+                    type="datetime-local"
+                    className={inputClasses(!!errors.commute_time)}
+                    value={formData.commute_time}
+                    onChange={(e) =>
+                      updateField("commute_time", e.target.value)
+                    }
                   />
-                  {errors.email && (
-                    <p className="text-rose-500 text-xs">{errors.email}</p>
+                  {errors.commute_time && (
+                    <p className="text-rose-500 text-xs">
+                      {errors.commute_time}
+                    </p>
                   )}
                 </div>
-              </>
-            ) : (
-              <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center gap-3">
-                <div className="bg-blue-100 p-2 rounded-full text-blue-600">
-                  <User size={20} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-blue-900">
-                    Logged in as {user.name}
-                  </p>
-                  <p className="text-xs text-blue-700">
-                    We'll use your account details for this request.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
-                  Frequency
-                </label>
-                <select
-                  className={inputClasses(!!errors.frequency)}
-                  value={formData.frequency}
-                  onChange={(e) => updateField("frequency", e.target.value)}
-                >
-                  <option value="">Select...</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="occasional">Occasional</option>
-                </select>
-                {errors.frequency && (
-                  <p className="text-rose-500 text-xs">{errors.frequency}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
-                  Time of Commute
-                </label>
-                <input
-                  type="datetime-local"
-                  className={inputClasses(!!errors.commute_time)}
-                  value={formData.commute_time}
-                  onChange={(e) => updateField("commute_time", e.target.value)}
-                />
-                {errors.commute_time && (
-                  <p className="text-rose-500 text-xs">{errors.commute_time}</p>
-                )}
               </div>
             </div>
-          </div>
-        )}
-
-        {/* --- STEP 2: Pickup Map --- */}
-        {step === 2 && (
-          <div className="animate-fade-in space-y-4">
-            <MapPicker
-              label="Step 2: Where should we pick you up?"
-              onLocationSelect={(lat, lng) =>
-                updateField("pickup", { lat, lng })
-              }
-            />
-            {errors.map && (
-              <p className="text-rose-500 text-center font-bold">
-                {errors.map}
-              </p>
-            )}
-            {formData.pickup.lat && (
-              <p className="text-center text-green-600 font-bold text-sm bg-green-50 p-2 rounded">
-                Pickup Selected: {formData.pickup.lat.toFixed(4)},{" "}
-                {formData.pickup.lng.toFixed(4)}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* --- STEP 3: Dropoff Map --- */}
-        {step === 3 && (
-          <div className="animate-fade-in space-y-4">
-            <MapPicker
-              label="Step 3: Where are you going?"
-              onLocationSelect={(lat, lng) =>
-                updateField("dropoff", { lat, lng })
-              }
-            />
-            {errors.map && (
-              <p className="text-rose-500 text-center font-bold">
-                {errors.map}
-              </p>
-            )}
-            {formData.dropoff.lat && (
-              <p className="text-center text-green-600 font-bold text-sm bg-green-50 p-2 rounded">
-                Dropoff Selected: {formData.dropoff.lat.toFixed(4)},{" "}
-                {formData.dropoff.lng.toFixed(4)}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* --- Footer / Buttons --- */}
-        <div className="flex justify-between items-center pt-8 mt-6 border-t border-stone-100">
-          {step === 1 ? (
-            <button
-              onClick={onCancel}
-              className="text-stone-400 hover:text-stone-600 font-bold uppercase text-sm"
-            >
-              Cancel
-            </button>
-          ) : (
-            <button
-              onClick={handleBack}
-              className="flex items-center gap-2 text-stone-500 hover:text-brand font-bold uppercase text-sm"
-            >
-              <ArrowLeft size={16} /> Back
-            </button>
           )}
 
-          {step < 3 ? (
-            <button
-              onClick={handleNext}
-              className="bg-brand hover:bg-brand-dark text-white px-8 py-3 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
-            >
-              Next Step <ArrowRight size={16} />
-            </button>
-          ) : (
-            <button
-              onClick={handleFinalSubmit}
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
-            >
-              Submit Request <Send size={16} />
-            </button>
+          {/* --- STEP 2: Pickup Map --- */}
+          {step === 2 && (
+            <div className="animate-fade-in space-y-4 flex-1 flex flex-col">
+              <MapPicker
+                label="Step 2: Where should we pick you up?"
+                onLocationSelect={(lat, lng) =>
+                  updateField("pickup", { lat, lng })
+                }
+              />
+              {errors.map && (
+                <p className="text-rose-500 text-center font-bold">
+                  {errors.map}
+                </p>
+              )}
+              {formData.pickup.lat && (
+                <p className="text-center text-green-600 font-bold text-sm bg-green-50 p-2 rounded">
+                  Pickup Selected: {formData.pickup.lat.toFixed(4)},{" "}
+                  {formData.pickup.lng.toFixed(4)}
+                </p>
+              )}
+            </div>
           )}
+
+          {/* --- STEP 3: Dropoff Map --- */}
+          {step === 3 && (
+            <div className="animate-fade-in space-y-4 flex-1 flex flex-col">
+              <MapPicker
+                label="Step 3: Where are you going?"
+                onLocationSelect={(lat, lng) =>
+                  updateField("dropoff", { lat, lng })
+                }
+              />
+              {errors.map && (
+                <p className="text-rose-500 text-center font-bold">
+                  {errors.map}
+                </p>
+              )}
+              {formData.dropoff.lat && (
+                <p className="text-center text-green-600 font-bold text-sm bg-green-50 p-2 rounded">
+                  Dropoff Selected: {formData.dropoff.lat.toFixed(4)},{" "}
+                  {formData.dropoff.lng.toFixed(4)}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* --- Footer / Buttons --- */}
+          <div className="flex justify-between items-center pt-8 mt-6 border-t border-stone-100">
+            {step === 1 ? (
+              <button
+                onClick={onCancel}
+                className="text-stone-400 hover:text-stone-600 font-bold uppercase text-sm"
+              >
+                Cancel
+              </button>
+            ) : (
+              <button
+                onClick={handleBack}
+                className="flex items-center gap-2 text-stone-500 hover:text-brand font-bold uppercase text-sm"
+              >
+                <ArrowLeft size={16} /> Back
+              </button>
+            )}
+
+            {step < 3 ? (
+              <button
+                onClick={handleNext}
+                className="bg-brand hover:bg-brand-dark text-white px-8 py-3 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
+              >
+                Next Step <ArrowRight size={16} />
+              </button>
+            ) : (
+              <button
+                onClick={handleFinalSubmit}
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
+              >
+                Submit Request <Send size={16} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

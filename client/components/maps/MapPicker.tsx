@@ -44,12 +44,12 @@ export const MapPicker: React.FC<MapPickerProps> = ({
   onLocationSelect,
 }) => {
   // Default center (e.g., Nairobi). You can use browser geolocation to set this dynamically.
-  const defaultCenter = { lat: -1.2921, lng: 36.8219 };
+  const defaultCenter = { lat: 43.6426, lng: 79.3832 };
 
   return (
-    <div className="h-full w-full flex flex-col">
+    <div className="flex flex-col h-full w-full min-h-0">
       <h3 className="text-xl font-bold text-stone-700 mb-4 px-1">{label}</h3>
-      <div className="flex-1 rounded-xl overflow-hidden border border-stone-200 shadow-inner h-[400px]">
+      <div className="flex-1 min-h-0 max-h-[250px] rounded-xl overflow-hidden border border-stone-200 shadow-inner relative">
         <MapContainer
           center={defaultCenter}
           zoom={13}
