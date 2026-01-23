@@ -19,5 +19,5 @@ Route::group(['prefix' => 'auth'], function(){
 
 Route::group(['prefix' => 'rides'], function(){
     Route::post('request', [RideRequestController::class, 'store']);
-    Route::get('groups', [App\Http\Controllers\RideRequestController::class, 'index']);
+    Route::get('groups', [RideRequestController::class, 'index']);
 });
