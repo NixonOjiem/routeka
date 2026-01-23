@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { User, Phone, Mail, Clock, Send, AlertCircle } from "lucide-react";
-import { AddressInput } from "./AddressInput";
 
 interface RequestRouteFormProps {
   onSubmit: (data: any) => void;
@@ -189,24 +188,6 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
               <AlertCircle className="w-3 h-3" /> {errors.frequency}
             </p>
           )}
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <AddressInput
-            label="Preferred Pick-up Address"
-            placeholder="Where should we pick you up?"
-            value={formData.pickup}
-            onChange={(val) => handleChange("pickup", val)}
-            error={errors.pickup}
-          />
-          <AddressInput
-            label="Preferred Drop-off Address"
-            placeholder="Where are you heading?"
-            iconColor="text-rose-500"
-            value={formData.dropoff}
-            onChange={(val) => handleChange("dropoff", val)}
-            error={errors.dropoff}
-          />
         </div>
 
         <div className="flex flex-col-reverse md:flex-row justify-end gap-4 pt-8 border-t border-stone-100">

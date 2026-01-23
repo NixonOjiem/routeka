@@ -1,20 +1,30 @@
-import React from "react";
-import { ViewState } from "../../types";
+import { useDispatch, useSelector } from "react-redux";
+import { logout, reset } from "@/redux/slices/authSlice";
+import { AppDispatch, RootState } from "@/redux/store";
+import { useNavigate } from "react-router-dom";
 import { Car, User } from "lucide-react";
 
 interface HeaderProps {
-  onViewChange: (view: ViewState) => void;
-  currentView: ViewState;
+  onViewChange: (view: string) => void;
+  currentView: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({
-  onViewChange,
-  currentView,
-}) => {
+export const Header = ({ onViewChange, currentView }: HeaderProps) => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+
+  // 1. Get the user from the auth slice
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  const onLogout = () => {
+    dispatch(logout());
+    dispatch(reset());
+    navigate("/auth");
+  };
+
   return (
-    <header className="bg-white/90 backdrop-blur-lg border-b border-stone-200 sticky top-0 z-40 transition-all duration-300">
-      <div className="container mx-auto px-6 h-20 flex items-center justify-between max-w-6xl">
-        {/* Logo */}
+    <header className="bg-white border-b border-gray-200 py-4">
+      <div className="container mx-auto px-6 flex justify-between items-center">
         <div
           className="flex items-center gap-3 cursor-pointer group select-none active:scale-95 transition-transform duration-200"
           onClick={() => onViewChange("home")}
@@ -32,36 +42,56 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
-        {/* Navigation */}
-        <nav className="hidden md:flex items-center gap-1">
-          <button
+        <nav className="flex items-center space-x-6">
+          {/* Navigation links based on your view state */}
+          {/* <button
             onClick={() => onViewChange("home")}
-            className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 transform active:scale-95 ${currentView === "home" ? "text-brand bg-stone-100 shadow-inner" : "text-stone-500 hover:text-brand hover:bg-stone-50"}`}
+            className={
+              currentView === "home"
+                ? "text-[#3E6272] font-bold"
+                : "text-gray-600"
+            }
           >
             Home
-          </button>
-          <button
-            onClick={() => onViewChange("request")}
-            className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 transform active:scale-95 ${currentView === "request" ? "text-brand bg-stone-100 shadow-inner" : "text-stone-500 hover:text-brand hover:bg-stone-50"}`}
-          >
-            Request/View Route
-          </button>
-        </nav>
+          </button> */}
+          {/* Navigation */}
+          <nav className="hidden md:flex items-center gap-1">
+            <button
+              onClick={() => onViewChange("home")}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 transform active:scale-95 ${currentView === "home" ? "text-brand bg-stone-100 shadow-inner" : "text-stone-500 hover:text-brand hover:bg-stone-50"}`}
+            >
+              Home
+            </button>
+            <button
+              onClick={() => onViewChange("request")}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 transform active:scale-95 ${currentView === "request" ? "text-brand bg-stone-100 shadow-inner" : "text-stone-500 hover:text-brand hover:bg-stone-50"}`}
+            >
+              Request/View Route
+            </button>
+          </nav>
 
-        {/* User Profile Placeholder */}
-        <div className="flex items-center gap-4 pl-8 border-l border-stone-200">
-          <div className="hidden sm:block text-right">
-            <div className="text-xs text-stone-400 font-medium uppercase tracking-widest">
-              Logged in
+          {/* 2. Conditional Rendering: Show Logout if user exists, else show Login */}
+          {user ? (
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                Hi, <strong>{user.name}</strong>
+              </span>
+              <button
+                onClick={onLogout}
+                className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
+              >
+                Logout
+              </button>
             </div>
-            <div className="text-sm font-display font-semibold text-stone-900">
-              Alex M.
-            </div>
-          </div>
-          <div className="w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center text-stone-500 cursor-pointer hover:bg-brand hover:text-white transition-all duration-300 border border-stone-200 shadow-sm hover:shadow-md group active:scale-95">
-            <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          </div>
-        </div>
+          ) : (
+            <button
+              onClick={() => navigate("/auth")}
+              className="bg-[#3E6272] text-white px-4 py-2 rounded-lg text-sm font-medium"
+            >
+              Sign In
+            </button>
+          )}
+        </nav>
       </div>
     </header>
   );
