@@ -12,30 +12,32 @@ const initialState = {
   message: "",
 };
 
-export const register = createAsyncThunk(
-  "auth/register",
-  async (userData, thunkAPI) => {
-    try {
-      return await authService.signup(userData);
-    } catch (error) {
-      const message = error.response?.data?.message || error.message;
-      return thunkAPI.rejectWithValue(message);
-    }
-  },
-);
+export const register = createAsyncThunk<
+  any, // The type of the successful response (action.payload)
+  any, // The type of the arguments passed to the thunk (credentials)
+  { rejectValue: string } // This defines the type of action.payload in the REJECTED case
+>("auth/register", async (userData, thunkAPI) => {
+  try {
+    return await authService.signup(userData);
+  } catch (error) {
+    const message = error.response?.data?.message || error.message;
+    return thunkAPI.rejectWithValue(message);
+  }
+});
 
 // UPDATED: Now passes the whole credentials object
-export const login = createAsyncThunk(
-  "auth/login",
-  async (credentials, thunkAPI) => {
-    try {
-      return await authService.signin(credentials);
-    } catch (error) {
-      const message = error.response?.data?.message || error.message;
-      return thunkAPI.rejectWithValue(message);
-    }
-  },
-);
+export const login = createAsyncThunk<
+  any, // The type of the successful response (action.payload)
+  any, // The type of the arguments passed to the thunk (credentials)
+  { rejectValue: string } // This defines the type of action.payload in the REJECTED case
+>("auth/login", async (credentials, thunkAPI) => {
+  try {
+    return await authService.signin(credentials);
+  } catch (error) {
+    const message = error.response?.data?.message || error.message;
+    return thunkAPI.rejectWithValue(message);
+  }
+});
 
 export const logout = createAsyncThunk("auth/logout", async () => {
   return await authService.signout();
