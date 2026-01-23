@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\RideRequestController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -17,6 +18,6 @@ Route::group(['prefix' => 'auth'], function(){
 
 
 Route::group(['prefix' => 'rides'], function(){
-    Route::post('request', [App\Http\Controllers\RideRequestController::class, 'store']);
+    Route::post('request', [RideRequestController::class, 'store']);
     Route::get('groups', [App\Http\Controllers\RideRequestController::class, 'index']);
 });

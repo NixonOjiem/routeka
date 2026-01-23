@@ -1,69 +1,103 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Services;
 
 use App\Models\RideRequest;
-use App\Services\RideMatchingService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
-class RideRequestController extends Controller
+class RideMatchingService
 {
-    protected $rideService;
-
-    public function __construct(RideMatchingService $rideService)
+    /**
+     * Find groups of users traveling similar routes.
+     */
+    public function getGroupedRides()
     {
-        $this->rideService = $rideService;
+        // 1. Get all requests (You might want to filter by "pending" status in a real app)
+        $allRequests = RideRequest::with('user')->get();
+
+        $groups = [];
+        $processedIds = [];
+
+        foreach ($allRequests as $request) {
+            // Skip if we already grouped this user
+            if (in_array($request->id, $processedIds)) {
+                continue;
+            }
+
+            // 2. Find matches for this specific request
+            // Logic: Pickup within 1 mile (1609 meters) AND Dropoff within 1 mile
+            $matches = RideRequest::query()
+                ->where('id', '!=', $request->id) // Don't match self
+                ->whereNotIn('id', $processedIds) // Don't match already grouped people
+                ->whereRaw("ST_Distance_Sphere(point(pickup_lng, pickup_lat), point(?, ?)) <= 1609.34", [
+                    $request->pickup_lng,
+                    $request->pickup_lat
+                ])
+                ->whereRaw("ST_Distance_Sphere(point(dropoff_lng, dropoff_lat), point(?, ?)) <= 1609.34", [
+                    $request->dropoff_lng,
+                    $request->dropoff_lat
+                ])
+                // Optional: Match similar commute times (e.g., within 30 mins)
+                // ->whereBetween('commute_time', [$startTime, $endTime])
+                ->with('user')
+                ->get();
+
+            if ($matches->count() > 0) {
+                // We found a group!
+
+                // Add the original request to the matches collection
+                $groupMembers = $matches->push($request);
+
+                // Mark all as processed
+                foreach ($groupMembers as $member) {
+                    $processedIds[] = $member->id;
+                }
+
+                // 3. Calculate a "Meetup Point" (Centroid of all pickups)
+                $meetupPoint = $this->calculateCentroid($groupMembers);
+
+                $groups[] = [
+                    'group_id' => 'group_' . $request->id, // Unique ID for frontend
+                    'meetup_point' => $meetupPoint,
+                    'member_count' => $groupMembers->count(),
+                    'members' => $groupMembers
+                ];
+            } else {
+                // User has no matches yet, they are a "solo" group
+                $groups[] = [
+                    'group_id' => 'solo_' . $request->id,
+                    'meetup_point' => [
+                        'lat' => $request->pickup_lat,
+                        'lng' => $request->pickup_lng
+                    ],
+                    'member_count' => 1,
+                    'members' => [$request]
+                ];
+                $processedIds[] = $request->id;
+            }
+        }
+
+        return $groups;
     }
 
-    // 1. Store the Ride Request
-    public function store(Request $request)
+    /**
+     * Calculate the average Lat/Lng of a collection of rides
+     */
+    private function calculateCentroid($rides)
     {
-        // Validation
-        $validated = $request->validate([
-            'pickup.lat' => 'required|numeric',
-            'pickup.lng' => 'required|numeric',
-            'dropoff.lat' => 'required|numeric',
-            'dropoff.lng' => 'required|numeric',
-            'commute_time' => 'required|date',
-            'frequency' => 'required|string',
-            // Guest validation fields (required only if not logged in)
-            'guest_name' => 'required_without:user_id|string|nullable',
-            'guest_email' => 'required_without:user_id|email|nullable',
-            'guest_phone' => 'required_without:user_id|string|nullable',
-        ]);
+        $totalLat = 0;
+        $totalLng = 0;
+        $count = $rides->count();
 
-        $user = Auth::user(); // Will be null if guest
+        foreach ($rides as $ride) {
+            $totalLat += $ride->pickup_lat;
+            $totalLng += $ride->pickup_lng;
+        }
 
-        // Prepare data for saving
-        $data = [
-            'user_id' => $user ? $user->id : null,
-            'guest_name' => $user ? null : $request->input('guest_name'),
-            'guest_email' => $user ? $user->email : $request->input('guest_email'), // Fallback to user email if logged in? Usually stored in users table.
-            'guest_phone' => $user ? null : $request->input('guest_phone'),
-            'pickup_lat' => $request->input('pickup.lat'),
-            'pickup_lng' => $request->input('pickup.lng'),
-            'dropoff_lat' => $request->input('dropoff.lat'),
-            'dropoff_lng' => $request->input('dropoff.lng'),
-            'commute_time' => $request->input('commute_time'),
-            'frequency' => $request->input('frequency'),
+        return [
+            'lat' => $totalLat / $count,
+            'lng' => $totalLng / $count,
+            'name' => 'Suggested Meetup Spot'
         ];
-
-        $ride = RideRequest::create($data);
-
-        return response()->json([
-            'message' => 'Ride request submitted successfully',
-            'data' => $ride
-        ], 201);
-    }
-
-    // 2. Fetch Grouped Data (For Admin or "My Matches" view)
-    public function index()
-    {
-        $groupedRides = $this->rideService->getGroupedRides();
-
-        return response()->json([
-            'groups' => $groupedRides
-        ]);
     }
 }
