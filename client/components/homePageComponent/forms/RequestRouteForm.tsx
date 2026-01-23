@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux"; // Import Redux hook
 import {
   User,
@@ -130,6 +130,16 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
       onSubmit(payload);
     }
   };
+  // useEffect(() => {
+  //   // Trigger map resize when step changes to 2 or 3
+  //   if (step === 2 || step === 3) {
+  //     // Wait for next render cycle
+  //     setTimeout(() => {
+  //       // Trigger window resize event to force Leaflet to recalculate
+  //       window.dispatchEvent(new Event("resize"));
+  //     }, 50);
+  //   }
+  // }, [step]);
 
   // --- CSS Helper ---
   const inputClasses = (hasError: boolean) => `
