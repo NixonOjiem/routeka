@@ -43,18 +43,6 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
         </div>
 
         <nav className="flex items-center space-x-6">
-          {/* Navigation links based on your view state */}
-          {/* <button
-            onClick={() => onViewChange("home")}
-            className={
-              currentView === "home"
-                ? "text-[#3E6272] font-bold"
-                : "text-gray-600"
-            }
-          >
-            Home
-          </button> */}
-          {/* Navigation */}
           <nav className="hidden md:flex items-center gap-1">
             <button
               onClick={() => onViewChange("home")}
