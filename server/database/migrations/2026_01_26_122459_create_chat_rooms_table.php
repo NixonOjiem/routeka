@@ -9,18 +9,22 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         Schema::create('chat_rooms', function (Blueprint $table) {
             $table->id();
+            $table->string('room_id')->unique(); // Unique identifier for the room
+            $table->string('name')->nullable(); // Optional room name
+            $table->json('ride_ids'); // Array of ride request IDs in this room
+            $table->json('user_ids')->nullable(); // Array of user IDs in this room
+            $table->string('pickup_grid'); // Grid identifier for pickup (1 mile)
+            $table->string('dropoff_grid'); // Grid identifier for dropoff (1 mile)
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('chat_rooms');
     }
