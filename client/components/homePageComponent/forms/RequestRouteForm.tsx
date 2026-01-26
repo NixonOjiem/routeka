@@ -11,7 +11,7 @@ import {
   ArrowRight,
   ArrowLeft,
 } from "lucide-react";
-import { MapPicker } from "@/components/maps/MapPicker"; // Import the map component created above
+import { MapPicker } from "@/components/maps/MapPicker";
 
 // --- Types ---
 interface RootState {
@@ -130,16 +130,6 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
       onSubmit(payload);
     }
   };
-  // useEffect(() => {
-  //   // Trigger map resize when step changes to 2 or 3
-  //   if (step === 2 || step === 3) {
-  //     // Wait for next render cycle
-  //     setTimeout(() => {
-  //       // Trigger window resize event to force Leaflet to recalculate
-  //       window.dispatchEvent(new Event("resize"));
-  //     }, 50);
-  //   }
-  // }, [step]);
 
   // --- CSS Helper ---
   const inputClasses = (hasError: boolean) => `
