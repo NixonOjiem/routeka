@@ -9,7 +9,7 @@ use App\Services\RideMatchingService;
 use Illuminate\Validation\ValidationException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
-
+use Illuminate\Support\Facades\Auth;
 class RideRequestController extends Controller
 {
     protected $rideService;
@@ -21,21 +21,25 @@ class RideRequestController extends Controller
 
     // 2. Fetch Grouped Data (For Admin or "My Matches" view)
      public function index()
-    {
-        $groupedRides = $this->rideService->getGroupedRides();
-        $chatRooms = $this->rideService->getAvailableChatRooms(
-            auth()->check() ? auth()->id() : null
-        );
+{
+    $groupedRides = $this->rideService->getGroupedRides();
 
-        return response()->json([
-            'groups' => $groupedRides,
-            'chat_rooms' => $chatRooms,
-            'user' => auth()->check() ? [
-                'id' => auth()->id(),
-                'name' => auth()->user()->name
-            ] : null
-        ]);
-    }
+    // Check if user is logged in via JWT
+    $user = Auth::guard('api')->user();
+
+    $chatRooms = $this->rideService->getAvailableChatRooms(
+        $user ? $user->id : null
+    );
+
+    return response()->json([
+        'groups' => $groupedRides,
+        'chat_rooms' => $chatRooms,
+        'user' => $user ? [
+            'id' => $user->id,
+            'name' => $user->name
+        ] : null
+    ]);
+}
 
     /**
      * Get rides grouped by grid
