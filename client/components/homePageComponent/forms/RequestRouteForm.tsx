@@ -1,28 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux"; // Import Redux hook
-import {
-  User,
-  Phone,
-  Mail,
-  Clock,
-  Send,
-  AlertCircle,
-  MapPin,
-  ArrowRight,
-  ArrowLeft,
-} from "lucide-react";
-import { MapPicker } from "@/components/maps/MapPicker"; // Import the map component created above
-
-// --- Types ---
-interface RootState {
-  auth: {
-    user: any | null; // Replace 'any' with your actual User type
-    token: string | null;
-  };
-}
+import { RootState } from "@/redux/store";
+import { useSelector } from "react-redux";
+import { User, Send, ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { MapPicker } from "@/components/maps/MapPicker";
 
 interface RequestRouteFormProps {
-  onSubmit: (data: any) => void; // This will call your API
+  onSubmit: (data: any) => void;
   onCancel: () => void;
 }
 
@@ -31,12 +14,11 @@ interface FormData {
   phone: string;
   email: string;
   frequency: string;
-  commute_time: string; // Added this field
+  commute_time: string;
   pickup: { lat: number | null; lng: number | null };
   dropoff: { lat: number | null; lng: number | null };
 }
 
-// --- Main Component ---
 export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
   onSubmit,
   onCancel,
@@ -45,7 +27,7 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
   const { user } = useSelector((state: RootState) => state.auth);
 
   // 2. Form State
-  const [step, setStep] = useState(1); // 1: Details, 2: Pickup, 3: Dropoff
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
     name: "",
     phone: "",
@@ -58,22 +40,32 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
 
   const [errors, setErrors] = useState<any>({});
 
+  // --- AUTO-FILL LOGIC ---
+  // Sync Redux user data to local form state on mount or when user changes
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: user.name || "",
+        email: user.email || "",
+        // phone is often not in basic auth, so we keep existing if null
+        phone: user.phone || prev.phone,
+      }));
+    }
+  }, [user]);
+
   // --- Helpers ---
   const updateField = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // --- Validation Logic ---
   const validateStep1 = () => {
     const newErrors: any = {};
-
-    // Only validate personal info if USER IS NOT LOGGED IN
     if (!user) {
       if (!formData.name.trim()) newErrors.name = "Name is required";
       if (!formData.email.trim()) newErrors.email = "Email is required";
       if (!formData.phone.trim()) newErrors.phone = "Phone is required";
     }
-
     if (!formData.frequency) newErrors.frequency = "Frequency is required";
     if (!formData.commute_time) newErrors.commute_time = "Time is required";
 
@@ -83,7 +75,7 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
 
   const validateStep2 = () => {
     if (!formData.pickup.lat) {
-      setErrors({ map: "Please select a pickup location on the map" });
+      setErrors({ map: "Please select a pickup location" });
       return false;
     }
     setErrors({});
@@ -92,56 +84,42 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
 
   const validateStep3 = () => {
     if (!formData.dropoff.lat) {
-      setErrors({ map: "Please select a dropoff location on the map" });
+      setErrors({ map: "Please select a dropoff location" });
       return false;
     }
     setErrors({});
     return true;
   };
 
-  // --- Navigation Handlers ---
   const handleNext = () => {
     if (step === 1 && validateStep1()) setStep(2);
     if (step === 2 && validateStep2()) setStep(3);
   };
 
-  const handleBack = () => {
-    setStep((prev) => prev - 1);
-  };
+  const handleBack = () => setStep((prev) => prev - 1);
 
   const handleFinalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateStep3()) {
-      // Construct Payload for Laravel
       const payload = {
-        // If user is logged in, these will be ignored by backend logic or handled via token
-        guest_name: !user ? formData.name : undefined,
-        guest_email: !user ? formData.email : undefined,
-        guest_phone: !user ? formData.phone : undefined,
+        // Use logged in user ID if available, otherwise send guest info
+        user_id: user?.id || null,
+        name: user ? user.name : formData.name,
+        email: user ? user.email : formData.email,
+        phone: formData.phone, // Phone is usually required regardless
 
         frequency: formData.frequency,
         commute_time: formData.commute_time,
-
-        // Coordinates
-        pickup: formData.pickup,
-        dropoff: formData.dropoff,
+        pickup_lat: formData.pickup.lat,
+        pickup_lng: formData.pickup.lng,
+        dropoff_lat: formData.dropoff.lat,
+        dropoff_lng: formData.dropoff.lng,
       };
-
+      //console.log("Submitting Ride Request:", payload);
       onSubmit(payload);
     }
   };
-  // useEffect(() => {
-  //   // Trigger map resize when step changes to 2 or 3
-  //   if (step === 2 || step === 3) {
-  //     // Wait for next render cycle
-  //     setTimeout(() => {
-  //       // Trigger window resize event to force Leaflet to recalculate
-  //       window.dispatchEvent(new Event("resize"));
-  //     }, 50);
-  //   }
-  // }, [step]);
 
-  // --- CSS Helper ---
   const inputClasses = (hasError: boolean) => `
     w-full px-5 py-4 border rounded-xl outline-none transition-all 
     ${hasError ? "border-rose-500 bg-rose-50" : "border-stone-200 bg-stone-50 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:bg-white"}
@@ -156,7 +134,6 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
           Request Route
         </h2>
         <div className="flex justify-center gap-2 mt-4">
-          {/* Step Indicators */}
           {[1, 2, 3].map((i) => (
             <div
               key={i}
@@ -167,13 +144,24 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
       </div>
 
       <div className="p-8 md:p-12">
-        {/* --- STEP 1: Details --- */}
-        <div className="h-[450px] flex flex-col overflow-y-auto overflow-x-hidden pr-2">
+        <div className="h-[480px] flex flex-col pr-2">
+          {/* STEP 1: Details */}
           {step === 1 && (
-            <div className="space-y-6 animate-fade-in">
-              {/* Conditional Rendering based on Auth */}
-              {!user ? (
-                <>
+            <div className="space-y-6 animate-fade-in overflow-y-auto pr-2">
+              {user ? (
+                <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-center gap-3">
+                  <div className="bg-emerald-100 p-2 rounded-full text-emerald-600">
+                    <CheckCircle2 size={20} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-emerald-900">
+                      Recognized as {user.name}
+                    </p>
+                    <p className="text-xs text-emerald-700">{user.email}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
@@ -218,24 +206,11 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
                       <p className="text-rose-500 text-xs">{errors.email}</p>
                     )}
                   </div>
-                </>
-              ) : (
-                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center gap-3">
-                  <div className="bg-blue-100 p-2 rounded-full text-blue-600">
-                    <User size={20} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-blue-900">
-                      Logged in as {user.name}
-                    </p>
-                    <p className="text-xs text-blue-700">
-                      We'll use your account details for this request.
-                    </p>
-                  </div>
                 </div>
               )}
 
-              <div className="grid md:grid-cols-2 gap-6">
+              {/* Shared Fields */}
+              <div className="grid md:grid-cols-2 gap-6 pt-2">
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
                     Frequency
@@ -250,9 +225,6 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
                     <option value="weekly">Weekly</option>
                     <option value="occasional">Occasional</option>
                   </select>
-                  {errors.frequency && (
-                    <p className="text-rose-500 text-xs">{errors.frequency}</p>
-                  )}
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
@@ -266,64 +238,47 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
                       updateField("commute_time", e.target.value)
                     }
                   />
-                  {errors.commute_time && (
-                    <p className="text-rose-500 text-xs">
-                      {errors.commute_time}
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
           )}
 
-          {/* --- STEP 2: Pickup Map --- */}
+          {/* STEP 2: Pickup Map */}
           {step === 2 && (
-            <div className="animate-fade-in space-y-4 flex-1 flex flex-col">
+            <div className="animate-fade-in flex-1 flex flex-col">
               <MapPicker
-                label="Step 2: Where should we pick you up?"
+                label="Pickup Location"
                 onLocationSelect={(lat, lng) =>
                   updateField("pickup", { lat, lng })
                 }
               />
               {errors.map && (
-                <p className="text-rose-500 text-center font-bold">
+                <p className="text-rose-500 text-center mt-2 font-bold">
                   {errors.map}
-                </p>
-              )}
-              {formData.pickup.lat && (
-                <p className="text-center text-green-600 font-bold text-sm bg-green-50 p-2 rounded">
-                  Pickup Selected: {formData.pickup.lat.toFixed(4)},{" "}
-                  {formData.pickup.lng.toFixed(4)}
                 </p>
               )}
             </div>
           )}
 
-          {/* --- STEP 3: Dropoff Map --- */}
+          {/* STEP 3: Dropoff Map */}
           {step === 3 && (
-            <div className="animate-fade-in space-y-4 flex-1 flex flex-col">
+            <div className="animate-fade-in flex-1 flex flex-col">
               <MapPicker
-                label="Step 3: Where are you going?"
+                label="Dropoff Location"
                 onLocationSelect={(lat, lng) =>
                   updateField("dropoff", { lat, lng })
                 }
               />
               {errors.map && (
-                <p className="text-rose-500 text-center font-bold">
+                <p className="text-rose-500 text-center mt-2 font-bold">
                   {errors.map}
-                </p>
-              )}
-              {formData.dropoff.lat && (
-                <p className="text-center text-green-600 font-bold text-sm bg-green-50 p-2 rounded">
-                  Dropoff Selected: {formData.dropoff.lat.toFixed(4)},{" "}
-                  {formData.dropoff.lng.toFixed(4)}
                 </p>
               )}
             </div>
           )}
 
-          {/* --- Footer / Buttons --- */}
-          <div className="flex justify-between items-center pt-8 mt-6 border-t border-stone-100">
+          {/* Footer Controls */}
+          <div className="flex justify-between items-center pt-8 mt-auto border-t border-stone-100">
             {step === 1 ? (
               <button
                 onClick={onCancel}
@@ -343,14 +298,14 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
             {step < 3 ? (
               <button
                 onClick={handleNext}
-                className="bg-brand hover:bg-brand-dark text-white px-8 py-3 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
+                className="bg-brand hover:bg-brand-dark text-white px-8 py-3 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg transition-all"
               >
                 Next Step <ArrowRight size={16} />
               </button>
             ) : (
               <button
                 onClick={handleFinalSubmit}
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg transition-all"
               >
                 Submit Request <Send size={16} />
               </button>

@@ -1,9 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
-
+import rideRequestReducer from "./slices/rideRequestSlice";
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    rideRequest: rideRequestReducer,
   },
   devTools: import.meta.env.VITE_ENVIRONMENT !== "production",
 
