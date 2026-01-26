@@ -18,44 +18,48 @@ class RideRequestController extends Controller
 
     // 1. Store the Ride Request
     public function store(Request $request)
-    {
-        // Validation
-        $validated = $request->validate([
-            'pickup.lat' => 'required|numeric',
-            'pickup.lng' => 'required|numeric',
-            'dropoff.lat' => 'required|numeric',
-            'dropoff.lng' => 'required|numeric',
-            'commute_time' => 'required|date',
-            'frequency' => 'required|string',
-            // Guest validation fields (required only if not logged in)
-            'guest_name' => 'required_without:user_id|string|nullable',
-            'guest_email' => 'required_without:user_id|email|nullable',
-            'guest_phone' => 'required_without:user_id|string|nullable',
-        ]);
+{
+    $user = Auth::user(); // may be null
 
-        $user = Auth::user(); // Will be null if guest
+    // Merge user_id into the request so validation rules that reference user_id work
+    $request->merge(['user_id' => $user ? $user->id : null]);
 
-        // Prepare data for saving
-        $data = [
-            'user_id' => $user ? $user->id : null,
-            'guest_name' => $user ? null : $request->input('guest_name'),
-            'guest_email' => $user ? $user->email : $request->input('guest_email'), // Fallback to user email if logged in? Usually stored in users table.
-            'guest_phone' => $user ? null : $request->input('guest_phone'),
-            'pickup_lat' => $request->input('pickup.lat'),
-            'pickup_lng' => $request->input('pickup.lng'),
-            'dropoff_lat' => $request->input('dropoff.lat'),
-            'dropoff_lng' => $request->input('dropoff.lng'),
-            'commute_time' => $request->input('commute_time'),
-            'frequency' => $request->input('frequency'),
-        ];
+    // Validation
+    $validated = $request->validate([
+        'pickup.lat' => 'required|numeric',
+        'pickup.lng' => 'required|numeric',
+        'dropoff.lat' => 'required|numeric',
+        'dropoff.lng' => 'required|numeric',
+        'commute_time' => 'required|date',
+        'frequency' => 'required|string',
+        // Guest validation fields (required only if not logged in)
+        'guest_name' => 'required_without:user_id|string',
+        'guest_email' => 'required_without:user_id|email',
+        'guest_phone' => 'required_without:user_id|string',
+    ]);
 
-        $ride = RideRequest::create($data);
+    // Prepare data for saving
+    $data = [
+        'user_id' => $user ? $user->id : null,
+        'guest_name' => $user ? null : $request->input('guest_name'),
+        'guest_email' => $user ? $user->email : $request->input('guest_email'),
+        'guest_phone' => $user ? null : $request->input('guest_phone'),
+        'pickup_lat' => $request->input('pickup.lat'),
+        'pickup_lng' => $request->input('pickup.lng'),
+        'dropoff_lat' => $request->input('dropoff.lat'),
+        'dropoff_lng' => $request->input('dropoff.lng'),
+        'commute_time' => $request->input('commute_time'),
+        'frequency' => $request->input('frequency'),
+    ];
 
-        return response()->json([
-            'message' => 'Ride request submitted successfully',
-            'data' => $ride
-        ], 201);
-    }
+    $ride = RideRequest::create($data);
+
+    return response()->json([
+        'message' => 'Ride request submitted successfully',
+        'data' => $ride
+    ], 201);
+}
+
 
     // 2. Fetch Grouped Data (For Admin or "My Matches" view)
     public function index()
