@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Services\RideMatchingService;
 use Illuminate\Validation\ValidationException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class RideRequestController extends Controller
 {
@@ -22,12 +23,26 @@ class RideRequestController extends Controller
     // 1. Store the Ride Request
     public function store(Request $request)
 {
-    $user = Auth::user();
+    // $user = Auth::user();
+    try {
+        $user = JWTAuth::parseToken()->authenticate();
+        \Log::info('JWT user', ['user' => $user]);
+        }
+        catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e)
+        {
+            \Log::warning('Token expired');
+        } catch
+        (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e)
+        {
+            \Log::warning('Token invalid');
+        } catch (\Exception $e) {
+         \Log::warning('Token parse error', ['err' => $e->getMessage()]);
+        }
 
 // inside store(Request $request)
-\Log::info('Request headers', $request->headers->all());
+    \Log::info('Request headers', $request->headers->all());
 
-    Log::info('Authenticated user:', ['user' => $user]);
+    //Log::info('Authenticated user:', ['user' => $user]);
     // Validation
     $validated = $request->validate([
         'pickup.lat' => 'required|numeric',
