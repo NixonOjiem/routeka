@@ -19,6 +19,85 @@ class RideRequestController extends Controller
         $this->rideService = $rideService;
     }
 
+    // 2. Fetch Grouped Data (For Admin or "My Matches" view)
+     public function index()
+    {
+        $groupedRides = $this->rideService->getGroupedRides();
+        $chatRooms = $this->rideService->getAvailableChatRooms(
+            auth()->check() ? auth()->id() : null
+        );
+
+        return response()->json([
+            'groups' => $groupedRides,
+            'chat_rooms' => $chatRooms,
+            'user' => auth()->check() ? [
+                'id' => auth()->id(),
+                'name' => auth()->user()->name
+            ] : null
+        ]);
+    }
+
+    /**
+     * Get rides grouped by grid
+     */
+    public function getGriddedRides(Request $request)
+    {
+        $gridSize = $request->input('grid_size', 0.0145); // ~1 mile
+
+        $rides = RideRequest::where('status', 'pending')
+            ->with('user')
+            ->get()
+            ->groupBy(function($ride) use ($gridSize) {
+                $pickupGrid = $this->calculateGrid(
+                    $ride->pickup_lat,
+                    $ride->pickup_lng,
+                    $gridSize
+                );
+                $dropoffGrid = $this->calculateGrid(
+                    $ride->dropoff_lat,
+                    $ride->dropoff_lng,
+                    $gridSize
+                );
+                return "{$pickupGrid}|{$dropoffGrid}";
+            });
+
+        return response()->json([
+            'grids' => $rides->map(function($groupRides, $gridKey) {
+                list($pickupGrid, $dropoffGrid) = explode('|', $gridKey);
+                return [
+                    'pickup_grid' => $pickupGrid,
+                    'dropoff_grid' => $dropoffGrid,
+                    'rides' => $groupRides->map(function($ride) {
+                        return [
+                            'id' => $ride->id,
+                            'user_id' => $ride->user_id,
+                            'user_name' => $ride->user->name ?? 'Guest',
+                            'pickup' => [
+                                'lat' => $ride->pickup_lat,
+                                'lng' => $ride->pickup_lng,
+                                'address' => $ride->pickup_address
+                            ],
+                            'dropoff' => [
+                                'lat' => $ride->dropoff_lat,
+                                'lng' => $ride->dropoff_lng,
+                                'address' => $ride->dropoff_address
+                            ],
+                            'time' => $ride->created_at
+                        ];
+                    }),
+                    'count' => $groupRides->count()
+                ];
+            })->values()
+        ]);
+    }
+
+    private function calculateGrid($lat, $lng, $gridSize)
+    {
+        $latGrid = floor($lat / $gridSize);
+        $lngGrid = floor($lng / $gridSize);
+        return "{$latGrid}_{$lngGrid}";
+    }
+
     // 1. Store the Ride Request
     public function store(Request $request)
 {
@@ -98,13 +177,5 @@ class RideRequestController extends Controller
 }
 
 
-    // 2. Fetch Grouped Data (For Admin or "My Matches" view)
-    public function index()
-    {
-        $groupedRides = $this->rideService->getGroupedRides();
 
-        return response()->json([
-            'groups' => $groupedRides
-        ]);
-    }
 }
