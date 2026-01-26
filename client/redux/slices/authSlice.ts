@@ -1,6 +1,6 @@
 // src/store/slices/authSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import * as authService from "@/services/authService";
+import { signin, signup, signout } from "@/services/api"; // ✅ use new api.ts directly
 
 // Types
 interface User {
@@ -47,7 +47,7 @@ export const register = createAsyncThunk<any, any, { rejectValue: string }>(
   "auth/register",
   async (userData, thunkAPI) => {
     try {
-      return await authService.signup(userData);
+      return await signup(userData); // ✅ now using api.ts
     } catch (error: any) {
       const message = error.response?.data?.message || error.message;
       return thunkAPI.rejectWithValue(message);
@@ -59,7 +59,7 @@ export const login = createAsyncThunk<any, any, { rejectValue: string }>(
   "auth/login",
   async (credentials, thunkAPI) => {
     try {
-      return await authService.signin(credentials);
+      return await signin(credentials); // ✅ now using api.ts
     } catch (error: any) {
       const message = error.response?.data?.message || error.message;
       return thunkAPI.rejectWithValue(message);
@@ -68,7 +68,7 @@ export const login = createAsyncThunk<any, any, { rejectValue: string }>(
 );
 
 export const logout = createAsyncThunk("auth/logout", async () => {
-  return await authService.signout();
+  return await signout(); // ✅ now using api.ts
 });
 
 // Slice
@@ -82,7 +82,6 @@ const authSlice = createSlice({
       state.isError = false;
       state.message = "";
     },
-    // new optional helpers
     setGuestId: (state, action: PayloadAction<string>) => {
       state.guestId = action.payload;
       localStorage.setItem("guest_id", action.payload);
