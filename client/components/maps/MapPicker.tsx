@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css"; // Ensure CSS is imported
+import "leaflet/dist/leaflet.css";
 
-// Fix for default Leaflet marker icon missing in Webpack/Vite
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
@@ -24,7 +23,6 @@ interface MapPickerProps {
   initialLng?: number;
 }
 
-// Component to handle click events on the map
 const LocationMarker = ({
   onSelect,
 }: {
@@ -46,43 +44,45 @@ export const MapPicker: React.FC<MapPickerProps> = ({
   label,
   onLocationSelect,
 }) => {
-  // Updated to Toronto, Canada coordinates
   const defaultCenter = { lat: 43.6532, lng: -79.3832 };
   const [map, setMap] = useState<L.Map | null>(null);
 
-  // Use useEffect to force map resize after mount
+  // --- THE FIX: RESIZE OBSERVER ---
   useEffect(() => {
-    if (map) {
-      // We use a timeout to wait for the "animate-fade-in" CSS transition to finish
-      // changing the container dimensions before Leaflet calculates the map size.
-      const timer = setTimeout(() => {
-        map.invalidateSize();
-      }, 250); // Increased slightly to 250ms to be safe against animations
+    if (!map) return;
 
-      return () => clearTimeout(timer);
-    }
+    // Create an observer that watches for size changes in the map container
+    const resizeObserver = new ResizeObserver(() => {
+      // Whenever the div size changes (e.g. animation finishes), tell Leaflet to fit
+      map.invalidateSize();
+    });
+
+    // Start observing the map's container HTML element
+    resizeObserver.observe(map.getContainer());
+
+    // Clean up when component unmounts
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, [map]);
 
   return (
     <div className="flex flex-col h-full w-full min-h-0">
       <h3 className="text-xl font-bold text-stone-700 mb-4 px-1">{label}</h3>
 
-      {/* The parent div determines the size. 
-         We ensure it has relative positioning and overflow hidden.
-      */}
+      {/* Container wrapper */}
       <div className="flex-1 min-h-[150px] max-h-[250px] rounded-xl overflow-hidden border border-stone-200 shadow-inner relative z-0">
         <MapContainer
           center={defaultCenter}
           zoom={13}
-          // --- THE FIX IS HERE ---
-          // Changed from 10%/50% to 100% to fill the parent container
           style={{ height: "100%", width: "100%" }}
           key={label}
           whenCreated={setMap}
         >
+          {/* --- WINTER STYLE APPLIED BELOW --- */}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${map_Tiler_key}`}
+            url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${map_Tiler_key}`} // winter-v2
           />
           <LocationMarker onSelect={onLocationSelect} />
         </MapContainer>
