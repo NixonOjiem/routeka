@@ -1,17 +1,26 @@
+// src/store/store.ts
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
 import rideRequestReducer from "./slices/rideRequestSlice";
+import rideGroupsReducer from "./slices/rideGroupsSlice"; // ✅ new slice
+import chatReducer from "./slices/chatSlice"; // ✅ new slice
+
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     rideRequest: rideRequestReducer,
+    rideGroups: rideGroupsReducer, // ✅ integrated
+    chat: chatReducer, // ✅ integrated
   },
   devTools: import.meta.env.VITE_ENVIRONMENT !== "production",
-
-  // storing non-JSON data (like File objects or Dates)
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: true,
+      serializableCheck: {
+        // ✅ keep strict checks but ignore known non-serializable fields
+        ignoredActions: ["chat/addMessage"],
+        ignoredActionPaths: ["meta.arg", "payload.timestamp"],
+        ignoredPaths: ["chat.messages"],
+      },
     }),
 });
 

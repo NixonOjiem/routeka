@@ -56,6 +56,12 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
             >
               Request/View Route
             </button>
+            <button
+              onClick={() => navigate("/rides")}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 transform active:scale-95 ${currentView === "request" ? "text-brand bg-stone-100 shadow-inner" : "text-stone-500 hover:text-brand hover:bg-stone-50"}`}
+            >
+              Rides
+            </button>
           </nav>
 
           {/* 2. Conditional Rendering: Show Logout if user exists, else show Login */}
