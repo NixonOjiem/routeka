@@ -82,6 +82,7 @@ class RideMatchingService
 
     /**
      * Calculate the average Lat/Lng of a collection of rides
+     *
      */
     private function calculateCentroid($rides)
     {
