@@ -1,60 +1,100 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+// src/store/slices/authSlice.ts
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import * as authService from "@/services/authService";
 
-const user = JSON.parse(localStorage.getItem("user"));
+// Types
+interface User {
+  id?: number;
+  name?: string;
+  email?: string;
+  // add other fields if your API returns them
+}
+
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  guestId: string;
+  isLoading: boolean;
+  isError: boolean;
+  message: string;
+}
+
+// Guest ID helper
+const getGuestId = (): string => {
+  let guestId = localStorage.getItem("guest_id");
+  if (!guestId) {
+    guestId = "guest_" + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem("guest_id", guestId);
+  }
+  return guestId;
+};
+
+// Initial state
+const user = JSON.parse(localStorage.getItem("user") || "null");
 const token = localStorage.getItem("token");
 
-const initialState = {
-  user: user ? user : null,
-  token: token ? token : null,
+const initialState: AuthState = {
+  user,
+  token,
+  guestId: getGuestId(),
   isLoading: false,
   isError: false,
   message: "",
 };
 
-export const register = createAsyncThunk<
-  any, // The type of the successful response (action.payload)
-  any, // The type of the arguments passed to the thunk (credentials)
-  { rejectValue: string } // This defines the type of action.payload in the REJECTED case
->("auth/register", async (userData, thunkAPI) => {
-  try {
-    return await authService.signup(userData);
-  } catch (error) {
-    const message = error.response?.data?.message || error.message;
-    return thunkAPI.rejectWithValue(message);
-  }
-});
+// Thunks
+export const register = createAsyncThunk<any, any, { rejectValue: string }>(
+  "auth/register",
+  async (userData, thunkAPI) => {
+    try {
+      return await authService.signup(userData);
+    } catch (error: any) {
+      const message = error.response?.data?.message || error.message;
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
 
-// UPDATED: Now passes the whole credentials object
-export const login = createAsyncThunk<
-  any, // The type of the successful response (action.payload)
-  any, // The type of the arguments passed to the thunk (credentials)
-  { rejectValue: string } // This defines the type of action.payload in the REJECTED case
->("auth/login", async (credentials, thunkAPI) => {
-  try {
-    return await authService.signin(credentials);
-  } catch (error) {
-    const message = error.response?.data?.message || error.message;
-    return thunkAPI.rejectWithValue(message);
-  }
-});
+export const login = createAsyncThunk<any, any, { rejectValue: string }>(
+  "auth/login",
+  async (credentials, thunkAPI) => {
+    try {
+      return await authService.signin(credentials);
+    } catch (error: any) {
+      const message = error.response?.data?.message || error.message;
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
 
 export const logout = createAsyncThunk("auth/logout", async () => {
   return await authService.signout();
 });
 
+// Slice
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    // ✅ keep reset for compatibility
     reset: (state) => {
       state.isLoading = false;
+      state.isError = false;
+      state.message = "";
+    },
+    // new optional helpers
+    setGuestId: (state, action: PayloadAction<string>) => {
+      state.guestId = action.payload;
+      localStorage.setItem("guest_id", action.payload);
+    },
+    clearError: (state) => {
       state.isError = false;
       state.message = "";
     },
   },
   extraReducers: (builder) => {
     builder
+      // Register
       .addCase(register.pending, (state) => {
         state.isLoading = true;
       })
@@ -62,12 +102,15 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        localStorage.setItem("user", JSON.stringify(action.payload.user));
+        localStorage.setItem("token", action.payload.token);
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
-        state.message = action.payload;
+        state.message = action.payload as string;
       })
+      // Login
       .addCase(login.pending, (state) => {
         state.isLoading = true;
       })
@@ -75,18 +118,23 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        localStorage.setItem("user", JSON.stringify(action.payload.user));
+        localStorage.setItem("token", action.payload.token);
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
-        state.message = action.payload;
+        state.message = action.payload as string;
       })
+      // Logout
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.token = null;
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
       });
   },
 });
 
-export const { reset } = authSlice.actions;
+export const { reset, setGuestId, clearError } = authSlice.actions;
 export default authSlice.reducer;
