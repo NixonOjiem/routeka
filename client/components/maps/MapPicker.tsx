@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
+import { Locate, Loader2 } from "lucide-react"; // Import icons
 import "leaflet/dist/leaflet.css";
 
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -23,13 +24,16 @@ interface MapPickerProps {
   initialLng?: number;
 }
 
+// Updated Component: Now accepts position/setPosition from parent
 const LocationMarker = ({
+  position,
+  setPosition,
   onSelect,
 }: {
+  position: L.LatLng | null;
+  setPosition: (pos: L.LatLng) => void;
   onSelect: (lat: number, lng: number) => void;
 }) => {
-  const [position, setPosition] = useState<L.LatLng | null>(null);
-
   useMapEvents({
     click(e) {
       setPosition(e.latlng);
@@ -45,32 +49,87 @@ export const MapPicker: React.FC<MapPickerProps> = ({
   onLocationSelect,
 }) => {
   const defaultCenter = { lat: 43.6532, lng: -79.3832 };
+
+  // State for the map instance
   const [map, setMap] = useState<L.Map | null>(null);
 
-  // --- THE FIX: RESIZE OBSERVER ---
+  // State for the marker position (Lifted up so the button can access it)
+  const [markerPosition, setMarkerPosition] = useState<L.LatLng | null>(null);
+
+  // State for loading status
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
+  // --- RESIZE OBSERVER (Kept from previous fix) ---
   useEffect(() => {
     if (!map) return;
-
-    // Create an observer that watches for size changes in the map container
     const resizeObserver = new ResizeObserver(() => {
-      // Whenever the div size changes (e.g. animation finishes), tell Leaflet to fit
       map.invalidateSize();
     });
-
-    // Start observing the map's container HTML element
     resizeObserver.observe(map.getContainer());
-
-    // Clean up when component unmounts
     return () => {
       resizeObserver.disconnect();
     };
   }, [map]);
 
+  // --- NEW: Handle "Use My Location" ---
+  const handleMyLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsLoadingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const newLatLng = new L.LatLng(latitude, longitude);
+
+        // 1. Update Marker State
+        setMarkerPosition(newLatLng);
+
+        // 2. Notify Parent Form
+        onLocationSelect(latitude, longitude);
+
+        // 3. Move Map to new location
+        if (map) {
+          map.flyTo(newLatLng, 15, {
+            animate: true,
+            duration: 1.5,
+          });
+        }
+
+        setIsLoadingLocation(false);
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        alert("Unable to retrieve your location. Please check permissions.");
+        setIsLoadingLocation(false);
+      },
+    );
+  };
+
   return (
     <div className="flex flex-col h-full w-full min-h-0">
-      <h3 className="text-xl font-bold text-stone-700 mb-4 px-1">{label}</h3>
+      <div className="flex justify-between items-end mb-4 px-1">
+        <h3 className="text-xl font-bold text-stone-700">{label}</h3>
 
-      {/* Container wrapper */}
+        {/* --- NEW BUTTON --- */}
+        <button
+          onClick={handleMyLocation}
+          disabled={isLoadingLocation}
+          className="text-xs font-bold uppercase tracking-wide text-brand hover:text-brand-dark flex items-center gap-1 transition-colors disabled:opacity-50"
+          type="button" // Prevent form submission
+        >
+          {isLoadingLocation ? (
+            <Loader2 className="animate-spin" size={16} />
+          ) : (
+            <Locate size={16} />
+          )}
+          {isLoadingLocation ? "Locating..." : "Use My Location"}
+        </button>
+      </div>
+
       <div className="flex-1 min-h-[150px] max-h-[250px] rounded-xl overflow-hidden border border-stone-200 shadow-inner relative z-0">
         <MapContainer
           center={defaultCenter}
@@ -79,16 +138,23 @@ export const MapPicker: React.FC<MapPickerProps> = ({
           key={label}
           whenCreated={setMap}
         >
-          {/* --- WINTER STYLE APPLIED BELOW --- */}
+          {/* --- WINTER STYLE --- */}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${map_Tiler_key}`} // winter-v2
+            url={`https://api.maptiler.com/maps/winter-v2/{z}/{x}/{y}.png?key=${map_Tiler_key}`}
           />
-          <LocationMarker onSelect={onLocationSelect} />
+
+          {/* Passing state down to the marker component */}
+          <LocationMarker
+            position={markerPosition}
+            setPosition={setMarkerPosition}
+            onSelect={onLocationSelect}
+          />
         </MapContainer>
       </div>
+
       <p className="text-sm text-stone-500 mt-2 text-center">
-        Click on the map to place the pin.
+        Click on the map or use the button to place the pin.
       </p>
     </div>
   );
