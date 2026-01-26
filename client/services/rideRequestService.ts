@@ -24,6 +24,9 @@ interface ApiRideRequestData {
   guest_email?: string;
   guest_phone?: string;
   user_id?: string | null;
+  name?: string;
+  email?: string;
+  phone?: string;
 }
 
 export const rideRequestService = {
@@ -38,9 +41,13 @@ export const rideRequestService = {
         dropoff: { lat: data.dropoff_lat, lng: data.dropoff_lng },
         commute_time: this.formatCommuteTime(data.commute_time),
         frequency: this.capitalizeFrequency(data.frequency),
-        guest_name: data.guest_name || "",
-        guest_email: data.guest_email || "",
-        guest_phone: data.guest_phone || "",
+        guest_name: data.user_id ? null : (data.guest_name ?? data.name ?? ""),
+        guest_email: data.user_id
+          ? null
+          : (data.guest_email ?? data.email ?? ""),
+        guest_phone: data.user_id
+          ? null
+          : (data.guest_phone ?? data.phone ?? ""),
       };
 
       const response = await axios.post(

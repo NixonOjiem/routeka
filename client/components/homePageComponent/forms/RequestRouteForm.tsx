@@ -115,7 +115,7 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
         dropoff_lat: formData.dropoff.lat,
         dropoff_lng: formData.dropoff.lng,
       };
-
+      //console.log("Submitting Ride Request:", payload);
       onSubmit(payload);
     }
   };
