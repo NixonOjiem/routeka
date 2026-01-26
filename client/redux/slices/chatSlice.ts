@@ -1,7 +1,7 @@
 // src/store/slices/chatSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { apiService, ChatMessage, ChatRoom } from "../../services/api";
-import { socketService } from "../../services/socket";
+import { socketService } from "@/services/socket";
 
 interface ChatState {
   activeRoom: {

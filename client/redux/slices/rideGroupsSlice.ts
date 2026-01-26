@@ -1,6 +1,6 @@
 // src/store/slices/rideGroupsSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { apiService, RideGroup, ChatRoom } from "../../services/api";
+import { apiService, RideGroup, ChatRoom } from "@/services/api";
 
 interface RideGroupsState {
   groups: RideGroup[];
