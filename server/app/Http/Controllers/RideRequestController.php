@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\RideRequest;
-use App\Services\RideMatchingService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Services\RideMatchingService;
+use Illuminate\Validation\ValidationException;
 
 class RideRequestController extends Controller
 {
@@ -19,11 +22,12 @@ class RideRequestController extends Controller
     // 1. Store the Ride Request
     public function store(Request $request)
 {
-    $user = Auth::user(); // may be null
+    $user = Auth::user();
 
-    // Merge user_id into the request so validation rules that reference user_id work
-    $request->merge(['user_id' => $user ? $user->id : null]);
+// inside store(Request $request)
+\Log::info('Request headers', $request->headers->all());
 
+    Log::info('Authenticated user:', ['user' => $user]);
     // Validation
     $validated = $request->validate([
         'pickup.lat' => 'required|numeric',
@@ -32,11 +36,30 @@ class RideRequestController extends Controller
         'dropoff.lng' => 'required|numeric',
         'commute_time' => 'required|date',
         'frequency' => 'required|string',
-        // Guest validation fields (required only if not logged in)
-        'guest_name' => 'required_without:user_id|string',
-        'guest_email' => 'required_without:user_id|email',
-        'guest_phone' => 'required_without:user_id|string',
+        // Make guest fields nullable but check content if no user
+        'guest_name' => 'nullable|string',
+        'guest_email' => 'nullable|email',
+        'guest_phone' => 'nullable|string',
     ]);
+
+    // Custom validation for guests
+    if (!$user) {
+        if (empty($request->input('guest_name'))) {
+            throw ValidationException::withMessages([
+                'guest_name' => ['The guest name field is required for guest users.'],
+            ]);
+        }
+        if (empty($request->input('guest_email'))) {
+            throw ValidationException::withMessages([
+                'guest_email' => ['The guest email field is required for guest users.'],
+            ]);
+        }
+        if (empty($request->input('guest_phone'))) {
+            throw ValidationException::withMessages([
+                'guest_phone' => ['The guest phone field is required for guest users.'],
+            ]);
+        }
+    }
 
     // Prepare data for saving
     $data = [

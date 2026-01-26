@@ -18,6 +18,6 @@ Route::group(['prefix' => 'auth'], function(){
 
 
 Route::group(['prefix' => 'rides'], function(){
-    Route::post('request', [RideRequestController::class, 'store']);
+    Route::post('request', [RideRequestController::class, 'store'])->middleware('auth:api');
     Route::get('groups', [RideRequestController::class, 'index']);
 });
