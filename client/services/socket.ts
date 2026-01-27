@@ -24,6 +24,7 @@ class SocketService {
       wsPort: Number(import.meta.env.VITE_REVERB_PORT) || 8080,
       forceTLS: import.meta.env.VITE_REVERB_SCHEME === "https",
       disableStats: true,
+      cluster: "mt1",
       auth: {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token") || ""}`,

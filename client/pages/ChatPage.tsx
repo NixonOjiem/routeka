@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { echo } from "@/services/echo";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -26,6 +27,18 @@ const ChatPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (!roomId) return;
+
+    const channel = echo
+      .channel(`chat.${roomId}`)
+      .listen(".message.sent", (message) => handleNewMessage(message));
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [roomId]);
+
   // Ref to track senderName for socket callbacks
   const senderNameRef = useRef("");
   useEffect(() => {
@@ -37,20 +50,40 @@ const ChatPage: React.FC = () => {
       navigate("/rides");
       return;
     }
+    const channel = echo.channel(`chat.${roomId}`);
+    channel;
+    //.listen(".message.sent", (message: any) => handleNewMessage(message))
+    channel
+      .listen(".message.sent", (e: any) => {
+        // Log to debug connectivity
+        console.log("Event received:", e);
 
+        // Pass the message data to your handler
+        // The structure matches your 'broadcastWith' array
+        handleNewMessage(e);
+      })
+      .listen(".user.joined", (data: any) => handleUserJoined(data)) // Adjust event name based on your backend event
+      .listen(".user.left", (data: any) => handleUserLeft(data)); // Adjust event name based on your backend event
+
+    return () => {
+      channel.stopListening(".message.sent");
+      channel.stopListening(".user.joined");
+      channel.stopListening(".user.left");
+      echo.leave(`chat.${roomId}`); // Important: Leave the channel on unmount
+    };
     loadChatRoom();
 
-    // Setup socket connection
-    socketService.connect(roomId, guestId);
-    socketService.on("message_received", handleNewMessage);
-    socketService.on("user_joined", handleUserJoined);
-    socketService.on("user_left", handleUserLeft);
-    return () => {
-      socketService.disconnect();
-      socketService.off("message_received", handleNewMessage);
-      socketService.off("user_joined", handleUserJoined);
-      socketService.off("user_left", handleUserLeft);
-    };
+    //Setup socket connection
+    // socketService.connect(roomId, guestId);
+    // socketService.on("message_received", handleNewMessage);
+    // socketService.on("user_joined", handleUserJoined);
+    // socketService.on("user_left", handleUserLeft);
+    // return () => {
+    //   socketService.disconnect();
+    //   socketService.off("message_received", handleNewMessage);
+    //   socketService.off("user_joined", handleUserJoined);
+    //   socketService.off("user_left", handleUserLeft);
+    // };
   }, [roomId]);
 
   useEffect(() => {
