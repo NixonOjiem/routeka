@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\ChatRoom;
 use App\Models\ChatMessage;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Events\ChatMessageSent;
+use Illuminate\Support\Facades\Validator;
 
 class ChatController extends Controller
 {
@@ -47,115 +48,243 @@ class ChatController extends Controller
     /**
      * Get messages for a specific chat room
      */
-    public function getMessages($roomId, Request $request)
-    {
-        $room = ChatRoom::where('room_id', $roomId)->firstOrFail();
+//     public function getMessages($roomId, Request $request)
+// {
+//     $room = ChatRoom::where('room_id', $roomId)->firstOrFail();
 
-        // Check access
-        if ($request->user()) {
-            $user = $request->user();
-            if (!in_array($user->id, $room->user_ids ?? [])) {
-                return response()->json(['error' => 'Not a member of this chat room'], 403);
-            }
-            $guestId = null;
-            $senderName = $user->name;
-        } else {
-            $guestId = $request->header('X-Guest-ID');
-            if (!$guestId) {
-                return response()->json(['error' => 'Guest ID required'], 400);
-            }
-            $senderName = 'Guest_' . substr($guestId, 0, 6);
+//     // Check access
+//     if ($request->user()) {
+//         $user = $request->user();
+//         if (!in_array($user->id, $room->user_ids ?? [])) {
+//             return response()->json(['error' => 'Not a member of this chat room'], 403);
+//         }
+//         $guestId = null;
+//         $senderName = $user->name;
+//     } else {
+//         $guestId = $request->header('X-Guest-ID');
+//         if (!$guestId) {
+//             return response()->json(['error' => 'Guest ID required'], 400);
+//         }
+//         $senderName = 'Guest_' . substr($guestId, 0, 6);
+//     }
+
+//     // Change from 'desc' to 'asc' - this puts oldest first
+//     $messages = ChatMessage::where('chat_room_id', $room->id)
+//         ->orderBy('created_at', 'asc') // Changed from 'desc' to 'asc'
+//         ->limit(50)
+//         ->get()
+//         ->map(function($message) {
+//             return [
+//                 'id' => $message->id,
+//                 'sender_name' => $message->sender_name,
+//                 'message' => $message->message,
+//                 'type' => $message->message_type,
+//                 'is_guest' => $message->user_id === null,
+//                 'timestamp' => $message->created_at->toISOString()
+//             ];
+//         });
+
+//     return response()->json([
+//         'room' => [
+//             'id' => $room->room_id,
+//             'name' => $room->name,
+//             'member_count' => count($room->ride_ids)
+//         ],
+//         'messages' => $messages,
+//         'sender_name' => $senderName
+//     ]);
+// }
+// In ChatController.php - getMessages method
+
+public function getMessages($roomId, Request $request)
+{
+    $room = ChatRoom::where('room_id', $roomId)->firstOrFail();
+    $user = null; $guestId = null; $senderName = null;
+
+    // Check access
+    if ($request->user()) {
+        $user = $request->user();
+        if (!in_array($user->id, $room->user_ids ?? [])) {
+            return response()->json(['error' => 'Not a member of this chat room'], 403);
         }
-
-        $messages = ChatMessage::where('chat_room_id', $room->id)
-            ->orderBy('created_at', 'desc')
-            ->limit(50)
-            ->get()
-            ->map(function($message) {
-                return [
-                    'id' => $message->id,
-                    'sender_name' => $message->sender_name,
-                    'message' => $message->message,
-                    'type' => $message->message_type,
-                    'is_guest' => $message->user_id === null,
-                    'timestamp' => $message->created_at->toISOString()
-                ];
-            });
-
-        return response()->json([
-            'room' => [
-                'id' => $room->room_id,
-                'name' => $room->name,
-                'member_count' => count($room->ride_ids)
-            ],
-            'messages' => $messages,
-            'sender_name' => $senderName
-        ]);
+        $guestId = null;
+        $senderName = $user->name;
+    } else {
+        $guestId = $request->header('X-Guest-ID');
+        if (!$guestId) {
+            return response()->json(['error' => 'Guest ID required'], 400);
+        }
+        // Make sure guest names are consistent
+        $senderName = 'Guest_' . substr($guestId, 0, 6);
     }
+
+    // Get messages in ASCENDING order (oldest first)
+    $messages = ChatMessage::where('chat_room_id', $room->id)
+        ->orderBy('created_at', 'asc') // ASC for proper chat flow
+        ->limit(50)
+        ->get()
+        ->map(function($message) use ($user, $guestId) {
+            // Add is_current_user flag to help frontend
+            $isCurrentUser = false;
+            if ($user) {
+                $isCurrentUser = $message->user_id === $user->id;
+            } else {
+                $isCurrentUser = $message->guest_id === $guestId;
+            }
+
+            return [
+                'id' => $message->id,
+                'sender_name' => $message->sender_name,
+                'message' => $message->message,
+                'type' => $message->message_type,
+                'is_guest' => $message->user_id === null,
+                'is_current_user' => $isCurrentUser, // Add this flag
+                'timestamp' => $message->created_at->toISOString()
+            ];
+        });
+
+    return response()->json([
+        'room' => [
+            'id' => $room->room_id,
+            'name' => $room->name,
+            'member_count' => count($room->ride_ids)
+        ],
+        'messages' => $messages,
+        'sender_name' => $senderName
+    ]);
+}
 
     /**
      * Send a message to a chat room
      */
+    // public function sendMessage($roomId, Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'message' => 'required|string|max:1000',
+    //         'type' => 'sometimes|in:text,image,location'
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->json(['errors' => $validator->errors()], 422);
+    //     }
+
+    //     $room = ChatRoom::where('room_id', $roomId)->firstOrFail();
+
+    //     // Determine sender info
+    //     if ($request->user()) {
+    //         $user = $request->user();
+    //         $userId = $user->id;
+    //         $guestId = null;
+    //         $senderName = $user->name;
+
+    //         // Ensure user is in the room
+    //         if (!in_array($userId, $room->user_ids ?? [])) {
+    //             return response()->json(['error' => 'Not a member of this chat room'], 403);
+    //         }
+    //     } else {
+    //         $userId = null;
+    //         $guestId = $request->header('X-Guest-ID');
+    //         if (!$guestId) {
+    //             $guestId = Str::random(10);
+    //         }
+    //         $senderName = 'Guest_' . substr($guestId, 0, 6);
+    //     }
+
+    //     // Create message
+    //     $message = ChatMessage::create([
+    //         'chat_room_id' => $room->id,
+    //         'user_id' => $userId,
+    //         'guest_id' => $guestId,
+    //         'sender_name' => $senderName,
+    //         'message' => $request->message,
+    //         'message_type' => $request->type ?? 'text'
+    //     ]);
+
+    //     // Update room's timestamp
+    //     $room->touch();
+
+    //     // Broadcast message (for real-time)
+    //     // event(new ChatMessageSent($message));
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => [
+    //             'id' => $message->id,
+    //             'sender_name' => $message->sender_name,
+    //             'message' => $message->message,
+    //             'timestamp' => $message->created_at->toISOString()
+    //         ],
+    //         'guest_id' => $guestId
+    //     ]);
+    // }
+
     public function sendMessage($roomId, Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'message' => 'required|string|max:1000',
-            'type' => 'sometimes|in:text,image,location'
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'message' => 'required|string|max:1000',
+        'type' => 'sometimes|in:text,image,location'
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $room = ChatRoom::where('room_id', $roomId)->firstOrFail();
-
-        // Determine sender info
-        if ($request->user()) {
-            $user = $request->user();
-            $userId = $user->id;
-            $guestId = null;
-            $senderName = $user->name;
-
-            // Ensure user is in the room
-            if (!in_array($userId, $room->user_ids ?? [])) {
-                return response()->json(['error' => 'Not a member of this chat room'], 403);
-            }
-        } else {
-            $userId = null;
-            $guestId = $request->header('X-Guest-ID');
-            if (!$guestId) {
-                $guestId = Str::random(10);
-            }
-            $senderName = 'Guest_' . substr($guestId, 0, 6);
-        }
-
-        // Create message
-        $message = ChatMessage::create([
-            'chat_room_id' => $room->id,
-            'user_id' => $userId,
-            'guest_id' => $guestId,
-            'sender_name' => $senderName,
-            'message' => $request->message,
-            'message_type' => $request->type ?? 'text'
-        ]);
-
-        // Update room's timestamp
-        $room->touch();
-
-        // Broadcast message (for real-time)
-        // event(new ChatMessageSent($message));
-
-        return response()->json([
-            'success' => true,
-            'message' => [
-                'id' => $message->id,
-                'sender_name' => $message->sender_name,
-                'message' => $message->message,
-                'timestamp' => $message->created_at->toISOString()
-            ],
-            'guest_id' => $guestId
-        ]);
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
     }
+
+    $room = ChatRoom::where('room_id', $roomId)->firstOrFail();
+
+    // Determine sender info
+    if ($request->user()) {
+        $user = $request->user();
+        $userId = $user->id;
+        $guestId = null;
+        $senderName = $user->name;
+
+        // Ensure user is in the room
+        if (!in_array($userId, $room->user_ids ?? [])) {
+            return response()->json(['error' => 'Not a member of this chat room'], 403);
+        }
+    } else {
+        $userId = null;
+        $guestId = $request->header('X-Guest-ID');
+        if (!$guestId) {
+            $guestId = Str::random(10);
+        }
+        // Make sure guest names are consistent
+        $senderName = 'Guest_' . substr($guestId, 0, 6);
+    }
+
+    // Create message
+    $message = ChatMessage::create([
+        'chat_room_id' => $room->id,
+        'user_id' => $userId,
+        'guest_id' => $guestId,
+        'sender_name' => $senderName, // Consistent naming
+        'message' => $request->message,
+        'message_type' => $request->type ?? 'text'
+    ]);
+
+    // Update room's timestamp
+    $room->touch();
+
+    // Return message with is_current_user flag
+    $responseMessage = [
+        'id' => $message->id,
+        'sender_name' => $message->sender_name,
+        'message' => $message->message,
+        'type' => $message->message_type,
+        'is_guest' => $message->user_id === null,
+        'is_current_user' => true, // Always true for sent messages
+        'timestamp' => $message->created_at->toISOString()
+    ];
+
+    // Broadcast message (for real-time)
+    broadcast(new ChatMessageSent($message))->toOthers();
+
+    return response()->json([
+        'success' => true,
+        'message' => $responseMessage,
+        'guest_id' => $guestId
+    ]);
+}
 
     /**
      * Join a chat room

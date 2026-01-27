@@ -1,50 +1,77 @@
-import { io, Socket } from "socket.io-client";
+// src/services/socket.ts
+import Echo from "laravel-echo";
+import Pusher from "pusher-js";
+
+declare global {
+  interface Window {
+    Pusher: typeof Pusher;
+  }
+}
+window.Pusher = Pusher;
 
 class SocketService {
-  private socket: Socket | null = null;
-  private listeners: Map<string, Function[]> = new Map();
+  private echo: Echo<any> | null = null;
 
   connect(roomId: string, guestId?: string) {
-    const SOCKET_URL =
-      process.env.REACT_APP_SOCKET_URL || "http://localhost:8000";
+    if (this.echo) {
+      this.disconnect();
+    }
 
-    this.socket = io(SOCKET_URL, {
-      query: {
-        roomId,
-        guestId,
+    this.echo = new Echo({
+      broadcaster: "pusher", // Echo still uses Pusher protocol
+      key: import.meta.env.VITE_REVERB_APP_KEY,
+      wsHost: import.meta.env.VITE_REVERB_HOST || "127.0.0.1",
+      wsPort: Number(import.meta.env.VITE_REVERB_PORT) || 8080,
+      forceTLS: import.meta.env.VITE_REVERB_SCHEME === "https",
+      disableStats: true,
+      cluster: "mt1",
+      auth: {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          "X-Guest-ID": guestId || "",
+        },
       },
     });
 
-    this.socket.on("connect", () => {
-      console.log("Connected to chat server");
-      this.socket?.emit("join_room", roomId);
-    });
-
-    this.socket.on("new_message", (message: any) => {
-      this.emit("message_received", message);
-    });
-
-    this.socket.on("user_joined", (user: any) => {
-      this.emit("user_joined", user);
-    });
-
-    this.socket.on("user_left", (user: any) => {
-      this.emit("user_left", user);
-    });
+    // Join presence channel
+    this.echo
+      .join(`chat.${roomId}`)
+      .here((users: any[]) => {
+        console.log("Users currently in room:", users);
+      })
+      .joining((user: any) => {
+        this.emit("user_joined", user);
+      })
+      .leaving((user: any) => {
+        this.emit("user_left", user);
+      })
+      .listen(".message.sent", (message: any) => {
+        this.emit("message_received", message);
+      });
   }
 
   disconnect() {
-    if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
+    if (this.echo) {
+      this.echo.disconnect();
+      this.echo = null;
     }
   }
 
-  sendMessage(message: string, type: string = "text") {
-    if (this.socket) {
-      this.socket.emit("send_message", { message, type });
-    }
+  sendMessage(roomId: string, message: string, type: string = "text") {
+    // With Laravel broadcasting, you usually POST to your API endpoint
+    // Example: /chat/rooms/{roomId}/messages
+    fetch(`/api/chat/rooms/${roomId}/messages`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+        "X-Guest-ID": localStorage.getItem("guest_id") || "",
+      },
+      body: JSON.stringify({ message, type }),
+    }).catch((err) => console.error("Failed to send message:", err));
   }
+
+  private listeners: Map<string, Function[]> = new Map();
 
   on(event: string, callback: Function) {
     if (!this.listeners.has(event)) {
@@ -66,7 +93,7 @@ class SocketService {
   private emit(event: string, data: any) {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
-      callbacks.forEach((callback) => callback(data));
+      callbacks.forEach((cb) => cb(data));
     }
   }
 }

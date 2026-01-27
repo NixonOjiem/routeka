@@ -81,7 +81,8 @@ const rideGroupsSlice = createSlice({
       .addCase(fetchRideGroups.fulfilled, (state, action) => {
         state.isLoading = false;
         state.groups = action.payload.groups;
-        state.chatRooms = action.payload.chatRooms;
+        // state.chatRooms = action.payload.chatRooms;
+        state.chatRooms = action.payload.chat_rooms;
       })
       .addCase(fetchRideGroups.rejected, (state, action) => {
         state.isLoading = false;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { echo } from "@/services/echo";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -27,25 +28,63 @@ const ChatPage: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!roomId) {
-      navigate("/");
-      return;
-    }
+    if (!roomId) return;
 
-    loadChatRoom();
-
-    // Setup socket connection
-    socketService.connect(roomId, guestId);
-    socketService.on("message_received", handleNewMessage);
-    socketService.on("user_joined", handleUserJoined);
-    socketService.on("user_left", handleUserLeft);
+    const channel = echo
+      .channel(`chat.${roomId}`)
+      .listen(".message.sent", (message) => handleNewMessage(message));
 
     return () => {
-      socketService.disconnect();
-      socketService.off("message_received", handleNewMessage);
-      socketService.off("user_joined", handleUserJoined);
-      socketService.off("user_left", handleUserLeft);
+      channel.unsubscribe();
     };
+  }, [roomId]);
+
+  // Ref to track senderName for socket callbacks
+  const senderNameRef = useRef("");
+  useEffect(() => {
+    senderNameRef.current = senderName;
+  }, [senderName]);
+
+  useEffect(() => {
+    if (!roomId) {
+      navigate("/rides");
+      return;
+    }
+    loadChatRoom();
+
+    const channel = echo.channel(`chat.${roomId}`);
+    channel;
+    //.listen(".message.sent", (message: any) => handleNewMessage(message))
+    channel
+      .listen(".message.sent", (e: any) => {
+        // Log to debug connectivity
+        console.log("Event received:", e);
+
+        // Pass the message data to your handler
+        // The structure matches your 'broadcastWith' array
+        handleNewMessage(e);
+      })
+      .listen(".user.joined", (data: any) => handleUserJoined(data)) // Adjust event name based on your backend event
+      .listen(".user.left", (data: any) => handleUserLeft(data)); // Adjust event name based on your backend event
+    return () => {
+      channel.stopListening(".message.sent");
+      channel.stopListening(".user.joined");
+      channel.stopListening(".user.left");
+      echo.leave(`chat.${roomId}`); // Important: Leave the channel on unmount
+    };
+    //loadChatRoom();
+
+    //Setup socket connection
+    // socketService.connect(roomId, guestId);
+    // socketService.on("message_received", handleNewMessage);
+    // socketService.on("user_joined", handleUserJoined);
+    // socketService.on("user_left", handleUserLeft);
+    // return () => {
+    //   socketService.disconnect();
+    //   socketService.off("message_received", handleNewMessage);
+    //   socketService.off("user_joined", handleUserJoined);
+    //   socketService.off("user_left", handleUserLeft);
+    // };
   }, [roomId]);
 
   useEffect(() => {
@@ -68,14 +107,23 @@ const ChatPage: React.FC = () => {
       toast.success("Joined chat room!");
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Failed to join chat room");
-      navigate("/");
+      navigate("/rides");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleNewMessage = (message: ChatMessage) => {
-    setMessages((prev) => [...prev, message]);
+    // Check if this message is from current user
+    const isFromCurrentUser = message.sender_name === senderNameRef.current;
+
+    // Add is_current_user flag to the message
+    const messageWithFlag = {
+      ...message,
+      is_current_user: isFromCurrentUser,
+    };
+
+    setMessages((prev) => [...prev, messageWithFlag]);
   };
 
   const handleUserJoined = (userData: any) => {
@@ -94,16 +142,14 @@ const ChatPage: React.FC = () => {
     try {
       const response = await apiService.sendMessage(roomId!, newMessage);
 
-      // Add message to local state
       const sentMessage = response.data.message;
-      setMessages((prev) => [...prev, sentMessage]);
-
-      // Send via socket for real-time
-      socketService.sendMessage(newMessage);
+      const messageWithFlag = {
+        ...sentMessage,
+        is_current_user: true,
+      };
+      setMessages((prev) => [...prev, messageWithFlag]);
 
       setNewMessage("");
-
-      // Focus input again
       inputRef.current?.focus();
     } catch (error) {
       toast.error("Failed to send message");
@@ -111,12 +157,27 @@ const ChatPage: React.FC = () => {
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }, 100);
   };
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  // Helper function to determine if message is from current user
+  const isCurrentUserMessage = (message: ChatMessage) => {
+    // First check if message has is_current_user flag
+    if ("is_current_user" in message) {
+      return message.is_current_user;
+    }
+    // Fallback to comparing sender_name
+    return message.sender_name === senderName;
   };
 
   if (isLoading) {
@@ -134,7 +195,7 @@ const ChatPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <button
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/rides")}
               className="mr-4 p-2 hover:bg-gray-100 rounded-full"
             >
               <ArrowLeftIcon className="h-5 w-5 text-gray-600" />
@@ -172,43 +233,44 @@ const ChatPage: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.sender_name === senderName ? "justify-end" : "justify-start"}`}
-                >
+              {messages.map((message) => {
+                const isCurrentUser = isCurrentUserMessage(message);
+
+                return (
                   <div
-                    className={`max-w-xs lg:max-w-md rounded-lg p-3 ${
-                      message.sender_name === senderName
-                        ? "bg-indigo-600 text-white rounded-br-none"
-                        : "bg-gray-100 text-gray-900 rounded-bl-none"
-                    }`}
+                    key={message.id}
+                    className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
                   >
-                    <div className="flex items-center mb-1">
-                      <span
-                        className={`text-xs font-medium ${
-                          message.sender_name === senderName
-                            ? "text-indigo-200"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        {message.sender_name}
-                        {message.is_guest && " (Guest)"}
-                      </span>
-                      <span
-                        className={`text-xs ml-2 ${
-                          message.sender_name === senderName
-                            ? "text-indigo-300"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {formatTime(message.timestamp)}
-                      </span>
+                    <div
+                      className={`max-w-xs lg:max-w-md rounded-lg p-3 ${
+                        isCurrentUser
+                          ? "bg-indigo-600 text-white rounded-br-none"
+                          : "bg-gray-100 text-gray-900 rounded-bl-none"
+                      }`}
+                    >
+                      <div className="flex items-center mb-1">
+                        <span
+                          className={`text-xs font-medium ${
+                            isCurrentUser ? "text-indigo-200" : "text-gray-500"
+                          }`}
+                        >
+                          {message.sender_name}
+                          {message.is_guest && " (Guest)"}
+                          {isCurrentUser && " (You)"}
+                        </span>
+                        <span
+                          className={`text-xs ml-2 ${
+                            isCurrentUser ? "text-indigo-300" : "text-gray-400"
+                          }`}
+                        >
+                          {formatTime(message.timestamp)}
+                        </span>
+                      </div>
+                      <p className="text-sm">{message.message}</p>
                     </div>
-                    <p className="text-sm">{message.message}</p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
           )}
@@ -241,15 +303,22 @@ const ChatPage: React.FC = () => {
         </form>
       </div>
 
+      {/* Debug Info (Optional - remove in production) */}
+      <div className="mt-2 text-xs text-gray-500">
+        <p>
+          Debug Info: Sender Name: "{senderName}" | Guest ID: {guestId}
+        </p>
+      </div>
+
       {/* Chat Info */}
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white p-4 rounded-lg shadow">
           <h3 className="font-medium text-gray-900 mb-2">Chat Rules</h3>
           <ul className="text-sm text-gray-600 space-y-1">
+            <li>• Your messages appear on the right (blue)</li>
+            <li>• Other users' messages appear on the left (gray)</li>
             <li>• Be respectful to other riders</li>
             <li>• Share pickup/dropoff details clearly</li>
-            <li>• Discuss timing and meeting points</li>
-            <li>• Coordinate ride sharing details</li>
           </ul>
         </div>
 
@@ -257,11 +326,11 @@ const ChatPage: React.FC = () => {
           <h3 className="font-medium text-gray-900 mb-2">Your Status</h3>
           <div className="text-sm text-gray-600">
             <p>
-              <strong>Name:</strong> {senderName}
+              <strong>Display Name:</strong> {senderName}
               {!user && " (Guest)"}
             </p>
             <p className="mt-1">
-              <strong>Guest ID:</strong> {guestId?.substring(0, 12)}...
+              <strong>Messages from you will appear on the right</strong>
             </p>
             {!user && (
               <button
