@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\ChatMessage;
+use App\Models\ChatRoom;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -15,16 +16,33 @@ class ChatMessageSent implements ShouldBroadcast
     public $message;
     public $roomId;
 
-    public function __construct(ChatMessage $message)
+    public function __construct(ChatMessage $message, $roomId = null)
     {
         $this->message = $message;
-        $this->roomId = $message->room->room_id;
+        // Use the provided roomId or fetch it if not provided
+        $this->roomId = $roomId ?? $this->getRoomIdFromMessage($message);
     }
 
-    // 👇 This is where you put your Channel definition
+    // Helper method to get room ID safely
+    private function getRoomIdFromMessage(ChatMessage $message)
+    {
+        // Load room relationship if not already loaded
+        if (!$message->relationLoaded('room')) {
+            $message->load('room');
+        }
+
+        // Check if room exists and has room_id
+        if ($message->room && $message->room->room_id) {
+            return $message->room->room_id;
+        }
+
+        // Fallback: query the room directly
+        $room = ChatRoom::find($message->chat_room_id);
+        return $room ? $room->room_id : 'unknown';
+    }
+
     public function broadcastOn()
     {
-        // Public channel — no auth required
         return new Channel('chat.' . $this->roomId);
     }
 
@@ -40,6 +58,7 @@ class ChatMessageSent implements ShouldBroadcast
             'sender_name' => $this->message->sender_name,
             'message' => $this->message->message,
             'type' => $this->message->message_type,
+            'is_guest' => $this->message->user_id === null,
             'timestamp' => $this->message->created_at->toISOString(),
         ];
     }

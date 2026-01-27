@@ -50,6 +50,8 @@ const ChatPage: React.FC = () => {
       navigate("/rides");
       return;
     }
+    loadChatRoom();
+
     const channel = echo.channel(`chat.${roomId}`);
     channel;
     //.listen(".message.sent", (message: any) => handleNewMessage(message))
@@ -64,14 +66,13 @@ const ChatPage: React.FC = () => {
       })
       .listen(".user.joined", (data: any) => handleUserJoined(data)) // Adjust event name based on your backend event
       .listen(".user.left", (data: any) => handleUserLeft(data)); // Adjust event name based on your backend event
-
     return () => {
       channel.stopListening(".message.sent");
       channel.stopListening(".user.joined");
       channel.stopListening(".user.left");
       echo.leave(`chat.${roomId}`); // Important: Leave the channel on unmount
     };
-    loadChatRoom();
+    //loadChatRoom();
 
     //Setup socket connection
     // socketService.connect(roomId, guestId);
