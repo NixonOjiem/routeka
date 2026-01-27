@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::table('ride_requests', function (Blueprint $table) {
             $table->enum('status', ['pending', 'accepted', 'completed', 'cancelled'])
-                  ->default('pending')
-                  ->after('dropoff_address');
+                  ->default('pending');
+                  //->after('dropoff_address');
         });
     }
 

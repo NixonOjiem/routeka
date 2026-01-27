@@ -20,6 +20,7 @@ class RideRequest extends Model
         'dropoff_lng',
         'commute_time',
         'frequency',
+        'status',
     ];
 
     public function user()
