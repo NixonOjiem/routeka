@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\RideRequest;
 use App\Models\ChatRoom;
-use Illuminate\Support\Facades\DB;
+use App\Models\RideRequest;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class RideMatchingService
 {
@@ -14,100 +16,119 @@ class RideMatchingService
      */
     public function getGroupedRides()
     {
-        // 1. Get all active ride requests
-        $allRequests = RideRequest::with('user')
-            ->where('status', 'pending')
-            ->get();
+        try {
+            // Check if status column exists
+            $hasStatusColumn = Schema::hasColumn('ride_requests', 'status');
 
-        $groups = [];
-        $processedIds = [];
+            // 1. Get all ride requests
+            $query = RideRequest::with('user');
 
-        // Grid size in degrees (approximately 1 mile)
-        $gridSize = 0.0145; // ~1 mile in degrees
-
-        foreach ($allRequests as $request) {
-            if (in_array($request->id, $processedIds)) {
-                continue;
+            // Only filter by status if the column exists
+            if ($hasStatusColumn) {
+                $query->where('status', 'pending');
             }
 
-            // Calculate grid coordinates
-            $pickupGrid = $this->calculateGrid($request->pickup_lat, $request->pickup_lng, $gridSize);
-            $dropoffGrid = $this->calculateGrid($request->dropoff_lat, $request->dropoff_lng, $gridSize);
+            $allRequests = $query->get();
 
-            // Find matches in same grid
-            $matches = RideRequest::query()
-                ->where('id', '!=', $request->id)
-                ->whereNotIn('id', $processedIds)
-                ->where('status', 'pending')
-                ->whereRaw("
-                    ABS(pickup_lat - ?) <= ? AND
-                    ABS(pickup_lng - ?) <= ? AND
-                    ABS(dropoff_lat - ?) <= ? AND
-                    ABS(dropoff_lng - ?) <= ?
-                ", [
-                    $request->pickup_lat, $gridSize,
-                    $request->pickup_lng, $gridSize,
-                    $request->dropoff_lat, $gridSize,
-                    $request->dropoff_lng, $gridSize
-                ])
-                ->with('user')
-                ->get();
+            $groups = [];
+            $processedIds = [];
 
-            if ($matches->count() > 0) {
-                // Create group with matches
-                $groupMembers = $matches->push($request);
+            // Grid size in degrees (approximately 1 mile)
+            $gridSize = 0.0145; // ~1 mile in degrees
 
-                foreach ($groupMembers as $member) {
-                    $processedIds[] = $member->id;
+            foreach ($allRequests as $request) {
+                if (in_array($request->id, $processedIds)) {
+                    continue;
                 }
 
-                // Create or get chat room for this group
-                $chatRoom = $this->getOrCreateChatRoom($groupMembers, $pickupGrid, $dropoffGrid);
+                // Calculate grid coordinates
+                $pickupGrid = $this->calculateGrid($request->pickup_lat, $request->pickup_lng, $gridSize);
+                $dropoffGrid = $this->calculateGrid($request->dropoff_lat, $request->dropoff_lng, $gridSize);
 
-                $groups[] = [
-                    'group_id' => 'group_' . $request->id,
-                    'chat_room_id' => $chatRoom->room_id,
-                    'meetup_point' => $this->calculateCentroid($groupMembers),
-                    'pickup_grid' => $pickupGrid,
-                    'dropoff_grid' => $dropoffGrid,
-                    'member_count' => $groupMembers->count(),
-                    'members' => $groupMembers->map(function($member) {
-                        return [
-                            'id' => $member->id,
-                            'user_id' => $member->user_id,
-                            'user_name' => $member->user->name ?? 'Guest',
-                            'pickup' => [
-                                'lat' => $member->pickup_lat,
-                                'lng' => $member->pickup_lng,
-                                'address' => $member->pickup_address
-                            ],
-                            'dropoff' => [
-                                'lat' => $member->dropoff_lat,
-                                'lng' => $member->dropoff_lng,
-                                'address' => $member->dropoff_address
-                            ]
-                        ];
-                    })
-                ];
-            } else {
-                // Solo ride
-                $groups[] = [
-                    'group_id' => 'solo_' . $request->id,
-                    'chat_room_id' => null,
-                    'meetup_point' => [
-                        'lat' => $request->pickup_lat,
-                        'lng' => $request->pickup_lng
-                    ],
-                    'pickup_grid' => $pickupGrid,
-                    'dropoff_grid' => $dropoffGrid,
-                    'member_count' => 1,
-                    'members' => [$request]
-                ];
-                $processedIds[] = $request->id;
+                // Build matches query
+                $matchesQuery = RideRequest::query()
+                    ->where('id', '!=', $request->id)
+                    ->whereNotIn('id', $processedIds)
+                    ->whereRaw("
+                        ABS(pickup_lat - ?) <= ? AND
+                        ABS(pickup_lng - ?) <= ? AND
+                        ABS(dropoff_lat - ?) <= ? AND
+                        ABS(dropoff_lng - ?) <= ?
+                    ", [
+                        $request->pickup_lat, $gridSize,
+                        $request->pickup_lng, $gridSize,
+                        $request->dropoff_lat, $gridSize,
+                        $request->dropoff_lng, $gridSize
+                    ])
+                    ->with('user');
+
+                // Only filter by status if the column exists
+                if ($hasStatusColumn) {
+                    $matchesQuery->where('status', 'pending');
+                }
+
+                $matches = $matchesQuery->get();
+
+                if ($matches->count() > 0) {
+                    // Create group with matches
+                    $groupMembers = $matches->push($request);
+
+                    foreach ($groupMembers as $member) {
+                        $processedIds[] = $member->id;
+                    }
+
+                    // Create or get chat room for this group
+                    $chatRoom = $this->getOrCreateChatRoom($groupMembers, $pickupGrid, $dropoffGrid);
+
+                    $groups[] = [
+                        'group_id' => 'group_' . $request->id,
+                        'chat_room_id' => $chatRoom->room_id,
+                        'meetup_point' => $this->calculateCentroid($groupMembers),
+                        'pickup_grid' => $pickupGrid,
+                        'dropoff_grid' => $dropoffGrid,
+                        'member_count' => $groupMembers->count(),
+                        'members' => $groupMembers->map(function($member) {
+                            return [
+                                'id' => $member->id,
+                                'user_id' => $member->user_id,
+                                'user_name' => $member->user->name ?? 'Guest',
+                                'pickup' => [
+                                    'lat' => $member->pickup_lat,
+                                    'lng' => $member->pickup_lng,
+                                    'address' => $member->pickup_address
+                                ],
+                                'dropoff' => [
+                                    'lat' => $member->dropoff_lat,
+                                    'lng' => $member->dropoff_lng,
+                                    'address' => $member->dropoff_address
+                                ]
+                            ];
+                        })
+                    ];
+                } else {
+                    // Solo ride
+                    $groups[] = [
+                        'group_id' => 'solo_' . $request->id,
+                        'chat_room_id' => null,
+                        'meetup_point' => [
+                            'lat' => $request->pickup_lat,
+                            'lng' => $request->pickup_lng
+                        ],
+                        'pickup_grid' => $pickupGrid,
+                        'dropoff_grid' => $dropoffGrid,
+                        'member_count' => 1,
+                        'members' => [$request]
+                    ];
+                    $processedIds[] = $request->id;
+                }
             }
-        }
 
-        return $groups;
+            return $groups;
+
+        } catch (\Exception $e) {
+            Log::error('Error in getGroupedRides: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
@@ -185,24 +206,30 @@ class RideMatchingService
      */
     public function getAvailableChatRooms($userId = null)
     {
-        $query = ChatRoom::where('is_active', true);
+        try {
+            $query = ChatRoom::where('is_active', true);
 
-        if ($userId) {
-            $query->whereJsonContains('user_ids', (string)$userId);
+            if ($userId) {
+                $query->whereJsonContains('user_ids', (string)$userId);
+            }
+
+            return $query->with(['messages' => function($q) {
+                $q->orderBy('created_at', 'desc')->limit(20);
+            }])->get()->map(function($room) {
+                return [
+                    'room_id' => $room->room_id,
+                    'name' => $room->name,
+                    'pickup_grid' => $room->pickup_grid,
+                    'dropoff_grid' => $room->dropoff_grid,
+                    'member_count' => count($room->ride_ids),
+                    'last_message' => $room->messages->first(),
+                    'message_count' => $room->messages->count()
+                ];
+            });
+
+        } catch (\Exception $e) {
+            Log::error('Error in getAvailableChatRooms: ' . $e->getMessage());
+            return [];
         }
-
-        return $query->with(['messages' => function($q) {
-            $q->orderBy('created_at', 'desc')->limit(20);
-        }])->get()->map(function($room) {
-            return [
-                'room_id' => $room->room_id,
-                'name' => $room->name,
-                'pickup_grid' => $room->pickup_grid,
-                'dropoff_grid' => $room->dropoff_grid,
-                'member_count' => count($room->ride_ids),
-                'last_message' => $room->messages->first(),
-                'message_count' => $room->messages->count()
-            ];
-        });
     }
 }

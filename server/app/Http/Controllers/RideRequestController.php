@@ -22,23 +22,36 @@ class RideRequestController extends Controller
     // 2. Fetch Grouped Data (For Admin or "My Matches" view)
      public function index()
 {
-    $groupedRides = $this->rideService->getGroupedRides();
+    try {
+        $groupedRides = $this->rideService->getGroupedRides();
 
-    // Check if user is logged in via JWT
-    $user = Auth::guard('api')->user();
+        // Check if user is logged in via JWT
+        $user = Auth::guard('api')->user();
 
-    $chatRooms = $this->rideService->getAvailableChatRooms(
-        $user ? $user->id : null
-    );
+        $chatRooms = $this->rideService->getAvailableChatRooms(
+            $user ? $user->id : null
+        );
 
-    return response()->json([
-        'groups' => $groupedRides,
-        'chat_rooms' => $chatRooms,
-        'user' => $user ? [
-            'id' => $user->id,
-            'name' => $user->name
-        ] : null
-    ]);
+        return response()->json([
+            'success' => true,
+            'groups' => $groupedRides,
+            'chat_rooms' => $chatRooms,
+            'user' => $user ? [
+                'id' => $user->id,
+                'name' => $user->name
+            ] : null
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('Error in RideRequestController index: ' . $e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to load ride groups',
+            'groups' => [],
+            'chat_rooms' => []
+        ], 500);
+    }
 }
 
     /**
