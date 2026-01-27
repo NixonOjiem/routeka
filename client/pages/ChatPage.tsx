@@ -28,7 +28,7 @@ const ChatPage: React.FC = () => {
 
   useEffect(() => {
     if (!roomId) {
-      navigate("/");
+      navigate("/rides");
       return;
     }
 
@@ -68,7 +68,7 @@ const ChatPage: React.FC = () => {
       toast.success("Joined chat room!");
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Failed to join chat room");
-      navigate("/");
+      navigate("/rides");
     } finally {
       setIsLoading(false);
     }
@@ -134,7 +134,7 @@ const ChatPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <button
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/rides")}
               className="mr-4 p-2 hover:bg-gray-100 rounded-full"
             >
               <ArrowLeftIcon className="h-5 w-5 text-gray-600" />
