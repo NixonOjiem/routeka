@@ -45,7 +45,6 @@ const ChatPage: React.FC = () => {
     socketService.on("message_received", handleNewMessage);
     socketService.on("user_joined", handleUserJoined);
     socketService.on("user_left", handleUserLeft);
-
     return () => {
       socketService.disconnect();
       socketService.off("message_received", handleNewMessage);
@@ -109,21 +108,14 @@ const ChatPage: React.FC = () => {
     try {
       const response = await apiService.sendMessage(roomId!, newMessage);
 
-      // Add message to local state
-      // Add message to local state with current user flag
       const sentMessage = response.data.message;
       const messageWithFlag = {
         ...sentMessage,
         is_current_user: true,
       };
-      setMessages((prev) => [...prev, sentMessage]);
-
-      // Send via socket for real-time
-      socketService.sendMessage(newMessage);
+      setMessages((prev) => [...prev, messageWithFlag]);
 
       setNewMessage("");
-
-      // Focus input again
       inputRef.current?.focus();
     } catch (error) {
       toast.error("Failed to send message");
