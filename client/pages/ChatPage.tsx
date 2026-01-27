@@ -26,6 +26,12 @@ const ChatPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Ref to track senderName for socket callbacks
+  const senderNameRef = useRef("");
+  useEffect(() => {
+    senderNameRef.current = senderName;
+  }, [senderName]);
+
   useEffect(() => {
     if (!roomId) {
       navigate("/rides");
@@ -75,7 +81,16 @@ const ChatPage: React.FC = () => {
   };
 
   const handleNewMessage = (message: ChatMessage) => {
-    setMessages((prev) => [...prev, message]);
+    // Check if this message is from current user
+    const isFromCurrentUser = message.sender_name === senderNameRef.current;
+
+    // Add is_current_user flag to the message
+    const messageWithFlag = {
+      ...message,
+      is_current_user: isFromCurrentUser,
+    };
+
+    setMessages((prev) => [...prev, messageWithFlag]);
   };
 
   const handleUserJoined = (userData: any) => {
@@ -95,7 +110,12 @@ const ChatPage: React.FC = () => {
       const response = await apiService.sendMessage(roomId!, newMessage);
 
       // Add message to local state
+      // Add message to local state with current user flag
       const sentMessage = response.data.message;
+      const messageWithFlag = {
+        ...sentMessage,
+        is_current_user: true,
+      };
       setMessages((prev) => [...prev, sentMessage]);
 
       // Send via socket for real-time
@@ -111,12 +131,27 @@ const ChatPage: React.FC = () => {
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }, 100);
   };
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  // Helper function to determine if message is from current user
+  const isCurrentUserMessage = (message: ChatMessage) => {
+    // First check if message has is_current_user flag
+    if ("is_current_user" in message) {
+      return message.is_current_user;
+    }
+    // Fallback to comparing sender_name
+    return message.sender_name === senderName;
   };
 
   if (isLoading) {
@@ -172,43 +207,44 @@ const ChatPage: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.sender_name === senderName ? "justify-end" : "justify-start"}`}
-                >
+              {messages.map((message) => {
+                const isCurrentUser = isCurrentUserMessage(message);
+
+                return (
                   <div
-                    className={`max-w-xs lg:max-w-md rounded-lg p-3 ${
-                      message.sender_name === senderName
-                        ? "bg-indigo-600 text-white rounded-br-none"
-                        : "bg-gray-100 text-gray-900 rounded-bl-none"
-                    }`}
+                    key={message.id}
+                    className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
                   >
-                    <div className="flex items-center mb-1">
-                      <span
-                        className={`text-xs font-medium ${
-                          message.sender_name === senderName
-                            ? "text-indigo-200"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        {message.sender_name}
-                        {message.is_guest && " (Guest)"}
-                      </span>
-                      <span
-                        className={`text-xs ml-2 ${
-                          message.sender_name === senderName
-                            ? "text-indigo-300"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {formatTime(message.timestamp)}
-                      </span>
+                    <div
+                      className={`max-w-xs lg:max-w-md rounded-lg p-3 ${
+                        isCurrentUser
+                          ? "bg-indigo-600 text-white rounded-br-none"
+                          : "bg-gray-100 text-gray-900 rounded-bl-none"
+                      }`}
+                    >
+                      <div className="flex items-center mb-1">
+                        <span
+                          className={`text-xs font-medium ${
+                            isCurrentUser ? "text-indigo-200" : "text-gray-500"
+                          }`}
+                        >
+                          {message.sender_name}
+                          {message.is_guest && " (Guest)"}
+                          {isCurrentUser && " (You)"}
+                        </span>
+                        <span
+                          className={`text-xs ml-2 ${
+                            isCurrentUser ? "text-indigo-300" : "text-gray-400"
+                          }`}
+                        >
+                          {formatTime(message.timestamp)}
+                        </span>
+                      </div>
+                      <p className="text-sm">{message.message}</p>
                     </div>
-                    <p className="text-sm">{message.message}</p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
           )}
@@ -241,15 +277,22 @@ const ChatPage: React.FC = () => {
         </form>
       </div>
 
+      {/* Debug Info (Optional - remove in production) */}
+      <div className="mt-2 text-xs text-gray-500">
+        <p>
+          Debug Info: Sender Name: "{senderName}" | Guest ID: {guestId}
+        </p>
+      </div>
+
       {/* Chat Info */}
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white p-4 rounded-lg shadow">
           <h3 className="font-medium text-gray-900 mb-2">Chat Rules</h3>
           <ul className="text-sm text-gray-600 space-y-1">
+            <li>• Your messages appear on the right (blue)</li>
+            <li>• Other users' messages appear on the left (gray)</li>
             <li>• Be respectful to other riders</li>
             <li>• Share pickup/dropoff details clearly</li>
-            <li>• Discuss timing and meeting points</li>
-            <li>• Coordinate ride sharing details</li>
           </ul>
         </div>
 
@@ -257,11 +300,11 @@ const ChatPage: React.FC = () => {
           <h3 className="font-medium text-gray-900 mb-2">Your Status</h3>
           <div className="text-sm text-gray-600">
             <p>
-              <strong>Name:</strong> {senderName}
+              <strong>Display Name:</strong> {senderName}
               {!user && " (Guest)"}
             </p>
             <p className="mt-1">
-              <strong>Guest ID:</strong> {guestId?.substring(0, 12)}...
+              <strong>Messages from you will appear on the right</strong>
             </p>
             {!user && (
               <button

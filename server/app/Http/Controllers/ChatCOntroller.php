@@ -47,51 +47,6 @@ class ChatController extends Controller
     /**
      * Get messages for a specific chat room
      */
-    // public function getMessages($roomId, Request $request)
-    // {
-    //     $room = ChatRoom::where('room_id', $roomId)->firstOrFail();
-
-    //     // Check access
-    //     if ($request->user()) {
-    //         $user = $request->user();
-    //         if (!in_array($user->id, $room->user_ids ?? [])) {
-    //             return response()->json(['error' => 'Not a member of this chat room'], 403);
-    //         }
-    //         $guestId = null;
-    //         $senderName = $user->name;
-    //     } else {
-    //         $guestId = $request->header('X-Guest-ID');
-    //         if (!$guestId) {
-    //             return response()->json(['error' => 'Guest ID required'], 400);
-    //         }
-    //         $senderName = 'Guest_' . substr($guestId, 0, 6);
-    //     }
-
-    //     $messages = ChatMessage::where('chat_room_id', $room->id)
-    //         ->orderBy('created_at', 'desc')
-    //         ->limit(50)
-    //         ->get()
-    //         ->map(function($message) {
-    //             return [
-    //                 'id' => $message->id,
-    //                 'sender_name' => $message->sender_name,
-    //                 'message' => $message->message,
-    //                 'type' => $message->message_type,
-    //                 'is_guest' => $message->user_id === null,
-    //                 'timestamp' => $message->created_at->toISOString()
-    //             ];
-    //         });
-
-    //     return response()->json([
-    //         'room' => [
-    //             'id' => $room->room_id,
-    //             'name' => $room->name,
-    //             'member_count' => count($room->ride_ids)
-    //         ],
-    //         'messages' => $messages,
-    //         'sender_name' => $senderName
-    //     ]);
-    // }
     public function getMessages($roomId, Request $request)
 {
     $room = ChatRoom::where('room_id', $roomId)->firstOrFail();
