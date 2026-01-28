@@ -277,11 +277,22 @@ public function getMessages($roomId, Request $request)
     ];
 
     // Broadcast message (for real-time)
-    broadcast(new ChatMessageSent($message))->toOthers();
+    broadcast(new ChatMessageSent($message));
 
     return response()->json([
         'success' => true,
-        'message' => $responseMessage,
+        'message' => [
+            // Return the same structure as the event
+            'id' => $message->id,
+            'sender_name' => $message->sender_name,
+            'message' => $message->message,
+            'type' => $message->message_type,
+            'is_guest' => $message->user_id === null,
+            'user_id' => $message->user_id, // Add this
+            'guest_id' => $message->guest_id, // Add this
+            'is_current_user' => true,
+            'timestamp' => $message->created_at->toISOString()
+        ],
         'guest_id' => $guestId
     ]);
 }

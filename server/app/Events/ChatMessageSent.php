@@ -59,7 +59,9 @@ class ChatMessageSent implements ShouldBroadcast
             'message' => $this->message->message,
             'type' => $this->message->message_type,
             'is_guest' => $this->message->user_id === null,
-            'timestamp' => $this->message->created_at->toISOString(),
+            'user_id' => $this->message->user_id,
+        'guest_id' => $this->message->guest_id,
+        'timestamp' => $this->message->created_at->toISOString(),
         ];
     }
 }
