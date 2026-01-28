@@ -105,35 +105,6 @@ const ChatPage: React.FC = () => {
     });
   };
 
-  // const sendMessage = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   if (!newMessage.trim()) return;
-
-  //   const textToSend = newMessage;
-  //   setNewMessage(""); // Clear input immediately for better UX
-
-  //   try {
-  //     const config = {
-  //       headers: { "X-Guest-ID": currentUserId },
-  //     };
-  //     const response = await apiService.sendMessage(
-  //       roomId!,
-  //       textToSend,
-  //       config,
-  //     );
-  //     const sentMessage = response.data.message;
-
-  //     // Manually mark as current user for the sender's UI
-  //     setMessages((prev) => [
-  //       ...prev,
-  //       { ...sentMessage, is_current_user: true },
-  //     ]);
-  //     inputRef.current?.focus();
-  //   } catch (error) {
-  //     toast.error("Failed to send message");
-  //     setNewMessage(textToSend); // Restore text if failed
-  //   }
-  // };
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -225,7 +196,7 @@ const ChatPage: React.FC = () => {
                   className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-lg p-3 ${isMe ? "bg-indigo-600 text-white rounded-br-none" : "bg-gray-100 text-gray-900 rounded-bl-none"}`}
+                    className={`max-w-[80%] rounded-lg p-3 ${isMe ? "bg-[#497487] text-white rounded-br-none" : "bg-gray-100 text-gray-900 rounded-bl-none"}`}
                   >
                     <div className="flex items-baseline space-x-2 mb-1">
                       <span
@@ -252,12 +223,12 @@ const ChatPage: React.FC = () => {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none"
+              className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#497487] outline-none"
             />
             <button
               type="submit"
               disabled={!newMessage.trim()}
-              className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white px-5 rounded-lg transition-colors"
+              className="bg-[#497487] hover:bg-[#546269] disabled:bg-gray-300 text-white px-5 rounded-lg transition-colors"
             >
               <PaperAirplaneIcon className="h-5 w-5 rotate-90" />
             </button>

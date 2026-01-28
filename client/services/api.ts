@@ -95,6 +95,8 @@ export interface ChatMessage {
   type: string;
   is_guest: boolean;
   timestamp: string;
+  sender_id: string | null;
+  is_current_user: boolean;
 }
 
 // Auth API calls (keep your existing functions)
