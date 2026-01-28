@@ -14,7 +14,8 @@ const api = axios.create({
 // Add interceptors for auth and guest ID
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  const guestId = localStorage.getItem("guest_id");
+  //const guestId = localStorage.getItem("guest_id");
+  const guestId = localStorage.getItem("chat_guest_id");
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -147,18 +148,26 @@ export const apiService = {
   getChatRooms: () =>
     api.get<{ rooms: ChatRoom[]; guest_id: string }>("/chat/rooms"),
 
-  getChatMessages: (roomId: string) =>
+  getChatMessages: (roomId: string, config?: any) =>
     api.get<{ room: any; messages: ChatMessage[]; sender_name: string }>(
       `/chat/rooms/${roomId}/messages`,
+      config,
     ),
 
-  sendMessage: (roomId: string, message: string, type: string = "text") =>
+  sendMessage: (
+    roomId: string,
+    message: string,
+    type: string = "text",
+    config?: any,
+  ) =>
     api.post<{ success: boolean; message: ChatMessage; guest_id: string }>(
       `/chat/rooms/${roomId}/messages`,
       { message, type },
+      config,
     ),
 
-  joinChatRoom: (roomId: string) => api.get(`/chat/rooms/${roomId}/join`),
+  joinChatRoom: (roomId: string, config?: any) =>
+    api.get(`/chat/rooms/${roomId}/join`, config),
 };
 
 export default api;
