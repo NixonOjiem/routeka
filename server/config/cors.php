@@ -9,7 +9,7 @@ return [
     */
 
     // Keep both api/* for your JWT routes and sanctum for potential CSRF needs
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'broadcasting/*'],
 
     'allowed_methods' => ['*'],
 
