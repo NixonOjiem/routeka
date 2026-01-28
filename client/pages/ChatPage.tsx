@@ -77,8 +77,9 @@ const ChatPage: React.FC = () => {
   const loadChatRoom = async () => {
     try {
       setIsLoading(true);
-      await apiService.joinChatRoom(roomId!);
-      const response = await apiService.getChatMessages(roomId!);
+      const config = { headers: { "X-Guest-ID": currentUserId } };
+      await apiService.joinChatRoom(roomId!, config);
+      const response = await apiService.getChatMessages(roomId!, config);
 
       setMessages(response.data.messages);
       setRoomInfo(response.data.room);
@@ -104,26 +105,69 @@ const ChatPage: React.FC = () => {
     });
   };
 
+  // const sendMessage = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!newMessage.trim()) return;
+
+  //   const textToSend = newMessage;
+  //   setNewMessage(""); // Clear input immediately for better UX
+
+  //   try {
+  //     const config = {
+  //       headers: { "X-Guest-ID": currentUserId },
+  //     };
+  //     const response = await apiService.sendMessage(
+  //       roomId!,
+  //       textToSend,
+  //       config,
+  //     );
+  //     const sentMessage = response.data.message;
+
+  //     // Manually mark as current user for the sender's UI
+  //     setMessages((prev) => [
+  //       ...prev,
+  //       { ...sentMessage, is_current_user: true },
+  //     ]);
+  //     inputRef.current?.focus();
+  //   } catch (error) {
+  //     toast.error("Failed to send message");
+  //     setNewMessage(textToSend); // Restore text if failed
+  //   }
+  // };
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
     const textToSend = newMessage;
-    setNewMessage(""); // Clear input immediately for better UX
+    setNewMessage("");
 
     try {
-      const response = await apiService.sendMessage(roomId!, textToSend);
+      // 1. Prepare the config with the Guest ID header
+      const config = {
+        headers: { "X-Guest-ID": currentUserId },
+      };
+
+      // 2. Pass config as the THIRD argument (after message and type)
+      const response = await apiService.sendMessage(
+        roomId!,
+        textToSend,
+        "text",
+        config,
+      );
       const sentMessage = response.data.message;
 
-      // Manually mark as current user for the sender's UI
-      setMessages((prev) => [
-        ...prev,
-        { ...sentMessage, is_current_user: true },
-      ]);
+      // 3. Update local state
+      setMessages((prev) => {
+        // Check if the message already exists (to prevent duplicates from Echo)
+        if (prev.some((m) => m.id === sentMessage.id)) return prev;
+
+        return [...prev, { ...sentMessage, is_current_user: true }];
+      });
+
       inputRef.current?.focus();
     } catch (error) {
       toast.error("Failed to send message");
-      setNewMessage(textToSend); // Restore text if failed
+      setNewMessage(textToSend); // Restore text so user doesn't lose it
     }
   };
 
