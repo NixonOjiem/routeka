@@ -20,13 +20,50 @@ class RideRequestController extends Controller
     }
 
     // 2. Fetch Grouped Data (For Admin or "My Matches" view)
-     public function index()
+//      public function index()
+// {
+//     try {
+//         $groupedRides = $this->rideService->getGroupedRides();
+
+//         // Check if user is logged in via JWT
+//         $user = Auth::guard('api')->user();
+
+//         $chatRooms = $this->rideService->getAvailableChatRooms(
+//             $user ? $user->id : null
+//         );
+
+//         return response()->json([
+//             'success' => true,
+//             'groups' => $groupedRides,
+//             'chat_rooms' => $chatRooms,
+//             'user' => $user ? [
+//                 'id' => $user->id,
+//                 'name' => $user->name
+//             ] : null
+//         ]);
+
+//     } catch (\Exception $e) {
+//         Log::error('Error in RideRequestController index: ' . $e->getMessage());
+
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Failed to load ride groups',
+//             'groups' => [],
+//             'chat_rooms' => []
+//         ], 500);
+//     }
+// }
+
+public function index(Request $request)
 {
     try {
         $groupedRides = $this->rideService->getGroupedRides();
 
         // Check if user is logged in via JWT
         $user = Auth::guard('api')->user();
+
+        // Get Guest ID from Header (sent by interceptor)
+        $guestId = $request->header('X-Guest-ID');
 
         $chatRooms = $this->rideService->getAvailableChatRooms(
             $user ? $user->id : null
@@ -39,17 +76,16 @@ class RideRequestController extends Controller
             'user' => $user ? [
                 'id' => $user->id,
                 'name' => $user->name
-            ] : null
+            ] : null,
+            // Return the detected guest ID to help frontend matching
+            'detected_guest_id' => $guestId
         ]);
 
     } catch (\Exception $e) {
         Log::error('Error in RideRequestController index: ' . $e->getMessage());
-
         return response()->json([
             'success' => false,
-            'message' => 'Failed to load ride groups',
-            'groups' => [],
-            'chat_rooms' => []
+            'message' => 'Failed to load ride groups'
         ], 500);
     }
 }
