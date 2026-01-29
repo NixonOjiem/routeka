@@ -19,11 +19,14 @@ import { RequestPage } from "./pages/RequestPage";
 import AuthenticationPage from "./pages/AuthenticationPage";
 import TestPage from "./pages/TestPage";
 
+// ✅ New pages
+import RideGroupsPage from "@/pages/RideGroupsPage";
+import ChatPage from "@/pages/ChatPage";
+
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 1. Check if the current route is the auth page
   const isAuthPage = location.pathname === "/auth";
 
   const getCurrentView = (): ViewState => {
@@ -47,7 +50,6 @@ function AppContent() {
 
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-brand-100 selection:text-brand-dark">
-      {/* 2. Conditionally render Header */}
       {!isAuthPage && (
         <Header
           onViewChange={handleViewChange}
@@ -56,7 +58,9 @@ function AppContent() {
       )}
 
       <main
-        className={`flex-grow ${!isAuthPage ? "container mx-auto px-4 md:px-6 py-6 max-w-7xl" : ""}`}
+        className={`flex-grow ${
+          !isAuthPage ? "container mx-auto px-4 md:px-6 py-6 max-w-7xl" : ""
+        }`}
       >
         {notification && (
           <NotificationToast
@@ -66,6 +70,7 @@ function AppContent() {
         )}
 
         <Routes>
+          {/* ✅ Keep existing routes */}
           <Route
             path="/"
             element={<HomePage onRequestRoute={() => navigate("/request")} />}
@@ -76,10 +81,15 @@ function AppContent() {
           />
           <Route path="/test" element={<TestPage />} />
           <Route path="/auth" element={<AuthenticationPage />} />
+
+          {/* ✅ Add new routes */}
+          <Route path="rides" element={<RideGroupsPage />} />
+          <Route path="chat/:roomId" element={<ChatPage />} />
+          {/* <Route path="login" element={<LoginPage />} />
+          <Route path="register" element={<RegisterPage />} /> */}
         </Routes>
       </main>
 
-      {/* 3. Conditionally render Footer */}
       {!isAuthPage && <Footer />}
     </div>
   );

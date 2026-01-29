@@ -1,211 +1,318 @@
-import React, { useState } from "react";
-import { User, Phone, Mail, Clock, Send, AlertCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { RootState } from "@/redux/store";
+import { useSelector } from "react-redux";
+import { User, Send, ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { MapPicker } from "@/components/maps/MapPicker";
 
 interface RequestRouteFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
 }
 
-interface FormErrors {
-  name?: string;
-  phone?: string;
-  email?: string;
-  frequency?: string;
-  pickup?: string;
-  dropoff?: string;
+interface FormData {
+  name: string;
+  phone: string;
+  email: string;
+  frequency: string;
+  commute_time: string;
+  pickup: { lat: number | null; lng: number | null };
+  dropoff: { lat: number | null; lng: number | null };
 }
 
 export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
   onSubmit,
   onCancel,
 }) => {
-  const [formData, setFormData] = useState({
+  // 1. Get Auth State from Redux
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  // 2. Form State
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState<FormData>({
     name: "",
     phone: "",
     email: "",
     frequency: "",
-    pickup: "",
-    dropoff: "",
+    commute_time: "",
+    pickup: { lat: null, lng: null },
+    dropoff: { lat: null, lng: null },
   });
 
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errors, setErrors] = useState<any>({});
 
-  const validate = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-
-    const phoneRegex = /^\+?[\d\s\-()]{7,20}$/;
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    } else if (!phoneRegex.test(formData.phone)) {
-      newErrors.phone = "Invalid phone format";
+  // --- AUTO-FILL LOGIC ---
+  // Sync Redux user data to local form state on mount or when user changes
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: user.name || "",
+        email: user.email || "",
+        // phone is often not in basic auth, so we keep existing if null
+        phone: user.phone || prev.phone,
+      }));
     }
+  }, [user]);
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = "Invalid email address";
+  // --- Helpers ---
+  const updateField = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const validateStep1 = () => {
+    const newErrors: any = {};
+    if (!user) {
+      if (!formData.name.trim()) newErrors.name = "Name is required";
+      if (!formData.email.trim()) newErrors.email = "Email is required";
+      if (!formData.phone.trim()) newErrors.phone = "Phone is required";
     }
-
-    if (!formData.frequency) newErrors.frequency = "Please select a frequency";
-    if (!formData.pickup.trim())
-      newErrors.pickup = "Pick-up address is required";
-    if (!formData.dropoff.trim())
-      newErrors.dropoff = "Drop-off address is required";
+    if (!formData.frequency) newErrors.frequency = "Frequency is required";
+    if (!formData.commute_time) newErrors.commute_time = "Time is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateStep2 = () => {
+    if (!formData.pickup.lat) {
+      setErrors({ map: "Please select a pickup location" });
+      return false;
+    }
+    setErrors({});
+    return true;
+  };
+
+  const validateStep3 = () => {
+    if (!formData.dropoff.lat) {
+      setErrors({ map: "Please select a dropoff location" });
+      return false;
+    }
+    setErrors({});
+    return true;
+  };
+
+  const handleNext = () => {
+    if (step === 1 && validateStep1()) setStep(2);
+    if (step === 2 && validateStep2()) setStep(3);
+  };
+
+  const handleBack = () => setStep((prev) => prev - 1);
+
+  const handleFinalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    if (validate()) {
-      onSubmit(formData);
+    if (validateStep3()) {
+      const payload = {
+        // Use logged in user ID if available, otherwise send guest info
+        user_id: user?.id || null,
+        name: user ? user.name : formData.name,
+        email: user ? user.email : formData.email,
+        phone: formData.phone, // Phone is usually required regardless
+
+        frequency: formData.frequency,
+        commute_time: formData.commute_time,
+        pickup_lat: formData.pickup.lat,
+        pickup_lng: formData.pickup.lng,
+        dropoff_lat: formData.dropoff.lat,
+        dropoff_lng: formData.dropoff.lng,
+      };
+      //console.log("Submitting Ride Request:", payload);
+      onSubmit(payload);
     }
   };
 
-  const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (isSubmitted) {
-      // Re-validate field on change if user already tried to submit
-      setTimeout(() => validate(), 0);
-    }
-  };
-
-  const inputClasses = (field: keyof FormErrors) => `
+  const inputClasses = (hasError: boolean) => `
     w-full px-5 py-4 border rounded-xl outline-none transition-all 
-    ${
-      errors[field]
-        ? "border-rose-500 bg-rose-50 focus:ring-rose-200"
-        : "border-stone-200 bg-stone-50 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:bg-white"
-    }
+    ${hasError ? "border-rose-500 bg-rose-50" : "border-stone-200 bg-stone-50 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:bg-white"}
     text-stone-800
   `;
 
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-2xl border border-stone-100 overflow-visible animate-fade-in-up">
-      <div className="bg-brand px-8 py-10 text-center rounded-t-2xl">
-        <h2 className="text-3xl md:text-4xl font-display font-medium text-white mb-2">
-          Request/View Route
+    <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-2xl border border-stone-100 overflow-hidden animate-fade-in-up">
+      {/* Header */}
+      <div className="bg-brand px-8 py-8 text-center">
+        <h2 className="text-3xl font-display font-medium text-white mb-2">
+          Request Route
         </h2>
-        <p className="text-brand-50 text-sm md:text-base font-light">
-          Tell us your commute details and we'll help you find the perfect
-          community match.
-        </p>
+        <div className="flex justify-center gap-2 mt-4">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className={`h-2 w-12 rounded-full transition-all ${step >= i ? "bg-white" : "bg-white/30"}`}
+            />
+          ))}
+        </div>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="p-8 md:p-12 space-y-6"
-        noValidate
-      >
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label
-              className={`flex items-center gap-2 text-xs font-bold uppercase tracking-widest ml-1 ${errors.name ? "text-rose-500" : "text-stone-500"}`}
-            >
-              <User className="w-3 h-3" /> Name
-            </label>
-            <input
-              type="text"
-              className={inputClasses("name")}
-              placeholder="Your full name"
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-            />
-            {errors.name && (
-              <p className="text-rose-500 text-xs ml-1 flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" /> {errors.name}
-              </p>
+      <div className="p-8 md:p-12">
+        <div className="h-[480px] flex flex-col pr-2">
+          {/* STEP 1: Details */}
+          {step === 1 && (
+            <div className="space-y-6 animate-fade-in overflow-y-auto pr-2">
+              {user ? (
+                <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-center gap-3">
+                  <div className="bg-emerald-100 p-2 rounded-full text-emerald-600">
+                    <CheckCircle2 size={20} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-emerald-900">
+                      Recognized as {user.name}
+                    </p>
+                    <p className="text-xs text-emerald-700">{user.email}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        className={inputClasses(!!errors.name)}
+                        value={formData.name}
+                        onChange={(e) => updateField("name", e.target.value)}
+                      />
+                      {errors.name && (
+                        <p className="text-rose-500 text-xs">{errors.name}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
+                        Phone
+                      </label>
+                      <input
+                        type="tel"
+                        className={inputClasses(!!errors.phone)}
+                        value={formData.phone}
+                        onChange={(e) => updateField("phone", e.target.value)}
+                      />
+                      {errors.phone && (
+                        <p className="text-rose-500 text-xs">{errors.phone}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      className={inputClasses(!!errors.email)}
+                      value={formData.email}
+                      onChange={(e) => updateField("email", e.target.value)}
+                    />
+                    {errors.email && (
+                      <p className="text-rose-500 text-xs">{errors.email}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Shared Fields */}
+              <div className="grid md:grid-cols-2 gap-6 pt-2">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
+                    Frequency
+                  </label>
+                  <select
+                    className={inputClasses(!!errors.frequency)}
+                    value={formData.frequency}
+                    onChange={(e) => updateField("frequency", e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="occasional">Occasional</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
+                    Time of Commute
+                  </label>
+                  <input
+                    type="datetime-local"
+                    className={inputClasses(!!errors.commute_time)}
+                    value={formData.commute_time}
+                    onChange={(e) =>
+                      updateField("commute_time", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: Pickup Map */}
+          {step === 2 && (
+            <div className="animate-fade-in flex-1 flex flex-col">
+              <MapPicker
+                label="Pickup Location"
+                onLocationSelect={(lat, lng) =>
+                  updateField("pickup", { lat, lng })
+                }
+              />
+              {errors.map && (
+                <p className="text-rose-500 text-center mt-2 font-bold">
+                  {errors.map}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* STEP 3: Dropoff Map */}
+          {step === 3 && (
+            <div className="animate-fade-in flex-1 flex flex-col">
+              <MapPicker
+                label="Dropoff Location"
+                onLocationSelect={(lat, lng) =>
+                  updateField("dropoff", { lat, lng })
+                }
+              />
+              {errors.map && (
+                <p className="text-rose-500 text-center mt-2 font-bold">
+                  {errors.map}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Footer Controls */}
+          <div className="flex justify-between items-center pt-8 mt-auto border-t border-stone-100">
+            {step === 1 ? (
+              <button
+                onClick={onCancel}
+                className="text-stone-400 hover:text-stone-600 font-bold uppercase text-sm"
+              >
+                Cancel
+              </button>
+            ) : (
+              <button
+                onClick={handleBack}
+                className="flex items-center gap-2 text-stone-500 hover:text-brand font-bold uppercase text-sm"
+              >
+                <ArrowLeft size={16} /> Back
+              </button>
+            )}
+
+            {step < 3 ? (
+              <button
+                onClick={handleNext}
+                className="bg-brand hover:bg-brand-dark text-white px-8 py-3 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg transition-all"
+              >
+                Next Step <ArrowRight size={16} />
+              </button>
+            ) : (
+              <button
+                onClick={handleFinalSubmit}
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg transition-all"
+              >
+                Submit Request <Send size={16} />
+              </button>
             )}
           </div>
-          <div className="space-y-2">
-            <label
-              className={`flex items-center gap-2 text-xs font-bold uppercase tracking-widest ml-1 ${errors.phone ? "text-rose-500" : "text-stone-500"}`}
-            >
-              <Phone className="w-3 h-3" /> Phone Number
-            </label>
-            <input
-              type="tel"
-              className={inputClasses("phone")}
-              placeholder="+1 (555) 000-0000"
-              value={formData.phone}
-              onChange={(e) => handleChange("phone", e.target.value)}
-            />
-            {errors.phone && (
-              <p className="text-rose-500 text-xs ml-1 flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" /> {errors.phone}
-              </p>
-            )}
-          </div>
         </div>
-
-        <div className="space-y-2">
-          <label
-            className={`flex items-center gap-2 text-xs font-bold uppercase tracking-widest ml-1 ${errors.email ? "text-rose-500" : "text-stone-500"}`}
-          >
-            <Mail className="w-3 h-3" /> Email Address
-          </label>
-          <input
-            type="email"
-            className={inputClasses("email")}
-            placeholder="email@example.com"
-            value={formData.email}
-            onChange={(e) => handleChange("email", e.target.value)}
-          />
-          {errors.email && (
-            <p className="text-rose-500 text-xs ml-1 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" /> {errors.email}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <label
-            className={`flex items-center gap-2 text-xs font-bold uppercase tracking-widest ml-1 ${errors.frequency ? "text-rose-500" : "text-stone-500"}`}
-          >
-            <Clock className="w-3 h-3" /> Frequency of Commute
-          </label>
-          <select
-            className={inputClasses("frequency")}
-            value={formData.frequency}
-            onChange={(e) => handleChange("frequency", e.target.value)}
-          >
-            <option value="" disabled>
-              Select frequency
-            </option>
-            <option value="daily">Daily (Mon-Fri)</option>
-            <option value="flexible">Flexible / Hybrid</option>
-            <option value="occasional">Occasional</option>
-            <option value="weekends">Weekends only</option>
-          </select>
-          {errors.frequency && (
-            <p className="text-rose-500 text-xs ml-1 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" /> {errors.frequency}
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col-reverse md:flex-row justify-end gap-4 pt-8 border-t border-stone-100">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-8 py-4 text-stone-500 font-bold uppercase tracking-widest hover:text-brand hover:bg-stone-50 rounded-xl transition-all active:scale-95"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="px-10 py-4 bg-brand text-white font-bold uppercase tracking-widest rounded-xl hover:bg-brand-dark transition-all shadow-lg hover:shadow-brand/20 flex items-center justify-center gap-3 active:scale-95"
-          >
-            Submit Request <Send className="w-4 h-4" />
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   );
 };

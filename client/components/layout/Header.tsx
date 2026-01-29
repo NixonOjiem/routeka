@@ -43,18 +43,6 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
         </div>
 
         <nav className="flex items-center space-x-6">
-          {/* Navigation links based on your view state */}
-          {/* <button
-            onClick={() => onViewChange("home")}
-            className={
-              currentView === "home"
-                ? "text-[#3E6272] font-bold"
-                : "text-gray-600"
-            }
-          >
-            Home
-          </button> */}
-          {/* Navigation */}
           <nav className="hidden md:flex items-center gap-1">
             <button
               onClick={() => onViewChange("home")}
@@ -67,6 +55,12 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 transform active:scale-95 ${currentView === "request" ? "text-brand bg-stone-100 shadow-inner" : "text-stone-500 hover:text-brand hover:bg-stone-50"}`}
             >
               Request/View Route
+            </button>
+            <button
+              onClick={() => navigate("/rides")}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 transform active:scale-95 ${currentView === "request" ? "text-brand bg-stone-100 shadow-inner" : "text-stone-500 hover:text-brand hover:bg-stone-50"}`}
+            >
+              Rides
             </button>
           </nav>
 
