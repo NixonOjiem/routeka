@@ -11,6 +11,7 @@ import {
   ClockIcon,
   UsersIcon,
   FilterIcon,
+  SearchIcon
 } from "@heroicons/react/outline";
 
 const RideGroupsPage: React.FC = () => {
@@ -56,7 +57,7 @@ const RideGroupsPage: React.FC = () => {
     // Filter by chat availability
     if (filters.hasChat === "hasChat") {
       filtered = filtered.filter((group) => group.chat_room_id !== null);
-    } else if (filters.hasChat === "noChat") {
+    } else if (filters.hasChat === "solo") {
       filtered = filtered.filter((group) => group.chat_room_id === null);
     }
 
@@ -119,64 +120,80 @@ const RideGroupsPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <div className="flex items-center mb-4">
-          <FilterIcon className="h-5 w-5 text-gray-500 mr-2" />
-          <h3 className="font-medium text-gray-900">Filter Groups</h3>
+{/* Creative Filter Deck */}
+<div className="bg-[#ffffff] border border-slate-200 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] overflow-hidden">
+  <div className="flex flex-col lg:flex-row items-stretch">
+    
+    {/* Section 1: The Search Command */}
+    <div className="grow p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-slate-100">
+      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-2 px-1">
+        Discovery Search
+      </label>
+      <div className="relative group">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <SearchIcon className="h-5 w-5 text-slate-300 group-focus-within:text-slate-500 transition-colors" />
         </div>
+        <input
+          type="text"
+          placeholder="Filter by grid (e.g. 40_74) or rider name..."
+          value={filters.searchQuery}
+          onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
+          className="block w-full pl-11 pr-4 py-3 bg-slate-50 outline-none border-none rounded-xl text-sm text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-slate-500/20 focus:bg-white transition-all"
+        />
+      </div>
+    </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Minimum Members
-            </label>
-            <select
-              value={filters.minMembers}
-              onChange={(e) =>
-                setFilters({ ...filters, minMembers: Number(e.target.value) })
-              }
-              className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value={0}>Any size</option>
-              <option value={2}>2+ members</option>
-              <option value={3}>3+ members</option>
-              <option value={5}>5+ members</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Chat Availability
-            </label>
-            <select
-              value={filters.hasChat}
-              onChange={(e) =>
-                setFilters({ ...filters, hasChat: e.target.value })
-              }
-              className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="all">All groups</option>
-              <option value="hasChat">With chat room</option>
-              <option value="noChat">Without chat room</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Search
-            </label>
-            <input
-              type="text"
-              placeholder="Search by grid or name..."
-              value={filters.searchQuery}
-              onChange={(e) =>
-                setFilters({ ...filters, searchQuery: e.target.value })
-              }
-              className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
+    {/* Section 2: Capacity Filter */}
+    <div className="w-full lg:w-64 p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-slate-100 bg-slate-50/30">
+      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-2 px-1">
+        Group Capacity
+      </label>
+      <div className="relative">
+        <select
+          value={filters.minMembers}
+          onChange={(e) => setFilters({ ...filters, minMembers: Number(e.target.value) })}
+          className="appearance-none w-full bg-white border border-slate-200 rounded-xl py-3 pl-4 pr-10 text-sm font-medium text-slate-600 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all cursor-pointer"
+        >
+          <option value={0}>Any Size</option>
+          <option value={2}>2+ Members</option>
+          <option value={3}>3+ Members</option>
+          <option value={5}>5+ Members</option>
+        </select>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+          <UsersIcon className="h-4 w-4" />
         </div>
       </div>
+    </div>
+
+    {/* Section 3: Connection Filter */}
+    <div className="w-full lg:w-72 p-4 lg:p-6 flex flex-col justify-center">
+      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-3 px-1">
+        Communication
+      </label>
+      <div className="flex bg-slate-100 p-1 rounded-xl">
+        {[
+          { id: 'all', label: 'All', icon: null },
+          { id: 'hasChat', label: 'Group', icon: ChatAlt2Icon },
+          { id: 'noChat', label: 'Solo', icon: null },
+        ].map((option) => (
+          <button
+            key={option.id}
+            onClick={() => setFilters({ ...filters, hasChat: option.id })}
+            className={`flex-1 flex items-center justify-center space-x-1 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all ${
+              filters.hasChat === option.id
+                ? 'bg-white text-slate-600 shadow-sm ring-1 ring-black/5'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            {option.icon && <option.icon className="h-3 w-3" />}
+            <span>{option.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+
+  </div>
+</div>
 
       {/* Groups Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -297,7 +314,7 @@ const RideGroupsPage: React.FC = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-indigo-600">
+            <div className="text-2xl font-bold text-slate-600">
               {groups.length}
             </div>
             <div className="text-sm text-gray-600">Total Groups</div>

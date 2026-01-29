@@ -1,3 +1,4 @@
+// src/pages/ChatPage.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -8,8 +9,9 @@ import { toast } from "react-toastify";
 import {
   ArrowLeftIcon,
   PaperAirplaneIcon,
-  UserCircleIcon,
   ClockIcon,
+  ShieldCheckIcon,
+  DotsVerticalIcon,
 } from "@heroicons/react/outline";
 
 const ChatPage: React.FC = () => {
@@ -21,7 +23,6 @@ const ChatPage: React.FC = () => {
     (state: RootState) => state.auth,
   );
 
-  // Persistence for Guest ID if not in Redux
   const [localGuestId] = useState(() => {
     const stored = localStorage.getItem("chat_guest_id");
     if (stored) return stored;
@@ -66,7 +67,6 @@ const ChatPage: React.FC = () => {
     };
   }, [roomId]);
 
-  // Auto-scroll logic
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -94,9 +94,7 @@ const ChatPage: React.FC = () => {
 
   const handleIncomingMessage = (incoming: ChatMessage) => {
     setMessages((prev) => {
-      // Avoid duplicate if we already added it via the Send button (optimistic/sync)
       if (prev.find((m) => m.id === incoming.id)) return prev;
-
       const messageWithFlag = {
         ...incoming,
         is_current_user: String(incoming.sender_id) === String(currentUserId),
@@ -113,127 +111,139 @@ const ChatPage: React.FC = () => {
     setNewMessage("");
 
     try {
-      // 1. Prepare the config with the Guest ID header
-      const config = {
-        headers: { "X-Guest-ID": currentUserId },
-      };
-
-      // 2. Pass config as the THIRD argument (after message and type)
-      const response = await apiService.sendMessage(
-        roomId!,
-        textToSend,
-        "text",
-        config,
-      );
+      const config = { headers: { "X-Guest-ID": currentUserId } };
+      const response = await apiService.sendMessage(roomId!, textToSend, "text", config);
       const sentMessage = response.data.message;
 
-      // 3. Update local state
       setMessages((prev) => {
-        // Check if the message already exists (to prevent duplicates from Echo)
         if (prev.some((m) => m.id === sentMessage.id)) return prev;
-
         return [...prev, { ...sentMessage, is_current_user: true }];
       });
 
       inputRef.current?.focus();
     } catch (error) {
       toast.error("Failed to send message");
-      setNewMessage(textToSend); // Restore text so user doesn't lose it
+      setNewMessage(textToSend);
     }
   };
 
   const isCurrentUserMessage = (msg: ChatMessage) => {
-    return (
-      msg.is_current_user || String(msg.sender_id) === String(currentUserId)
-    );
+    return msg.is_current_user || String(msg.sender_id) === String(currentUserId);
   };
 
   if (isLoading)
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="flex flex-col justify-center items-center h-[80vh] space-y-4">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-slate-100 border-t-slate-600 rounded-full animate-spin"></div>
+        </div>
+        <p className="text-slate-400 font-medium animate-pulse">Syncing encrypted chat...</p>
       </div>
     );
 
   return (
-    <div className="max-w-4xl mx-auto p-2 md:p-4">
-      {/* Header */}
-      <div className="bg-white rounded-t-lg shadow-md p-4 flex items-center justify-between">
-        <div className="flex items-center">
+    <div className="max-w-5xl mx-auto h-[calc(100vh-120px)] flex flex-col bg-slate-50/50 rounded-3xl overflow-hidden border border-white shadow-2xl">
+      {/* Refined Glass Header */}
+      <div className="bg-white/80 backdrop-blur-md border-b border-slate-100 p-4 flex items-center justify-between z-10">
+        <div className="flex items-center space-x-4">
           <button
             onClick={() => navigate("/rides")}
-            className="mr-4 p-2 hover:bg-gray-100 rounded-full"
+            className="p-2.5 bg-slate-50 hover:bg-white hover:shadow-sm text-slate-600 rounded-xl transition-all"
           >
-            <ArrowLeftIcon className="h-5 w-5 text-gray-600" />
+            <ArrowLeftIcon className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-xl font-semibold">
-              {roomInfo?.name || "Chat Room"}
-            </h1>
-            <p className="text-xs text-gray-500">
-              {senderName} • {roomInfo?.member_count || 0} members
+            <div className="flex items-center space-x-2">
+              <h1 className="text-lg font-bold text-slate-800 tracking-tight">
+                {roomInfo?.name || "Ride Group Chat"}
+              </h1>
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            </div>
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest flex items-center">
+              <ShieldCheckIcon className="h-3 w-3 mr-1 text-emerald-500" />
+              {roomInfo?.member_count || 0} Members Active
             </p>
           </div>
         </div>
-        <div className="hidden md:block text-sm text-gray-400">
-          <ClockIcon className="h-4 w-4 inline mr-1" /> Real-time
+        
+        <div className="flex items-center space-x-3">
+           <div className="hidden md:flex flex-col items-end mr-2">
+             <span className="text-[10px] font-bold text-slate-400 uppercase">Your Alias</span>
+             <span className="text-xs font-bold text-slate-600">{senderName}</span>
+           </div>
+           <button className="p-2 text-slate-400 hover:text-slate-600">
+             <DotsVerticalIcon className="h-5 w-5" />
+           </button>
         </div>
       </div>
 
-      {/* Messages Window */}
-      <div className="bg-white shadow-md h-125 flex flex-col border-t">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-gray-400">
-              No messages yet. Say hi!
-            </div>
-          ) : (
-            messages.map((msg, idx) => {
-              const isMe = isCurrentUserMessage(msg);
-              return (
-                <div
-                  key={msg.id || idx}
-                  className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-                >
+      {/* Messages Canvas */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed">
+        {messages.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center space-y-3 opacity-40">
+            <div className="p-4 bg-white rounded-full shadow-inner text-4xl">💬</div>
+            <p className="font-medium text-slate-500">The journey starts with "Hello"</p>
+          </div>
+        ) : (
+          messages.map((msg, idx) => {
+            const isMe = isCurrentUserMessage(msg);
+            return (
+              <div
+                key={msg.id || idx}
+                className={`flex w-full animate-in fade-in slide-in-from-bottom-2 ${isMe ? "justify-end" : "justify-start"}`}
+              >
+                <div className={`flex flex-col space-y-1 ${isMe ? "items-end" : "items-start"} max-w-[75%]`}>
+                  {!isMe && (
+                    <span className="ml-2 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                      {msg.sender_name}
+                    </span>
+                  )}
                   <div
-                    className={`max-w-[80%] rounded-lg p-3 ${isMe ? "bg-brand text-white rounded-br-none" : "bg-gray-100 text-gray-900 rounded-bl-none"}`}
+                    className={`relative px-4 py-3 shadow-sm ${
+                      isMe
+                        ? "bg-brand text-white rounded-2xl rounded-tr-none"
+                        : "bg-white text-slate-700 rounded-2xl rounded-tl-none border border-slate-100"
+                    }`}
                   >
-                    <div className="flex items-baseline space-x-2 mb-1">
-                      <span
-                        className={`text-[10px] font-bold uppercase ${isMe ? "text-indigo-200" : "text-gray-500"}`}
-                      >
-                        {msg.sender_name} {isMe && "(You)"}
-                      </span>
+                    <p className="text-sm leading-relaxed">{msg.message}</p>
+                    <div className={`text-[9px] mt-1 opacity-50 flex items-center ${isMe ? "justify-end" : "justify-start"}`}>
+                      <ClockIcon className="h-2.5 w-2.5 mr-1" />
+                      {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
-                    <p className="text-sm">{msg.message}</p>
                   </div>
                 </div>
-              );
-            })
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+              </div>
+            );
+          })
+        )}
+        <div ref={messagesEndRef} />
+      </div>
 
-        {/* Input */}
-        <form onSubmit={sendMessage} className="border-t p-4 bg-gray-50">
-          <div className="flex space-x-2">
-            <input
-              ref={inputRef}
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand outline-none"
-            />
-            <button
-              type="submit"
-              disabled={!newMessage.trim()}
-              className="bg-brand hover:bg-[#546269] disabled:bg-gray-300 text-white px-5 rounded-lg transition-colors"
-            >
-              <PaperAirplaneIcon className="h-5 w-5 rotate-90" />
-            </button>
-          </div>
+      {/* Floating Input Dock */}
+      <div className="p-6 bg-transparent">
+        <form 
+          onSubmit={sendMessage} 
+          className="bg-white p-2 rounded-2xl shadow-xl border border-slate-100 flex items-center space-x-2 focus-within:ring-2 focus-within:ring-slate-500/20 transition-all"
+        >
+          <input
+            ref={inputRef}
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Share an update or say hi..."
+            className="flex-1 outline-none bg-transparent border-none focus:ring-0 text-sm py-3 px-4 text-slate-700 placeholder:text-slate-400"
+          />
+          <button
+            type="submit"
+            disabled={!newMessage.trim()}
+            className="group flex items-center justify-center h-11 w-11 bg-brand hover:bg-slate-700 disabled:bg-slate-200 text-white rounded-xl transition-all shadow-lg shadow-slate-200 disabled:shadow-none"
+          >
+            <PaperAirplaneIcon className="h-5 w-5 rotate-45 group-hover:scale-110 transition-transform" />
+          </button>
         </form>
+        <p className="text-center text-[10px] text-slate-400 mt-3 font-medium uppercase tracking-widest">
+          Messages are private to this ride group
+        </p>
       </div>
     </div>
   );
