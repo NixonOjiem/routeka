@@ -20,7 +20,7 @@
   --animate-blob: blob 7s infinite;
   --animate-fade-in-up: fadeInUp 0.5s ease-out forwards;
   --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  --animate-slide-right: slideRight 0.3s ease-out forwards;
+  /* --animate-slide-right: slideRight 0.3s ease-out forwards; */
   --animate-shimmer: shimmer 8s linear infinite;
   --animate-breathe: breathe 6s ease-in-out infinite;
 

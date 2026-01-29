@@ -100,7 +100,7 @@ export const CategoryGrid = ({ onRequestRoute }: CategoryGridProps) => {
               text-[10px] lg:text-sm font-bold uppercase tracking-wider
               rounded-lg lg:rounded-xl
               group-hover:bg-brand group-hover:text-white group-hover:shadow-lg
-              hover:bg-stone-200
+              hover:bg-brand-dark
               active:scale-95 active:bg-brand-dark active:text-white
               transition-all duration-300 ease-out
               flex items-center justify-center gap-2
