@@ -10,7 +10,6 @@ import {
   LocationMarkerIcon,
   ClockIcon,
   UsersIcon,
-  FilterIcon,
   SearchIcon
 } from "@heroicons/react/outline";
 
@@ -120,80 +119,78 @@ const RideGroupsPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-{/* Creative Filter Deck */}
-<div className="bg-[#ffffff] border border-slate-200 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] overflow-hidden">
-  <div className="flex flex-col lg:flex-row items-stretch">
-    
-    {/* Section 1: The Search Command */}
-    <div className="grow p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-slate-100">
-      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-2 px-1">
-        Discovery Search
-      </label>
-      <div className="relative group">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <SearchIcon className="h-5 w-5 text-slate-300 group-focus-within:text-slate-500 transition-colors" />
+      <div className="bg-[#ffffff] border border-slate-200 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] overflow-hidden">
+        <div className="flex flex-col lg:flex-row items-stretch">
+
+          {/* Section 1: The Search Command */}
+          <div className="grow p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-slate-100">
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-2 px-1">
+              Discovery Search
+            </label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <SearchIcon className="h-5 w-5 text-slate-300 group-focus-within:text-slate-500 transition-colors" />
+              </div>
+              <input
+                type="text"
+                placeholder="Filter by grid (e.g. 40_74) or rider name..."
+                value={filters.searchQuery}
+                onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
+                className="block w-full pl-11 pr-4 py-3 bg-slate-50 outline-none border-none rounded-xl text-sm text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-slate-500/20 focus:bg-white transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Section 2: Capacity Filter */}
+          <div className="w-full lg:w-64 p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-slate-100 bg-slate-50/30">
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-2 px-1">
+              Group Capacity
+            </label>
+            <div className="relative">
+              <select
+                value={filters.minMembers}
+                onChange={(e) => setFilters({ ...filters, minMembers: Number(e.target.value) })}
+                className="appearance-none w-full bg-white border border-slate-200 rounded-xl py-3 pl-4 pr-10 text-sm font-medium text-slate-600 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all cursor-pointer"
+              >
+                <option value={0}>Any Size</option>
+                <option value={2}>2+ Members</option>
+                <option value={3}>3+ Members</option>
+                <option value={5}>5+ Members</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                <UsersIcon className="h-4 w-4" />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Connection Filter */}
+          <div className="w-full lg:w-72 p-4 lg:p-6 flex flex-col justify-center">
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-3 px-1">
+              Communication
+            </label>
+            <div className="flex bg-slate-100 p-1 rounded-xl">
+              {[
+                { id: 'all', label: 'All', icon: null },
+                { id: 'hasChat', label: 'Group', icon: ChatAlt2Icon },
+                { id: 'noChat', label: 'Solo', icon: null },
+              ].map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => setFilters({ ...filters, hasChat: option.id })}
+                  className={`flex-1 flex items-center justify-center space-x-1 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all ${filters.hasChat === option.id
+                      ? 'bg-white text-slate-600 shadow-sm ring-1 ring-black/5'
+                      : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                >
+                  {option.icon && <option.icon className="h-3 w-3" />}
+                  <span>{option.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
         </div>
-        <input
-          type="text"
-          placeholder="Filter by grid (e.g. 40_74) or rider name..."
-          value={filters.searchQuery}
-          onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
-          className="block w-full pl-11 pr-4 py-3 bg-slate-50 outline-none border-none rounded-xl text-sm text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-slate-500/20 focus:bg-white transition-all"
-        />
       </div>
-    </div>
-
-    {/* Section 2: Capacity Filter */}
-    <div className="w-full lg:w-64 p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-slate-100 bg-slate-50/30">
-      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-2 px-1">
-        Group Capacity
-      </label>
-      <div className="relative">
-        <select
-          value={filters.minMembers}
-          onChange={(e) => setFilters({ ...filters, minMembers: Number(e.target.value) })}
-          className="appearance-none w-full bg-white border border-slate-200 rounded-xl py-3 pl-4 pr-10 text-sm font-medium text-slate-600 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all cursor-pointer"
-        >
-          <option value={0}>Any Size</option>
-          <option value={2}>2+ Members</option>
-          <option value={3}>3+ Members</option>
-          <option value={5}>5+ Members</option>
-        </select>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
-          <UsersIcon className="h-4 w-4" />
-        </div>
-      </div>
-    </div>
-
-    {/* Section 3: Connection Filter */}
-    <div className="w-full lg:w-72 p-4 lg:p-6 flex flex-col justify-center">
-      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-3 px-1">
-        Communication
-      </label>
-      <div className="flex bg-slate-100 p-1 rounded-xl">
-        {[
-          { id: 'all', label: 'All', icon: null },
-          { id: 'hasChat', label: 'Group', icon: ChatAlt2Icon },
-          { id: 'noChat', label: 'Solo', icon: null },
-        ].map((option) => (
-          <button
-            key={option.id}
-            onClick={() => setFilters({ ...filters, hasChat: option.id })}
-            className={`flex-1 flex items-center justify-center space-x-1 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all ${
-              filters.hasChat === option.id
-                ? 'bg-white text-slate-600 shadow-sm ring-1 ring-black/5'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            {option.icon && <option.icon className="h-3 w-3" />}
-            <span>{option.label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-
-  </div>
-</div>
 
       {/* Groups Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -335,7 +332,7 @@ const RideGroupsPage: React.FC = () => {
             <div className="text-2xl font-bold text-purple-600">
               {Math.round(
                 groups.reduce((acc, g) => acc + g.member_count, 0) /
-                  (groups.length || 1),
+                (groups.length || 1),
               )}
             </div>
             <div className="text-sm text-gray-600">Avg. Group Size</div>
