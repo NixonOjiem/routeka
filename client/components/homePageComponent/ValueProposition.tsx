@@ -31,13 +31,13 @@ export const ValueProposition = () => {
       >
         {/* Animated Shimmer Overlay */}
         <div className="absolute inset-0 pointer-events-none z-0">
-          <div className="absolute -inset-full top-0 block h-full w-1/2 -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+          <div className="absolute -inset-full top-0 block h-full w-1/2 -skew-x-12 bg-linear-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
         </div>
 
         {/* Custom Interactive Magnifier Lens */}
         <div
           className={`
-            fixed pointer-events-none z-[60] w-32 h-32 md:w-64 md:h-64 rounded-full 
+            fixed pointer-events-none z-60 w-32 h-32 md:w-64 md:h-64 rounded-full 
             border-[3px] md:border-[6px] border-white/80 shadow-[0_0_50px_rgba(255,255,255,0.4),inset_0_0_20px_rgba(0,0,0,0.1)]
             backdrop-blur-[1px] backdrop-saturate-[1.8] backdrop-contrast-[1.1]
             transition-opacity duration-300 ease-out
