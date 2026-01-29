@@ -64,6 +64,7 @@ public function index(Request $request)
 
         // Get Guest ID from Header (sent by interceptor)
         $guestId = $request->header('X-Guest-ID');
+        Log::info('Detected guest ID: ' . $guestId);
 
         $chatRooms = $this->rideService->getAvailableChatRooms(
             $user ? $user->id : null
@@ -171,7 +172,7 @@ public function index(Request $request)
         }
 
 // inside store(Request $request)
-    Log::info('Request headers', $request->headers->all());
+    Log::info('Request headers for storing rides', $request->headers->all());
 
     //Log::info('Authenticated user:', ['user' => $user]);
     // Validation

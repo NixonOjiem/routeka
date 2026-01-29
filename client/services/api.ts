@@ -137,9 +137,10 @@ export const signout = async () => {
 // Ride and Chat API calls
 export const apiService = {
   // Ride endpoints
-  getGroupedRides: () =>
+  getGroupedRides: (config?: any) =>
     api.get<{ groups: RideGroup[]; chat_rooms: ChatRoom[]; user: User | null }>(
       "/rides/groups",
+      config,
     ),
 
   getGriddedRides: (gridSize?: number) =>
