@@ -42,7 +42,7 @@ export const RequestPage: React.FC<RequestPageProps> = ({
 
       // Navigate back to home after a short delay
       const timer = setTimeout(() => {
-        navigate("/");
+        navigate("/rides");
         // Reset the ride request state
         dispatch(clearRideRequestState());
       }, 2000);
@@ -108,7 +108,7 @@ export const RequestPage: React.FC<RequestPageProps> = ({
               </h3>
               <p className="text-stone-500 text-sm leading-relaxed">
                 Your route request has been sent successfully. You'll be
-                redirected to the home page shortly.
+                redirected to the rides page shortly.
               </p>
             </div>
           </div>
