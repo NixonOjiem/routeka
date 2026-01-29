@@ -57,7 +57,7 @@ const RideGroupsPage: React.FC = () => {
     // Filter by chat availability
     if (filters.hasChat === "hasChat") {
       filtered = filtered.filter((group) => group.chat_room_id !== null);
-    } else if (filters.hasChat === "solo") {
+    } else if (filters.hasChat === "noChat") {
       filtered = filtered.filter((group) => group.chat_room_id === null);
     }
 
