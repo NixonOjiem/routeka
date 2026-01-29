@@ -1,12 +1,11 @@
-
-export type ViewState = 'home' | 'request';
-export type NotificationType = 'success' | 'error';
+export type ViewState = "home" | "request";
+export type NotificationType = "success" | "error";
 
 export enum CommunityGroup {
-  UNIVERSITY = 'University',
-  CORPORATE_PARK = 'Corporate Park',
-  NEIGHBORHOOD = 'Neighborhood',
-  RESIDENTIAL = 'Residential Complex'
+  UNIVERSITY = "University",
+  CORPORATE_PARK = "Corporate Park",
+  NEIGHBORHOOD = "Neighborhood",
+  RESIDENTIAL = "Residential Complex",
 }
 
 export interface Driver {
@@ -39,7 +38,7 @@ export interface RouteRequest {
   frequency: string;
   pickup: string;
   dropoff: string;
-  status: 'pending' | 'matched' | 'completed';
+  status: "pending" | "matched" | "completed";
   createdAt: string;
 }
 
