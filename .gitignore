@@ -60,3 +60,4 @@ dist-ssr
 *.env
 *.env.development
 *.log
+*.yml
