@@ -111,7 +111,7 @@ const RideGroupsPage: React.FC = () => {
           </div>
           <button
             onClick={fetchGroups}
-            className="mt-4 md:mt-0 px-4 py-2 bg-[#497487] text-white rounded-md hover:bg-[#546269] text-sm font-medium"
+            className="mt-4 md:mt-0 px-4 py-2 bg-brand text-white rounded-md hover:bg-[#546269] text-sm font-medium"
           >
             Refresh Groups
           </button>
@@ -203,7 +203,7 @@ const RideGroupsPage: React.FC = () => {
                     <h3 className="text-lg font-semibold text-gray-900">
                       {group.group_id.startsWith("group_") ? (
                         <span className="flex items-center">
-                          <UserGroupIcon className="h-5 w-5 text-[#497487] mr-2" />
+                          <UserGroupIcon className="h-5 w-5 text-brand mr-2" />
                           Group Ride
                         </span>
                       ) : (
@@ -276,7 +276,7 @@ const RideGroupsPage: React.FC = () => {
                   {group.chat_room_id ? (
                     <Link
                       to={`/chat/${group.chat_room_id}`}
-                      className="inline-flex items-center px-4 py-2 bg-[#497487] text-white text-sm font-medium rounded-md hover:bg-[#546269]"
+                      className="inline-flex items-center px-4 py-2 bg-brand text-white text-sm font-medium rounded-md hover:bg-[#546269]"
                     >
                       <ChatAlt2Icon className="h-4 w-4 mr-2" />
                       Join Chat
