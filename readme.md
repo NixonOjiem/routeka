@@ -166,14 +166,16 @@ npm run dev
 
 ### 🌐 Hosting & Deployment
 
-Backend (Server)
+#### Backend (Server)
+
 Requirements: A VPS (DigitalOcean, AWS, or Laravel Forge) with a process manager like Supervisor.
 
 Supervisor Config: You must keep reverb:start and queue:listen running as background processes.
 
 SSL: WebSockets require wss:// for production. Use Nginx as a reverse proxy to handle SSL termination.
 
-Frontend (Static Hosting)
+#### Frontend (Static Hosting)
+
 Platforms: Vercel, Netlify, or GitHub Pages.
 
 Build: Run npm run build and point the hosting provider to the dist folder.
@@ -189,16 +191,3 @@ VITE_API_URL=http://localhost:8000/api
 VITE_REVERB_HOST=localhost
 VITE_REVERB_PORT=8080
 VITE_REVERB_SCHEME=http
-
-🤝 Contributing
-Contributions make the open-source community an amazing place to learn, inspire, and create.
-
-Fork the Project.
-
-Create your Feature Branch (git checkout -b feature/AmazingFeature).
-
-Commit your Changes (git commit -m 'Add some AmazingFeature').
-
-Push to the Branch (git push origin feature/AmazingFeature).
-
-Open a Pull Request.
