@@ -60,6 +60,7 @@ export interface RideGroupMember {
   user_name: string;
   pickup: RideLocation;
   dropoff: RideLocation;
+  guest_id: string | null;
 }
 
 export interface RideGroup {

@@ -20,39 +20,6 @@ class RideRequestController extends Controller
     }
 
     // 2. Fetch Grouped Data (For Admin or "My Matches" view)
-//      public function index()
-// {
-//     try {
-//         $groupedRides = $this->rideService->getGroupedRides();
-
-//         // Check if user is logged in via JWT
-//         $user = Auth::guard('api')->user();
-
-//         $chatRooms = $this->rideService->getAvailableChatRooms(
-//             $user ? $user->id : null
-//         );
-
-//         return response()->json([
-//             'success' => true,
-//             'groups' => $groupedRides,
-//             'chat_rooms' => $chatRooms,
-//             'user' => $user ? [
-//                 'id' => $user->id,
-//                 'name' => $user->name
-//             ] : null
-//         ]);
-
-//     } catch (\Exception $e) {
-//         Log::error('Error in RideRequestController index: ' . $e->getMessage());
-
-//         return response()->json([
-//             'success' => false,
-//             'message' => 'Failed to load ride groups',
-//             'groups' => [],
-//             'chat_rooms' => []
-//         ], 500);
-//     }
-// }
 
 public function index(Request $request)
 {
@@ -64,7 +31,7 @@ public function index(Request $request)
 
         // Get Guest ID from Header (sent by interceptor)
         $guestId = $request->header('X-Guest-ID');
-        Log::info('Detected guest ID: ' . $guestId);
+        Log::info('Detected guest ID from index function: ' . $guestId);
 
         $chatRooms = $this->rideService->getAvailableChatRooms(
             $user ? $user->id : null
@@ -173,6 +140,8 @@ public function index(Request $request)
 
 // inside store(Request $request)
     Log::info('Request headers for storing rides', $request->headers->all());
+    $guestId = $request->header('X-Guest-ID');
+    Log::info('Detected guest ID from store function: ' . $guestId);
 
     //Log::info('Authenticated user:', ['user' => $user]);
     // Validation
@@ -211,6 +180,7 @@ public function index(Request $request)
     // Prepare data for saving
     $data = [
         'user_id' => $user ? $user->id : null,
+        'guest_id' => $user ? null : $guestId,
         'guest_name' => $user ? null : $request->input('guest_name'),
         'guest_email' => $user ? $user->email : $request->input('guest_email'),
         'guest_phone' => $user ? null : $request->input('guest_phone'),
@@ -221,6 +191,7 @@ public function index(Request $request)
         'commute_time' => $request->input('commute_time'),
         'frequency' => $request->input('frequency'),
     ];
+    Log::info('Storing ride request data', $data);
 
     $ride = RideRequest::create($data);
 
