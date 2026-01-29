@@ -44,7 +44,7 @@ export const CategoryGrid = ({ onRequestRoute }: CategoryGridProps) => {
   ];
 
   return (
-    <div className="flex flex-col gap-1 md:gap-4 lg:grid lg:grid-cols-2 xl:grid-cols-4 lg:gap-8 relative z-10 max-w-[90rem] mx-auto w-full px-2 md:px-0 mt-4 md:mt-0">
+    <div className="flex flex-col gap-1 md:gap-4 lg:grid lg:grid-cols-2 xl:grid-cols-4 lg:gap-8 relative z-10 max-w-360 mx-auto w-full px-2 md:px-0 mt-4 md:mt-0">
       {categories.map((cat) => (
         <div
           key={cat.id}
