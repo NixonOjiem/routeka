@@ -1,4 +1,3 @@
-// src/pages/RideGroupsPage.tsx
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { apiService, RideGroup } from "../services/api";
