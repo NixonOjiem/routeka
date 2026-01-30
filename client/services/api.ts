@@ -1,4 +1,3 @@
-// src/services/api.ts
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -61,6 +60,7 @@ export interface RideGroupMember {
   user_name: string;
   pickup: RideLocation;
   dropoff: RideLocation;
+  guest_id: string | null;
 }
 
 export interface RideGroup {
@@ -138,9 +138,10 @@ export const signout = async () => {
 // Ride and Chat API calls
 export const apiService = {
   // Ride endpoints
-  getGroupedRides: () =>
+  getGroupedRides: (config?: any) =>
     api.get<{ groups: RideGroup[]; chat_rooms: ChatRoom[]; user: User | null }>(
       "/rides/groups",
+      config,
     ),
 
   getGriddedRides: (gridSize?: number) =>

@@ -1,41 +1,50 @@
-// src/pages/RideGroupsPage.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { apiService, RideGroup } from "../services/api";
+import { apiService, RideGroup, User } from "../services/api";
 import { toast } from "react-toastify";
 import {
   MapIcon,
   UserGroupIcon,
   ChatAlt2Icon,
-  LocationMarkerIcon,
+  // LocationMarkerIcon,
   ClockIcon,
   UsersIcon,
-  SearchIcon
+  SearchIcon,
+  StarIcon,
+  UserIcon,
 } from "@heroicons/react/outline";
+
+// Define Tab Types
+type TabType = "all" | "relevant";
 
 const RideGroupsPage: React.FC = () => {
   const [groups, setGroups] = useState<RideGroup[]>([]);
-  const [filteredGroups, setFilteredGroups] = useState<RideGroup[]>([]);
+  // Use a derived state for the final display list rather than a separate state
   const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType>("all");
+
   const [filters, setFilters] = useState({
     minMembers: 0,
     hasChat: "all",
     searchQuery: "",
   });
 
+  // Get identities from storage
+  const guestId = localStorage.getItem("chat_guest_id");
+
   useEffect(() => {
     fetchGroups();
   }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [groups, filters]);
 
   const fetchGroups = async () => {
     try {
       setIsLoading(true);
       const response = await apiService.getGroupedRides();
       setGroups(response.data.groups);
+      if (response.data.user) {
+        setCurrentUser(response.data.user);
+      }
     } catch (error) {
       toast.error("Failed to load ride groups");
     } finally {
@@ -43,38 +52,60 @@ const RideGroupsPage: React.FC = () => {
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...groups];
+  // Helper to check if a specific group belongs to the current user/guest
+  const isGroupRelevant = (group: RideGroup) => {
+    return group.members.some((member) => {
+      // 1. Check by Auth User ID
+      if (currentUser && member.user_id === currentUser.id) return true;
 
-    // Filter by member count
+      // 2. Check by Guest ID (Assuming chat_guest_id matches the Ride Request ID)
+      // We convert both to strings to ensure loose matching (e.g. "5" vs 5)
+      if (guestId && String(member.guest_id) === String(guestId)) return true;
+
+      return false;
+    });
+  };
+
+  // Process groups: Filter -> Sort (Relevant first) -> Tab Filter
+  const displayedGroups = useMemo(() => {
+    let processed = [...groups];
+
+    // 1. Apply Standard Filters (Search, Members, etc)
     if (filters.minMembers > 0) {
-      filtered = filtered.filter(
-        (group) => group.member_count >= filters.minMembers,
-      );
+      processed = processed.filter((g) => g.member_count >= filters.minMembers);
     }
-
-    // Filter by chat availability
     if (filters.hasChat === "hasChat") {
-      filtered = filtered.filter((group) => group.chat_room_id !== null);
+      processed = processed.filter((g) => g.chat_room_id !== null);
     } else if (filters.hasChat === "noChat") {
-      filtered = filtered.filter((group) => group.chat_room_id === null);
+      processed = processed.filter((g) => g.chat_room_id === null);
     }
-
-    // Filter by search query
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (group) =>
-          group.pickup_grid.toLowerCase().includes(query) ||
-          group.dropoff_grid.toLowerCase().includes(query) ||
-          group.members.some((member) =>
-            member.user_name.toLowerCase().includes(query),
-          ),
+      processed = processed.filter(
+        (g) =>
+          g.pickup_grid.toLowerCase().includes(query) ||
+          g.dropoff_grid.toLowerCase().includes(query) ||
+          g.members.some((m) => m.user_name.toLowerCase().includes(query)),
       );
     }
 
-    setFilteredGroups(filtered);
-  };
+    // 2. Sort: Relevant groups go to the TOP
+    processed.sort((a, b) => {
+      const aRel = isGroupRelevant(a);
+      const bRel = isGroupRelevant(b);
+      // If a is relevant and b is not, a comes first (-1)
+      if (aRel && !bRel) return -1;
+      if (!aRel && bRel) return 1;
+      return 0;
+    });
+
+    // 3. Tab Filtering
+    if (activeTab === "relevant") {
+      processed = processed.filter((g) => isGroupRelevant(g));
+    }
+
+    return processed;
+  }, [groups, filters, activeTab, currentUser, guestId]);
 
   const getGridDetails = (grid: string) => {
     const [lat, lng] = grid.split("_").map(Number);
@@ -104,10 +135,7 @@ const RideGroupsPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Ride Groups</h1>
-            <p className="text-gray-600 mt-1">
-              Groups are automatically created based on 1-mile proximity in both
-              pickup and dropoff locations
-            </p>
+            <p className="text-gray-600 mt-1">Find your travel companions</p>
           </div>
           <button
             onClick={fetchGroups}
@@ -116,12 +144,45 @@ const RideGroupsPage: React.FC = () => {
             Refresh Groups
           </button>
         </div>
+
+        {/* --- NEW TABS SECTION --- */}
+        <div className="mt-6 border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`${
+                activeTab === "all"
+                  ? "border-[#497487] text-[#497487]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+            >
+              All Groups
+              <span className="ml-2 bg-gray-100 text-gray-600 py-0.5 px-2.5 rounded-full text-xs">
+                {groups.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("relevant")}
+              className={`${
+                activeTab === "relevant"
+                  ? "border-[#497487] text-[#497487]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+            >
+              <StarIcon className="w-4 h-4 mr-1" />
+              My Relevant Rides
+              <span className="ml-2 bg-[#497487] text-white py-0.5 px-2.5 rounded-full text-xs">
+                {groups.filter(isGroupRelevant).length}
+              </span>
+            </button>
+          </nav>
+        </div>
       </div>
 
       {/* Filters */}
       <div className="bg-[#ffffff] border border-slate-200 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] overflow-hidden">
         <div className="flex flex-col lg:flex-row items-stretch">
-
           {/* Section 1: The Search Command */}
           <div className="grow p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-slate-100">
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-2 px-1">
@@ -135,7 +196,9 @@ const RideGroupsPage: React.FC = () => {
                 type="text"
                 placeholder="Filter by grid (e.g. 40_74) or rider name..."
                 value={filters.searchQuery}
-                onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
+                onChange={(e) =>
+                  setFilters({ ...filters, searchQuery: e.target.value })
+                }
                 className="block w-full pl-11 pr-4 py-3 bg-slate-50 outline-none border-none rounded-xl text-sm text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-slate-500/20 focus:bg-white transition-all"
               />
             </div>
@@ -149,7 +212,9 @@ const RideGroupsPage: React.FC = () => {
             <div className="relative">
               <select
                 value={filters.minMembers}
-                onChange={(e) => setFilters({ ...filters, minMembers: Number(e.target.value) })}
+                onChange={(e) =>
+                  setFilters({ ...filters, minMembers: Number(e.target.value) })
+                }
                 className="appearance-none w-full bg-white border border-slate-200 rounded-xl py-3 pl-4 pr-10 text-sm font-medium text-slate-600 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all cursor-pointer"
               >
                 <option value={0}>Any Size</option>
@@ -170,17 +235,18 @@ const RideGroupsPage: React.FC = () => {
             </label>
             <div className="flex bg-slate-100 p-1 rounded-xl">
               {[
-                { id: 'all', label: 'All', icon: null },
-                { id: 'hasChat', label: 'Group', icon: ChatAlt2Icon },
-                { id: 'noChat', label: 'Solo', icon: null },
+                { id: "all", label: "All", icon: null },
+                { id: "hasChat", label: "Group", icon: ChatAlt2Icon },
+                { id: "noChat", label: "Solo", icon: null },
               ].map((option) => (
                 <button
                   key={option.id}
                   onClick={() => setFilters({ ...filters, hasChat: option.id })}
-                  className={`flex-1 flex items-center justify-center space-x-1 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all ${filters.hasChat === option.id
-                      ? 'bg-white text-slate-600 shadow-sm ring-1 ring-black/5'
-                      : 'text-slate-500 hover:text-slate-700'
-                    }`}
+                  className={`flex-1 flex items-center justify-center space-x-1 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all ${
+                    filters.hasChat === option.id
+                      ? "bg-white text-slate-600 shadow-sm ring-1 ring-black/5"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
                 >
                   {option.icon && <option.icon className="h-3 w-3" />}
                   <span>{option.label}</span>
@@ -188,24 +254,29 @@ const RideGroupsPage: React.FC = () => {
               ))}
             </div>
           </div>
-
         </div>
       </div>
 
       {/* Groups Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredGroups.length === 0 ? (
+        {displayedGroups.length === 0 ? (
           <div className="col-span-2 bg-white rounded-lg shadow-md p-8 text-center">
-            <div className="text-4xl mb-4">🚗</div>
+            <div className="text-4xl mb-4">
+              {activeTab === "relevant" ? "🔍" : "🚗"}
+            </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No groups found
+              {activeTab === "relevant"
+                ? "No relevant rides found"
+                : "No groups found"}
             </h3>
             <p className="text-gray-600">
-              Try adjusting your filters or check back later for new ride groups
+              {activeTab === "relevant"
+                ? "We couldn't find a group containing your request. Try creating a ride request first."
+                : "Try adjusting your filters or check back later."}
             </p>
           </div>
         ) : (
-          filteredGroups.map((group) => (
+          displayedGroups.map((group) => (
             <div
               key={group.group_id}
               className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
@@ -232,46 +303,32 @@ const RideGroupsPage: React.FC = () => {
                       Created recently
                     </div>
                   </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${getDistanceColor(group.member_count)}`}
-                  >
-                    {group.member_count}{" "}
-                    {group.member_count === 1 ? "rider" : "riders"}
-                  </span>
-                </div>
-
-                {/* Route Information */}
-                <div className="mb-4">
-                  <div className="flex items-center text-sm text-gray-700 mb-2">
-                    <LocationMarkerIcon className="h-4 w-4 mr-2 text-green-600" />
-                    <span className="font-medium">Pickup:</span>
-                    <span className="ml-2">
-                      {getGridDetails(group.pickup_grid)}
-                    </span>
-                  </div>
-                  <div className="flex items-center text-sm text-gray-700">
-                    <LocationMarkerIcon className="h-4 w-4 mr-2 text-red-600" />
-                    <span className="font-medium">Dropoff:</span>
-                    <span className="ml-2">
-                      {getGridDetails(group.dropoff_grid)}
-                    </span>
-                  </div>
                 </div>
 
                 {/* Members */}
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-gray-900 mb-2">
-                    Riders in this group:
+                    Riders:
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {group.members.slice(0, 3).map((member, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                      >
-                        {member.user_name}
-                      </span>
-                    ))}
+                    {group.members.slice(0, 3).map((member, index) => {
+                      const isMe =
+                        (currentUser && member.user_id === currentUser.id) ||
+                        (guestId && String(member.id) === String(guestId));
+
+                      return (
+                        <span
+                          key={index}
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            isMe
+                              ? "bg-[#497487] text-white ring-2 ring-offset-1 ring-[#497487]"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {member.user_name} {isMe && "(You)"}
+                        </span>
+                      );
+                    })}
                     {group.member_count > 3 && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800">
                         +{group.member_count - 3} more
@@ -332,7 +389,7 @@ const RideGroupsPage: React.FC = () => {
             <div className="text-2xl font-bold text-purple-600">
               {Math.round(
                 groups.reduce((acc, g) => acc + g.member_count, 0) /
-                (groups.length || 1),
+                  (groups.length || 1),
               )}
             </div>
             <div className="text-sm text-gray-600">Avg. Group Size</div>
@@ -342,8 +399,5 @@ const RideGroupsPage: React.FC = () => {
     </div>
   );
 };
-
-// Add missing import
-import { UserIcon } from "@heroicons/react/outline";
 
 export default RideGroupsPage;

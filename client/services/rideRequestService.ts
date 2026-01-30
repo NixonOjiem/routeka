@@ -1,5 +1,5 @@
 import axios from "axios";
-
+import { useState } from "react";
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
@@ -33,6 +33,17 @@ export const rideRequestService = {
   /**
    * Submit a ride request to the API
    */
+  /**
+   * Retrieves or generates a Guest ID from localStorage
+   */
+  getOrCreateGuestId() {
+    let guestId = localStorage.getItem("chat_guest_id");
+    if (!guestId) {
+      guestId = Math.random().toString(36).substring(2, 15);
+      localStorage.setItem("chat_guest_id", guestId);
+    }
+    return guestId;
+  },
   async submitRideRequest(data: ApiRideRequestData) {
     try {
       // Transform data to match your API endpoint format
@@ -50,12 +61,16 @@ export const rideRequestService = {
           : (data.guest_phone ?? data.phone ?? ""),
       };
 
+      // Get ID directly from our helper
+      const guestId = this.getOrCreateGuestId();
+
       const response = await axios.post(
         `${API_BASE_URL}/rides/request`,
         payload,
         {
           headers: {
             "Content-Type": "application/json",
+            "X-Guest-ID": guestId,
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         },
