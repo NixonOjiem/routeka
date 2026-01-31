@@ -8,10 +8,12 @@ interface User {
   email?: string;
   phone?: string;
   email_verified_at?: any;
+  user_name?: string;
 }
 
 interface AuthState {
   user: User | null;
+  user_name?: string;
   token: string | null;
   guestId: string;
   isLoading: boolean;

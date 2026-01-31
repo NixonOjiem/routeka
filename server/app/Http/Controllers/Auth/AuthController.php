@@ -42,19 +42,33 @@ class AuthController extends Controller
     // Login
     public function login()
     {
-        $credentials = request(['email', 'password', 'user_name']);
+        // 1. Get the login input (can be email or username) and password
+        $loginData = request()->input('login');
+        $password = request()->input('password');
 
+        // 2. Determine if the input is an email or a username
+        $loginField = filter_var($loginData, FILTER_VALIDATE_EMAIL) ? 'email' : 'user_name';
+
+        // 3. Merge the specific field into the credentials
+        $credentials = [
+            $loginField => $loginData,
+            'password'  => $password,
+        ];
+
+        // 4. Attempt login
         if (! $token = auth('api')->attempt($credentials)) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-        $user = auth('api')->user();
-        if(! $user->hasVerifiedEmail()){
-            #Logout immediately
-            auth('api')->logout();
-            return response()->json([ 'message' => 'Please verify your email before logging in.' ], 403); // 403 Forbidden
+            return response()->json(['message' => 'Unauthorized. Check your credentials.'], 401);
         }
 
-        return $this->respondWithToken($token, auth('api')->user());
+        $user = auth('api')->user();
+
+        // 5. Check Email Verification
+        if(! $user->hasVerifiedEmail()){
+            auth('api')->logout();
+            return response()->json([ 'message' => 'Please verify your email before logging in.' ], 403);
+        }
+
+        return $this->respondWithToken($token, $user, $user->user_name);
     }
 
     // Get Authenticated User
