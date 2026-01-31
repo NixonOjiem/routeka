@@ -87,7 +87,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
           {user ? (
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
-                Hi, <strong>{user.name}</strong>
+                Hi, <strong>{user.user_name}</strong>
               </span>
               <button
                 onClick={onLogout}
