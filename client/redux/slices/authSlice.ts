@@ -7,6 +7,7 @@ interface User {
   name?: string;
   email?: string;
   phone?: string;
+  email_verified_at?: any;
   // add other fields if your API returns them
 }
 
