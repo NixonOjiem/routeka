@@ -32,6 +32,12 @@ class AuthController extends Controller
         ]);
 
         // trigger event to send email
+
+
+        // Use a terminating callback to trigger the event AFTER the response is sent
+        // app()->terminating(function () use ($user) {
+        //     event(new Registered($user));
+        // });
         event(new Registered($user));
         #$token = auth('api')->login($user);
         #return $this->respondWithToken($token, $user);

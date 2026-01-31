@@ -8,12 +8,22 @@ import "./Auth.css";
 
 export const AuthenticationComponent: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
 
-  const location = useLocation();
+  // ✅ 1. Derive state from URL instead of useState
+  // If the URL contains '/signup', isSignUp is true. Otherwise, it defaults to false (signin).
+  const isSignUp = location.pathname === "/signup";
+
   const [verificationMessage, setVerificationMessage] = useState<string | null>(
     null,
   );
+
+  // ✅ 2. Helper function to switch tabs via URL
+  const handleSwitchTab = (mode: "signin" | "signup") => {
+    // We preserve location.search (e.g., ?verified=true) so messages aren't lost when switching tabs
+    navigate(`/${mode}${location.search}`);
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -23,37 +33,34 @@ export const AuthenticationComponent: React.FC = () => {
         "✅ Email verified successfully! You can now log in.",
       );
     }
-
     if (params.get("error") === "invalid_link") {
       setVerificationMessage("❌ Invalid or expired verification link.");
     }
-
     if (params.get("error") === "invalid_user") {
       setVerificationMessage("❌ Invalid user.");
     }
   }, [location.search]);
 
-  // 1. Grab state from Redux
-  const { user, isLoading, isError, message } = useSelector(
+  // 3. Grab state from Redux
+  const { user, isError, message } = useSelector(
     (state: RootState) => state.auth,
   );
 
-  const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
 
-  // 2. Handle Redirect and Cleanup
+  // 4. Handle Redirect and Cleanup
   useEffect(() => {
     if (user) {
-      navigate("/"); // Redirect to home if login successful
+      navigate("/");
     }
 
     if (isError) {
-      alert(message); // Simple error feedback
-      dispatch(reset()); // Clear error state so it doesn't pop up again
+      alert(message);
+      dispatch(reset());
     }
   }, [user, isError, message, navigate, dispatch]);
 
@@ -64,7 +71,6 @@ export const AuthenticationComponent: React.FC = () => {
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    // 3. Dispatch Register Thunk
     dispatch(register(formData))
       .unwrap()
       .then((res) => {
@@ -77,7 +83,6 @@ export const AuthenticationComponent: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // 4. Dispatch Login Thunk
     dispatch(login({ email: formData.email, password: formData.password }));
   };
 
@@ -87,7 +92,7 @@ export const AuthenticationComponent: React.FC = () => {
         id="container"
         className="relative overflow-hidden w-full max-w-[768px] min-h-[550px] bg-white rounded-xl shadow-2xl"
       >
-        {/* ✅ Verification Message */}
+        {/* Verification Message */}
         {verificationMessage && (
           <div
             className={`mb-4 p-3 rounded text-sm text-center ${verificationMessage.startsWith("✅") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
@@ -95,7 +100,8 @@ export const AuthenticationComponent: React.FC = () => {
             {verificationMessage}
           </div>
         )}
-        {/* Sign Up Container - Responsive positioning */}
+
+        {/* Sign Up Container */}
         <div
           className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-full md:w-1/2 z-[1] ${
             isSignUp
@@ -149,7 +155,7 @@ export const AuthenticationComponent: React.FC = () => {
           </form>
         </div>
 
-        {/* Sign In Container - Responsive positioning */}
+        {/* Sign In Container */}
         <div
           className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-full md:w-1/2 z-[2] ${
             isSignUp
@@ -192,10 +198,10 @@ export const AuthenticationComponent: React.FC = () => {
           </form>
         </div>
 
-        {/* Mobile Toggle Buttons - Only show on small screens */}
+        {/* Mobile Toggle Buttons */}
         <div className="md:hidden absolute bottom-6 left-0 right-0 flex justify-center space-x-4 z-[200] px-6">
           <button
-            onClick={() => setIsSignUp(false)}
+            onClick={() => handleSwitchTab("signin")}
             className={`rounded-full border ${
               !isSignUp
                 ? "border-[#3E6272] bg-[#3E6272] text-white"
@@ -205,7 +211,7 @@ export const AuthenticationComponent: React.FC = () => {
             Sign In
           </button>
           <button
-            onClick={() => setIsSignUp(true)}
+            onClick={() => handleSwitchTab("signup")}
             className={`rounded-full border ${
               isSignUp
                 ? "border-[#3E6272] bg-[#3E6272] text-white"
@@ -227,7 +233,7 @@ export const AuthenticationComponent: React.FC = () => {
               isSignUp ? "translate-x-1/2" : "translate-x-0"
             }`}
           >
-            {/* Left Panel */}
+            {/* Left Panel (For Sign In) */}
             <div
               className={`absolute flex flex-col items-center justify-center top-0 h-full w-1/2 px-8 lg:px-10 text-center transition-transform duration-700 ease-in-out ${
                 isSignUp ? "translate-x-0" : "-translate-x-[20%]"
@@ -240,14 +246,14 @@ export const AuthenticationComponent: React.FC = () => {
                 Login and continue your journey with us.
               </p>
               <button
-                onClick={() => setIsSignUp(false)}
+                onClick={() => handleSwitchTab("signin")}
                 className="rounded-full border border-white bg-transparent text-white text-xs font-bold py-3 px-8 lg:px-11 uppercase tracking-wider transition-transform active:scale-95 hover:bg-white hover:text-[#3E6272]"
               >
                 Sign In
               </button>
             </div>
 
-            {/* Right Panel */}
+            {/* Right Panel (For Sign Up) */}
             <div
               className={`absolute right-0 flex flex-col items-center justify-center top-0 h-full w-1/2 px-8 lg:px-10 text-center transition-transform duration-700 ease-in-out ${
                 isSignUp ? "translate-x-[20%]" : "translate-x-0"
@@ -260,7 +266,7 @@ export const AuthenticationComponent: React.FC = () => {
                 Enter your personal details and start your journey with us.
               </p>
               <button
-                onClick={() => setIsSignUp(true)}
+                onClick={() => handleSwitchTab("signup")}
                 className="rounded-full border border-white bg-transparent text-white text-xs font-bold py-3 px-8 lg:px-11 uppercase tracking-wider transition-transform active:scale-95 hover:bg-white hover:text-[#3E6272]"
               >
                 Sign Up
