@@ -19,6 +19,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
+            'user_name'=> 'required|string|max:100'
         ]);
 
         if ($validator->fails()) {
@@ -29,6 +30,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'user_name'=> $request->user_name,
         ]);
 
         // trigger event to send email
@@ -40,7 +42,7 @@ class AuthController extends Controller
     // Login
     public function login()
     {
-        $credentials = request(['email', 'password']);
+        $credentials = request(['email', 'password', 'user_name']);
 
         if (! $token = auth('api')->attempt($credentials)) {
             return response()->json(['message' => 'Unauthorized'], 401);
@@ -69,11 +71,12 @@ class AuthController extends Controller
     }
 
     // Helper function to format the response
-    protected function respondWithToken($token, $user)
+    protected function respondWithToken($token, $user, $user_name)
     {
         return response()->json([
             'token' => $token,
             'user' => $user,
+            'user_name'=>$user_name,
             'token_type' => 'bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60
         ]);
