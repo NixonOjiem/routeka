@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ProtectedRoute } from "./components/authPages/ProtectedRoute";
 import {
   BrowserRouter as Router,
   Routes,
@@ -76,10 +77,10 @@ function AppContent() {
             path="/"
             element={<HomePage onRequestRoute={() => navigate("/request")} />}
           />
-          <Route
+          {/* <Route
             path="/request"
             element={<RequestPage showNotification={showNotification} />}
-          />
+          /> */}
           <Route path="/test" element={<TestPage />} />
           <Route path="/signin" element={<AuthenticationPage />} />
           <Route path="/signup" element={<AuthenticationPage />} />
@@ -89,6 +90,16 @@ function AppContent() {
           {/* ✅ Add new routes */}
           <Route path="rides" element={<RideGroupsPage />} />
           <Route path="chat/:roomId" element={<ChatPage />} />
+
+          {/* protected routes */}
+          <Route
+            path="/request"
+            element={
+              <ProtectedRoute>
+                <RequestPage showNotification={showNotification} />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </main>
 
