@@ -19,7 +19,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
   const onLogout = () => {
     dispatch(logout());
     dispatch(reset());
-    navigate("/auth");
+    navigate("/signin");
   };
 
   return (

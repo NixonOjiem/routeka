@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\RideRequest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use App\Services\RideMatchingService;
-use Illuminate\Validation\ValidationException;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Tymon\JWTAuth\Exceptions\JWTException;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Services\RideMatchingService;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Illuminate\Validation\ValidationException;
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Exceptions\TokenInvalidException;
+
 class RideRequestController extends Controller
 {
     protected $rideService;
@@ -122,29 +125,28 @@ public function index(Request $request)
     // 1. Store the Ride Request
     public function store(Request $request)
 {
-    $user = null;
+
     try {
+        // 1. Authenticate the user via JWT
         $user = JWTAuth::parseToken()->authenticate();
-        Log::info('JWT user', ['user' => $user]);
-        }
-        catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e)
-        {
-            Log::warning('Token expired');
-        } catch
-        (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e)
-        {
-            Log::warning('Token invalid');
-        } catch (\Exception $e) {
-         Log::warning('Token parse error', ['err' => $e->getMessage()]);
+
+        // 2. Check if the user is verified
+        if (!$user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Your email address is not verified.',
+                'error' => 'email_unverified'
+            ], 403);
         }
 
-// inside store(Request $request)
-    Log::info('Request headers for storing rides', $request->headers->all());
-    $guestId = $request->header('X-Guest-ID');
-    Log::info('Detected guest ID from store function: ' . $guestId);
+    } catch (TokenExpiredException $e) {
+        return response()->json(['message' => 'Token expired', 'error' => 'token_expired'], 401);
+    } catch (TokenInvalidException $e) {
+        return response()->json(['message' => 'Token invalid', 'error' => 'token_invalid'], 401);
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Authorization error'], 401);
+    }
 
-    //Log::info('Authenticated user:', ['user' => $user]);
-    // Validation
+    // 3. Validation (Removed guest fields as they are no longer allowed)
     $validated = $request->validate([
         'pickup.lat' => 'required|numeric',
         'pickup.lng' => 'required|numeric',
@@ -152,38 +154,11 @@ public function index(Request $request)
         'dropoff.lng' => 'required|numeric',
         'commute_time' => 'required|date',
         'frequency' => 'required|string',
-        // Make guest fields nullable but check content if no user
-        'guest_name' => 'nullable|string',
-        'guest_email' => 'nullable|email',
-        'guest_phone' => 'nullable|string',
     ]);
 
-    // Custom validation for guests
-    if (!$user) {
-        if (empty($request->input('guest_name'))) {
-            throw ValidationException::withMessages([
-                'guest_name' => ['The guest name field is required for guest users.'],
-            ]);
-        }
-        if (empty($request->input('guest_email'))) {
-            throw ValidationException::withMessages([
-                'guest_email' => ['The guest email field is required for guest users.'],
-            ]);
-        }
-        if (empty($request->input('guest_phone'))) {
-            throw ValidationException::withMessages([
-                'guest_phone' => ['The guest phone field is required for guest users.'],
-            ]);
-        }
-    }
-
-    // Prepare data for saving
+    // 4. Prepare data for saving
     $data = [
-        'user_id' => $user ? $user->id : null,
-        'guest_id' => $user ? null : $guestId,
-        'guest_name' => $user ? null : $request->input('guest_name'),
-        'guest_email' => $user ? $user->email : $request->input('guest_email'),
-        'guest_phone' => $user ? null : $request->input('guest_phone'),
+        'user_id' => $user->id,
         'pickup_lat' => $request->input('pickup.lat'),
         'pickup_lng' => $request->input('pickup.lng'),
         'dropoff_lat' => $request->input('dropoff.lat'),
@@ -191,15 +166,94 @@ public function index(Request $request)
         'commute_time' => $request->input('commute_time'),
         'frequency' => $request->input('frequency'),
     ];
-    Log::info('Storing ride request data', $data);
 
     $ride = RideRequest::create($data);
-
+    #Log::info("stored ride details for user:", $user);
     return response()->json([
         'message' => 'Ride request submitted successfully',
         'data' => $ride
     ], 201);
 }
+//     public function store(Request $request)
+// {
+//     $user = null;
+//     try {
+//         $user = JWTAuth::parseToken()->authenticate();
+//         Log::info('JWT user', ['user' => $user]);
+//         }
+//         catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e)
+//         {
+//             Log::warning('Token expired');
+//         } catch
+//         (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e)
+//         {
+//             Log::warning('Token invalid');
+//         } catch (\Exception $e) {
+//          Log::warning('Token parse error', ['err' => $e->getMessage()]);
+//         }
+
+//     // inside store(Request $request)
+//     Log::info('Request headers for storing rides', $request->headers->all());
+//     $guestId = $request->header('X-Guest-ID');
+//     Log::info('Detected guest ID from store function: ' . $guestId);
+
+//     //Log::info('Authenticated user:', ['user' => $user]);
+//     // Validation
+//     $validated = $request->validate([
+//         'pickup.lat' => 'required|numeric',
+//         'pickup.lng' => 'required|numeric',
+//         'dropoff.lat' => 'required|numeric',
+//         'dropoff.lng' => 'required|numeric',
+//         'commute_time' => 'required|date',
+//         'frequency' => 'required|string',
+//         // Make guest fields nullable but check content if no user
+//         'guest_name' => 'nullable|string',
+//         'guest_email' => 'nullable|email',
+//         'guest_phone' => 'nullable|string',
+//     ]);
+
+//     // Custom validation for guests
+//     if (!$user) {
+//         if (empty($request->input('guest_name'))) {
+//             throw ValidationException::withMessages([
+//                 'guest_name' => ['The guest name field is required for guest users.'],
+//             ]);
+//         }
+//         if (empty($request->input('guest_email'))) {
+//             throw ValidationException::withMessages([
+//                 'guest_email' => ['The guest email field is required for guest users.'],
+//             ]);
+//         }
+//         if (empty($request->input('guest_phone'))) {
+//             throw ValidationException::withMessages([
+//                 'guest_phone' => ['The guest phone field is required for guest users.'],
+//             ]);
+//         }
+//     }
+
+//     // Prepare data for saving
+//     $data = [
+//         'user_id' => $user ? $user->id : null,
+//         'guest_id' => $user ? null : $guestId,
+//         'guest_name' => $user ? null : $request->input('guest_name'),
+//         'guest_email' => $user ? $user->email : $request->input('guest_email'),
+//         'guest_phone' => $user ? null : $request->input('guest_phone'),
+//         'pickup_lat' => $request->input('pickup.lat'),
+//         'pickup_lng' => $request->input('pickup.lng'),
+//         'dropoff_lat' => $request->input('dropoff.lat'),
+//         'dropoff_lng' => $request->input('dropoff.lng'),
+//         'commute_time' => $request->input('commute_time'),
+//         'frequency' => $request->input('frequency'),
+//     ];
+//     Log::info('Storing ride request data', $data);
+
+//     $ride = RideRequest::create($data);
+
+//     return response()->json([
+//         'message' => 'Ride request submitted successfully',
+//         'data' => $ride
+//     ], 201);
+// }
 
 
 
