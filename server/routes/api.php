@@ -10,6 +10,7 @@ use App\Http\Controllers\RideRequestController;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
+//Auth routes
 Route::group(['prefix' => 'auth'], function(){
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
