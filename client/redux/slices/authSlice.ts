@@ -1,4 +1,3 @@
-// src/store/slices/authSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { signin, signup, signout } from "@/services/api"; // ✅ use new api.ts directly
 
@@ -30,13 +29,15 @@ const getGuestId = (): string => {
   return guestId;
 };
 
-// Initial state
-const user = JSON.parse(localStorage.getItem("user") || "null");
+// Initial state - Added a safety check for "undefined" string
+const savedUser = localStorage.getItem("user");
+const user =
+  savedUser && savedUser !== "undefined" ? JSON.parse(savedUser) : null;
 const token = localStorage.getItem("token");
 
 const initialState: AuthState = {
   user,
-  token,
+  token: token === "undefined" ? null : token, // Safety for token too
   guestId: getGuestId(),
   isLoading: false,
   isError: false,
@@ -100,10 +101,13 @@ const authSlice = createSlice({
       })
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        localStorage.setItem("user", JSON.stringify(action.payload.user));
-        localStorage.setItem("token", action.payload.token);
+        // Only save if the data actually exists
+        if (action.payload.user && action.payload.token) {
+          state.user = action.payload.user;
+          state.token = action.payload.token;
+          localStorage.setItem("user", JSON.stringify(action.payload.user));
+          localStorage.setItem("token", action.payload.token);
+        }
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
@@ -116,10 +120,13 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        localStorage.setItem("user", JSON.stringify(action.payload.user));
-        localStorage.setItem("token", action.payload.token);
+        // Only save if the data actually exists
+        if (action.payload.user && action.payload.token) {
+          state.user = action.payload.user;
+          state.token = action.payload.token;
+          localStorage.setItem("user", JSON.stringify(action.payload.user));
+          localStorage.setItem("token", action.payload.token);
+        }
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;

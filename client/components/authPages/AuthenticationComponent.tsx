@@ -2,13 +2,36 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { login, register, reset } from "@/redux/slices/authSlice";
 import { AppDispatch, RootState } from "@/redux/store";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 // @ts-ignore
 import "./Auth.css";
 
 export const AuthenticationComponent: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+
+  const location = useLocation();
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+
+    if (params.get("verified") === "true") {
+      setVerificationMessage(
+        "✅ Email verified successfully! You can now log in.",
+      );
+    }
+
+    if (params.get("error") === "invalid_link") {
+      setVerificationMessage("❌ Invalid or expired verification link.");
+    }
+
+    if (params.get("error") === "invalid_user") {
+      setVerificationMessage("❌ Invalid user.");
+    }
+  }, [location.search]);
 
   // 1. Grab state from Redux
   const { user, isLoading, isError, message } = useSelector(
@@ -42,7 +65,14 @@ export const AuthenticationComponent: React.FC = () => {
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     // 3. Dispatch Register Thunk
-    dispatch(register(formData));
+    dispatch(register(formData))
+      .unwrap()
+      .then((res) => {
+        alert(res.message);
+      })
+      .catch((err) => {
+        alert(err);
+      });
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -57,6 +87,14 @@ export const AuthenticationComponent: React.FC = () => {
         id="container"
         className="relative overflow-hidden w-full max-w-[768px] min-h-[550px] bg-white rounded-xl shadow-2xl"
       >
+        {/* ✅ Verification Message */}
+        {verificationMessage && (
+          <div
+            className={`mb-4 p-3 rounded text-sm text-center ${verificationMessage.startsWith("✅") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+          >
+            {verificationMessage}
+          </div>
+        )}
         {/* Sign Up Container - Responsive positioning */}
         <div
           className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-full md:w-1/2 z-[1] ${
