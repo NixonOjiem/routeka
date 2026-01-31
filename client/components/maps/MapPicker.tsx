@@ -407,7 +407,8 @@ export const MapPicker: React.FC<MapPickerProps> = ({
           {/* Tile Layer with loading optimization */}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url={`https://api.maptiler.com/maps/winter-v2/{z}/{x}/{y}.png?key=${map_Tiler_key}`}
+            //url={`https://api.maptiler.com/maps/winter-v2/{z}/{x}/{y}.png?key=${map_Tiler_key}`}
+            url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${map_Tiler_key}`}
             maxZoom={19}
             minZoom={1}
           />

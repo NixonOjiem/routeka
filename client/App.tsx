@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   useNavigate,
+  Navigate,
   useLocation,
 } from "react-router-dom";
 import { ViewState, NotificationType } from "./types";
@@ -27,7 +28,7 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAuthPage = location.pathname === "/auth";
+  const isAuthPage = /^\/(auth|signin|signup)/.test(location.pathname);
 
   const getCurrentView = (): ViewState => {
     return location.pathname === "/request" ? "request" : "home";
@@ -80,13 +81,14 @@ function AppContent() {
             element={<RequestPage showNotification={showNotification} />}
           />
           <Route path="/test" element={<TestPage />} />
-          <Route path="/auth" element={<AuthenticationPage />} />
+          <Route path="/signin" element={<AuthenticationPage />} />
+          <Route path="/signup" element={<AuthenticationPage />} />
+          <Route path="/auth" element={<Navigate to="/signin" replace />} />
+          {/* <Route path="/auth" element={<AuthenticationPage />} /> */}
 
           {/* ✅ Add new routes */}
           <Route path="rides" element={<RideGroupsPage />} />
           <Route path="chat/:roomId" element={<ChatPage />} />
-          {/* <Route path="login" element={<LoginPage />} />
-          <Route path="register" element={<RegisterPage />} /> */}
         </Routes>
       </main>
 

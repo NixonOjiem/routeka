@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Auth\Events\Registered;
 
 class AuthController extends Controller
 {
@@ -30,9 +31,17 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        $token = auth('api')->login($user);
+        // trigger event to send email
 
-        return $this->respondWithToken($token, $user);
+
+        // Use a terminating callback to trigger the event AFTER the response is sent
+        // app()->terminating(function () use ($user) {
+        //     event(new Registered($user));
+        // });
+        event(new Registered($user));
+        #$token = auth('api')->login($user);
+        #return $this->respondWithToken($token, $user);
+        return response()->json([ 'message' => 'Registration successful. Please verify your email before logging in.' ], 201);
     }
 
     // Login
@@ -42,6 +51,12 @@ class AuthController extends Controller
 
         if (! $token = auth('api')->attempt($credentials)) {
             return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        $user = auth('api')->user();
+        if(! $user->hasVerifiedEmail()){
+            #Logout immediately
+            auth('api')->logout();
+            return response()->json([ 'message' => 'Please verify your email before logging in.' ], 403); // 403 Forbidden
         }
 
         return $this->respondWithToken($token, auth('api')->user());

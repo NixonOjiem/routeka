@@ -2,35 +2,70 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { login, register, reset } from "@/redux/slices/authSlice";
 import { AppDispatch, RootState } from "@/redux/store";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 // @ts-ignore
 import "./Auth.css";
 
 export const AuthenticationComponent: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
 
-  // 1. Grab state from Redux
-  const { user, isLoading, isError, message } = useSelector(
+  // ✅ 1. Derive state from URL instead of useState
+  const isSignUp = location.pathname === "/signup";
+
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(
+    null,
+  );
+
+  // ✅ Add loading states for signup and signin
+  const [isLoadingSignup, setIsLoadingSignup] = useState(false);
+  const [isLoadingSignin, setIsLoadingSignin] = useState(false);
+
+  // ✅ 2. Helper function to switch tabs via URL
+  const handleSwitchTab = (mode: "signin" | "signup") => {
+    navigate(`/${mode}${location.search}`);
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+
+    if (params.get("verified") === "true") {
+      setVerificationMessage(
+        "✅ Email verified successfully! You can now log in.",
+      );
+    }
+    if (params.get("error") === "invalid_link") {
+      setVerificationMessage("❌ Invalid or expired verification link.");
+    }
+    if (params.get("error") === "invalid_user") {
+      setVerificationMessage("❌ Invalid user.");
+    }
+  }, [location.search]);
+
+  // 3. Grab state from Redux
+  const { user, isError, message } = useSelector(
     (state: RootState) => state.auth,
   );
 
-  const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
 
-  // 2. Handle Redirect and Cleanup
+  // 4. Handle Redirect and Cleanup
   useEffect(() => {
     if (user) {
-      navigate("/"); // Redirect to home if login successful
+      navigate("/");
     }
 
     if (isError) {
-      alert(message); // Simple error feedback
-      dispatch(reset()); // Clear error state so it doesn't pop up again
+      alert(message);
+      dispatch(reset());
+      // Reset loading states on error
+      setIsLoadingSignup(false);
+      setIsLoadingSignin(false);
     }
   }, [user, isError, message, navigate, dispatch]);
 
@@ -39,17 +74,57 @@ export const AuthenticationComponent: React.FC = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 3. Dispatch Register Thunk
-    dispatch(register(formData));
+    setIsLoadingSignup(true);
+
+    try {
+      const resultAction = await dispatch(register(formData));
+      if (register.fulfilled.match(resultAction)) {
+        alert(resultAction.payload?.message || "Registration successful!");
+      } else {
+        throw new Error(
+          (resultAction.payload as string) || "Registration failed",
+        );
+      }
+    } catch (err: any) {
+      alert(err.message || "An error occurred during registration");
+    } finally {
+      setIsLoadingSignup(false);
+    }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 4. Dispatch Login Thunk
-    dispatch(login({ email: formData.email, password: formData.password }));
+    setIsLoadingSignin(true);
+
+    try {
+      const resultAction = await dispatch(
+        login({
+          email: formData.email,
+          password: formData.password,
+        }),
+      );
+
+      if (login.fulfilled.match(resultAction)) {
+        // Login successful - navigation will be handled by useEffect
+      } else {
+        throw new Error((resultAction.payload as string) || "Login failed");
+      }
+    } catch (err: any) {
+      alert(err.message || "An error occurred during login");
+    } finally {
+      setIsLoadingSignin(false);
+    }
   };
+
+  // ✅ Loader component for buttons
+  const Loader = () => (
+    <div className="flex items-center justify-center">
+      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+      <span>Processing...</span>
+    </div>
+  );
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 font-sans p-4 md:p-8">
@@ -57,7 +132,16 @@ export const AuthenticationComponent: React.FC = () => {
         id="container"
         className="relative overflow-hidden w-full max-w-[768px] min-h-[550px] bg-white rounded-xl shadow-2xl"
       >
-        {/* Sign Up Container - Responsive positioning */}
+        {/* Verification Message */}
+        {verificationMessage && (
+          <div
+            className={`mb-4 p-3 rounded text-sm text-center ${verificationMessage.startsWith("✅") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+          >
+            {verificationMessage}
+          </div>
+        )}
+
+        {/* Sign Up Container */}
         <div
           className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-full md:w-1/2 z-[1] ${
             isSignUp
@@ -83,6 +167,7 @@ export const AuthenticationComponent: React.FC = () => {
               onChange={handleChange}
               className="bg-gray-100 border-none p-3 my-2 w-full rounded-lg focus:ring-2 focus:ring-[#3E6272] outline-none text-gray-600 text-sm sm:text-base"
               required
+              disabled={isLoadingSignup}
             />
             <input
               name="email"
@@ -92,6 +177,7 @@ export const AuthenticationComponent: React.FC = () => {
               onChange={handleChange}
               className="bg-gray-100 border-none p-3 my-2 w-full rounded-lg focus:ring-2 focus:ring-[#3E6272] outline-none text-gray-600 text-sm sm:text-base"
               required
+              disabled={isLoadingSignup}
             />
             <input
               name="password"
@@ -101,17 +187,19 @@ export const AuthenticationComponent: React.FC = () => {
               onChange={handleChange}
               className="bg-gray-100 border-none p-3 my-2 w-full rounded-lg focus:ring-2 focus:ring-[#3E6272] outline-none text-gray-600 text-sm sm:text-base"
               required
+              disabled={isLoadingSignup}
             />
             <button
               type="submit"
-              className="mt-4 rounded-full border border-[#3E6272] bg-[#3E6272] text-white text-xs sm:text-sm font-bold py-3 px-8 sm:px-11 uppercase tracking-wider transition-transform active:scale-95 hover:opacity-90 w-full sm:w-auto"
+              disabled={isLoadingSignup}
+              className="mt-4 rounded-full border border-[#3E6272] bg-[#3E6272] text-white text-xs sm:text-sm font-bold py-3 px-8 sm:px-11 uppercase tracking-wider transition-transform active:scale-95 hover:opacity-90 w-full sm:w-auto disabled:opacity-70 disabled:cursor-not-allowed min-h-[48px]"
             >
-              Sign Up
+              {isLoadingSignup ? <Loader /> : "Sign Up"}
             </button>
           </form>
         </div>
 
-        {/* Sign In Container - Responsive positioning */}
+        {/* Sign In Container */}
         <div
           className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-full md:w-1/2 z-[2] ${
             isSignUp
@@ -135,6 +223,7 @@ export const AuthenticationComponent: React.FC = () => {
               onChange={handleChange}
               className="bg-gray-100 border-none p-3 my-2 w-full rounded-lg focus:ring-2 focus:ring-[#3E6272] outline-none text-gray-600 text-sm sm:text-base"
               required
+              disabled={isLoadingSignin}
             />
             <input
               name="password"
@@ -144,35 +233,39 @@ export const AuthenticationComponent: React.FC = () => {
               onChange={handleChange}
               className="bg-gray-100 border-none p-3 my-2 w-full rounded-lg focus:ring-2 focus:ring-[#3E6272] outline-none text-gray-600 text-sm sm:text-base"
               required
+              disabled={isLoadingSignin}
             />
             <button
               type="submit"
-              className="mt-6 rounded-full border border-[#3E6272] bg-[#3E6272] text-white text-xs sm:text-sm font-bold py-3 px-8 sm:px-11 uppercase tracking-wider transition-transform active:scale-95 hover:opacity-90 w-full sm:w-auto"
+              disabled={isLoadingSignin}
+              className="mt-6 rounded-full border border-[#3E6272] bg-[#3E6272] text-white text-xs sm:text-sm font-bold py-3 px-8 sm:px-11 uppercase tracking-wider transition-transform active:scale-95 hover:opacity-90 w-full sm:w-auto disabled:opacity-70 disabled:cursor-not-allowed min-h-[48px]"
             >
-              Sign In
+              {isLoadingSignin ? <Loader /> : "Sign In"}
             </button>
           </form>
         </div>
 
-        {/* Mobile Toggle Buttons - Only show on small screens */}
+        {/* Mobile Toggle Buttons */}
         <div className="md:hidden absolute bottom-6 left-0 right-0 flex justify-center space-x-4 z-[200] px-6">
           <button
-            onClick={() => setIsSignUp(false)}
+            onClick={() => handleSwitchTab("signin")}
+            disabled={isLoadingSignin || isLoadingSignup}
             className={`rounded-full border ${
               !isSignUp
                 ? "border-[#3E6272] bg-[#3E6272] text-white"
                 : "border-gray-300 bg-transparent text-gray-700"
-            } text-xs font-bold py-2 px-6 uppercase tracking-wider transition-all`}
+            } text-xs font-bold py-2 px-6 uppercase tracking-wider transition-all disabled:opacity-50`}
           >
             Sign In
           </button>
           <button
-            onClick={() => setIsSignUp(true)}
+            onClick={() => handleSwitchTab("signup")}
+            disabled={isLoadingSignin || isLoadingSignup}
             className={`rounded-full border ${
               isSignUp
                 ? "border-[#3E6272] bg-[#3E6272] text-white"
                 : "border-gray-300 bg-transparent text-gray-700"
-            } text-xs font-bold py-2 px-6 uppercase tracking-wider transition-all`}
+            } text-xs font-bold py-2 px-6 uppercase tracking-wider transition-all disabled:opacity-50`}
           >
             Sign Up
           </button>
@@ -189,7 +282,7 @@ export const AuthenticationComponent: React.FC = () => {
               isSignUp ? "translate-x-1/2" : "translate-x-0"
             }`}
           >
-            {/* Left Panel */}
+            {/* Left Panel (For Sign In) */}
             <div
               className={`absolute flex flex-col items-center justify-center top-0 h-full w-1/2 px-8 lg:px-10 text-center transition-transform duration-700 ease-in-out ${
                 isSignUp ? "translate-x-0" : "-translate-x-[20%]"
@@ -202,14 +295,15 @@ export const AuthenticationComponent: React.FC = () => {
                 Login and continue your journey with us.
               </p>
               <button
-                onClick={() => setIsSignUp(false)}
-                className="rounded-full border border-white bg-transparent text-white text-xs font-bold py-3 px-8 lg:px-11 uppercase tracking-wider transition-transform active:scale-95 hover:bg-white hover:text-[#3E6272]"
+                onClick={() => handleSwitchTab("signin")}
+                disabled={isLoadingSignin || isLoadingSignup}
+                className="rounded-full border border-white bg-transparent text-white text-xs font-bold py-3 px-8 lg:px-11 uppercase tracking-wider transition-transform active:scale-95 hover:bg-white hover:text-[#3E6272] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Sign In
               </button>
             </div>
 
-            {/* Right Panel */}
+            {/* Right Panel (For Sign Up) */}
             <div
               className={`absolute right-0 flex flex-col items-center justify-center top-0 h-full w-1/2 px-8 lg:px-10 text-center transition-transform duration-700 ease-in-out ${
                 isSignUp ? "translate-x-[20%]" : "translate-x-0"
@@ -222,8 +316,9 @@ export const AuthenticationComponent: React.FC = () => {
                 Enter your personal details and start your journey with us.
               </p>
               <button
-                onClick={() => setIsSignUp(true)}
-                className="rounded-full border border-white bg-transparent text-white text-xs font-bold py-3 px-8 lg:px-11 uppercase tracking-wider transition-transform active:scale-95 hover:bg-white hover:text-[#3E6272]"
+                onClick={() => handleSwitchTab("signup")}
+                disabled={isLoadingSignin || isLoadingSignup}
+                className="rounded-full border border-white bg-transparent text-white text-xs font-bold py-3 px-8 lg:px-11 uppercase tracking-wider transition-transform active:scale-95 hover:bg-white hover:text-[#3E6272] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Sign Up
               </button>
