@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { apiService, RideGroup, User } from "../services/api";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { useNavigate } from "react-router-dom";
 import {
   MapIcon,
   UserGroupIcon,
@@ -18,11 +21,13 @@ import {
 type TabType = "all" | "relevant";
 
 const RideGroupsPage: React.FC = () => {
+  const { user } = useSelector((state: RootState) => state.auth);
   const [groups, setGroups] = useState<RideGroup[]>([]);
   // Use a derived state for the final display list rather than a separate state
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("all");
+  const navigate = useNavigate();
 
   const [filters, setFilters] = useState({
     minMembers: 0,
@@ -338,6 +343,7 @@ const RideGroupsPage: React.FC = () => {
                 </div>
 
                 {/* Actions */}
+                {/* Actions */}
                 <div className="flex justify-between items-center pt-4 border-t border-gray-100">
                   <div className="text-sm text-gray-500">
                     <MapIcon className="h-4 w-4 inline mr-1" />
@@ -345,15 +351,41 @@ const RideGroupsPage: React.FC = () => {
                   </div>
 
                   {group.chat_room_id ? (
-                    <Link
-                      to={`/chat/${group.chat_room_id}`}
-                      className="inline-flex items-center px-4 py-2 bg-brand text-white text-sm font-medium rounded-md hover:bg-[#546269]"
-                    >
-                      <ChatAlt2Icon className="h-4 w-4 mr-2" />
-                      Join Chat
-                    </Link>
+                    !user ? (
+                      /* 1. NOT LOGGED IN */
+                      <button
+                        onClick={() => navigate("/signin")}
+                        className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors"
+                      >
+                        <ChatAlt2Icon className="h-4 w-4 mr-2" />
+                        Sign in to Chat
+                      </button>
+                    ) : !user.email_verified_at ? (
+                      /* 2. LOGGED IN BUT NOT VERIFIED */
+                      <button
+                        onClick={() =>
+                          toast.warning(
+                            "Please verify your email to join the chat.",
+                          )
+                        }
+                        className="inline-flex items-center px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200 text-sm font-medium rounded-md hover:bg-amber-100 transition-colors"
+                        title="Check your email for a verification link"
+                      >
+                        <ChatAlt2Icon className="h-4 w-4 mr-2" />
+                        Verify Account to Chat
+                      </button>
+                    ) : (
+                      /* 3. LOGGED IN AND VERIFIED */
+                      <Link
+                        to={`/chat/${group.chat_room_id}`}
+                        className="inline-flex items-center px-4 py-2 bg-brand text-white text-sm font-medium rounded-md hover:bg-[#546269] transition-colors"
+                      >
+                        <ChatAlt2Icon className="h-4 w-4 mr-2" />
+                        Join Chat
+                      </Link>
+                    )
                   ) : (
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500 italic">
                       Chat not available
                     </span>
                   )}

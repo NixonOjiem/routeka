@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { signin, signup, signout } from "@/services/api"; // ✅ use new api.ts directly
+import { signin, signup, signout } from "@/services/api";
 
 // Types
 interface User {
@@ -7,7 +7,7 @@ interface User {
   name?: string;
   email?: string;
   phone?: string;
-  // add other fields if your API returns them
+  email_verified_at?: any;
 }
 
 interface AuthState {
@@ -19,7 +19,6 @@ interface AuthState {
   message: string;
 }
 
-// Guest ID helper
 const getGuestId = (): string => {
   let guestId = localStorage.getItem("guest_id");
   if (!guestId) {
@@ -29,7 +28,6 @@ const getGuestId = (): string => {
   return guestId;
 };
 
-// Initial state - Added a safety check for "undefined" string
 const savedUser = localStorage.getItem("user");
 const user =
   savedUser && savedUser !== "undefined" ? JSON.parse(savedUser) : null;
@@ -37,7 +35,7 @@ const token = localStorage.getItem("token");
 
 const initialState: AuthState = {
   user,
-  token: token === "undefined" ? null : token, // Safety for token too
+  token: token === "undefined" ? null : token,
   guestId: getGuestId(),
   isLoading: false,
   isError: false,
@@ -49,7 +47,7 @@ export const register = createAsyncThunk<any, any, { rejectValue: string }>(
   "auth/register",
   async (userData, thunkAPI) => {
     try {
-      return await signup(userData); // ✅ now using api.ts
+      return await signup(userData);
     } catch (error: any) {
       const message = error.response?.data?.message || error.message;
       return thunkAPI.rejectWithValue(message);
@@ -61,7 +59,7 @@ export const login = createAsyncThunk<any, any, { rejectValue: string }>(
   "auth/login",
   async (credentials, thunkAPI) => {
     try {
-      return await signin(credentials); // ✅ now using api.ts
+      return await signin(credentials);
     } catch (error: any) {
       const message = error.response?.data?.message || error.message;
       return thunkAPI.rejectWithValue(message);
@@ -69,8 +67,13 @@ export const login = createAsyncThunk<any, any, { rejectValue: string }>(
   },
 );
 
-export const logout = createAsyncThunk("auth/logout", async () => {
-  return await signout(); // ✅ now using api.ts
+export const logout = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
+  try {
+    return await signout();
+  } catch (error: any) {
+    const message = error.response?.data?.message || error.message;
+    return thunkAPI.rejectWithValue(message);
+  }
 });
 
 // Slice
@@ -78,7 +81,6 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    // ✅ keep reset for compatibility
     reset: (state) => {
       state.isLoading = false;
       state.isError = false;
@@ -101,7 +103,6 @@ const authSlice = createSlice({
       })
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
-        // Only save if the data actually exists
         if (action.payload.user && action.payload.token) {
           state.user = action.payload.user;
           state.token = action.payload.token;
@@ -120,7 +121,6 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
-        // Only save if the data actually exists
         if (action.payload.user && action.payload.token) {
           state.user = action.payload.user;
           state.token = action.payload.token;
@@ -133,8 +133,20 @@ const authSlice = createSlice({
         state.isError = true;
         state.message = action.payload as string;
       })
-      // Logout
+      // Logout logic with loading states
+      .addCase(logout.pending, (state) => {
+        state.isLoading = true;
+      })
       .addCase(logout.fulfilled, (state) => {
+        state.isLoading = false;
+        state.user = null;
+        state.token = null;
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      })
+      .addCase(logout.rejected, (state) => {
+        state.isLoading = false;
+        // Even if logout fails on backend, we usually clear local state
         state.user = null;
         state.token = null;
         localStorage.removeItem("user");
