@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Auth\Events\Registered;
 
 class AuthController extends Controller
 {
@@ -30,6 +31,8 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // trigger event to send email
+        event(new Registered($user));
         $token = auth('api')->login($user);
 
         return $this->respondWithToken($token, $user);
