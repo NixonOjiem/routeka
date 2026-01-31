@@ -125,6 +125,7 @@ public function index(Request $request)
     // 1. Store the Ride Request
     public function store(Request $request)
 {
+
     try {
         // 1. Authenticate the user via JWT
         $user = JWTAuth::parseToken()->authenticate();
@@ -167,7 +168,7 @@ public function index(Request $request)
     ];
 
     $ride = RideRequest::create($data);
-
+    #Log::info("stored ride details for user:", $user);
     return response()->json([
         'message' => 'Ride request submitted successfully',
         'data' => $ride
