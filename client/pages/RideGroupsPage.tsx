@@ -351,8 +351,31 @@ const RideGroupsPage: React.FC = () => {
                   </div>
 
                   {group.chat_room_id ? (
-                    user?.email_verified_at ? (
-                      /* ✅ User is logged in: Allow them to go to chat */
+                    !user ? (
+                      /* 1. NOT LOGGED IN */
+                      <button
+                        onClick={() => navigate("/signin")}
+                        className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors"
+                      >
+                        <ChatAlt2Icon className="h-4 w-4 mr-2" />
+                        Sign in to Chat
+                      </button>
+                    ) : !user.email_verified_at ? (
+                      /* 2. LOGGED IN BUT NOT VERIFIED */
+                      <button
+                        onClick={() =>
+                          toast.warning(
+                            "Please verify your email to join the chat.",
+                          )
+                        }
+                        className="inline-flex items-center px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200 text-sm font-medium rounded-md hover:bg-amber-100 transition-colors"
+                        title="Check your email for a verification link"
+                      >
+                        <ChatAlt2Icon className="h-4 w-4 mr-2" />
+                        Verify Account to Chat
+                      </button>
+                    ) : (
+                      /* 3. LOGGED IN AND VERIFIED */
                       <Link
                         to={`/chat/${group.chat_room_id}`}
                         className="inline-flex items-center px-4 py-2 bg-brand text-white text-sm font-medium rounded-md hover:bg-[#546269] transition-colors"
@@ -360,16 +383,6 @@ const RideGroupsPage: React.FC = () => {
                         <ChatAlt2Icon className="h-4 w-4 mr-2" />
                         Join Chat
                       </Link>
-                    ) : (
-                      /* 🔒 User is NOT logged in: Redirect to signin */
-                      <button
-                        onClick={() => navigate("/signin")}
-                        className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors"
-                        title="Sign in to join the conversation"
-                      >
-                        <ChatAlt2Icon className="h-4 w-4 mr-2" />
-                        Sign in to Chat
-                      </button>
                     )
                   ) : (
                     <span className="text-sm text-gray-500 italic">
