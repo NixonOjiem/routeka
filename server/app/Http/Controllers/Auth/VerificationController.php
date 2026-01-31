@@ -12,15 +12,13 @@ class VerificationController extends Controller
     public function verify($id, Request $request)
     {
         if (!$request->hasValidSignature()) {
-            #return response()->json(['msg' => 'Invalid/Expired URL provided.'], 401);
-            return redirect(env('FRONTEND_URL') . '/auth?error=invalid_link');
+            return redirect(env('FRONTEND_URL') . '/auth?error=invalid_link', 401);
         }
 
         $user = User::find($id);
 
         if (!$user) {
-            # return response()->json(['msg' => 'Invalid user.'], 401);
-            return redirect(env('FRONTEND_URL') . '/auth?error=invalid_user');
+            return redirect(env('FRONTEND_URL') . '/auth?error=invalid_user', 401);
         }
 
         if (!$user->hasVerifiedEmail()) {
@@ -28,16 +26,13 @@ class VerificationController extends Controller
             event(new Verified($user));
         }
 
-        #return response()->json(['msg' => 'Email verified successfully.']);
-        # SUCCESS: Redirect to React Login page with a query param
     return redirect(env('FRONTEND_URL') . '/auth?verified=true');
     }
 
     public function resend(Request $request)
     {
         if ($request->user()->hasVerifiedEmail()) {
-            # return response()->json(['msg' => 'Email already verified.'], 400);
-            return redirect(env('FRONTEND_URL'). '/auth?verified=true');
+            return redirect(env('FRONTEND_URL'). '/auth?verified=true', 400);
         }
 
         $request->user()->sendEmailVerificationNotification();

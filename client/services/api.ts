@@ -46,6 +46,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  user_name?: string;
 }
 
 export interface RideLocation {
@@ -101,9 +102,10 @@ export interface ChatMessage {
 
 // Auth API calls (keep your existing functions)
 export const signin = async (credentials: {
-  email: string;
+  login: string; // Changed from 'email' to 'login'
   password: string;
 }) => {
+  // The backend now expects 'login' and 'password'
   const response = await api.post(`${API_URL}/auth/login`, credentials);
   if (response.data.token) {
     localStorage.setItem("token", response.data.token);
@@ -115,13 +117,10 @@ export const signin = async (credentials: {
 export const signup = async (data: {
   name: string;
   email: string;
+  user_name: string;
   password: string;
 }) => {
   const response = await api.post(`${API_URL}/auth/register`, data);
-  // if (response.data.token) {
-  //   localStorage.setItem("token", response.data.token);
-  //   localStorage.setItem("user", JSON.stringify(response.data.user));
-  // }
   return response.data;
 };
 

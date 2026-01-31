@@ -51,6 +51,7 @@ export const AuthenticationComponent: React.FC = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    user_name: "",
     password: "",
   });
 
@@ -101,7 +102,7 @@ export const AuthenticationComponent: React.FC = () => {
     try {
       const resultAction = await dispatch(
         login({
-          email: formData.email,
+          login: formData.email,
           password: formData.password,
         }),
       );
@@ -159,6 +160,7 @@ export const AuthenticationComponent: React.FC = () => {
             <span className="text-sm text-gray-500 mb-4">
               Join our community today
             </span>
+            {/* Full Name */}
             <input
               name="name"
               type="text"
@@ -166,6 +168,16 @@ export const AuthenticationComponent: React.FC = () => {
               value={formData.name}
               onChange={handleChange}
               className="bg-gray-100 border-none p-3 my-2 w-full rounded-lg focus:ring-2 focus:ring-[#3E6272] outline-none text-gray-600 text-sm sm:text-base"
+              required
+              disabled={isLoadingSignup}
+            />
+            <input
+              name="user_name"
+              type="text"
+              placeholder="Username"
+              value={formData.user_name}
+              onChange={handleChange}
+              className="bg-gray-100 border-none p-3 my-2 w-full rounded-lg focus:ring-2 focus:ring-[#3E6272] outline-none text-gray-600"
               required
               disabled={isLoadingSignup}
             />
@@ -217,8 +229,8 @@ export const AuthenticationComponent: React.FC = () => {
             <span className="text-sm text-gray-500 mb-4">Welcome back</span>
             <input
               name="email"
-              type="email"
-              placeholder="Email"
+              type="text"
+              placeholder="Email or Username"
               value={formData.email}
               onChange={handleChange}
               className="bg-gray-100 border-none p-3 my-2 w-full rounded-lg focus:ring-2 focus:ring-[#3E6272] outline-none text-gray-600 text-sm sm:text-base"

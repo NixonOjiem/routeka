@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Jobs\SendVerificationEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -22,6 +23,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'name',
         'email',
         'password',
+        'user_name'
     ];
 
     /**
@@ -65,4 +67,18 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     {
         return [];
     }
+    /**
+     * OVERRIDE: Send the email verification notification.
+     *
+     * This overrides the default synchronous behavior.
+     * Instead of sending mail directly, it dispatches our Job.
+     *
+     * @return void
+     */
+    public function sendEmailVerificationNotification()
+    {
+        // Dispatch the Job to the queue
+        SendVerificationEmail::dispatch($this);
+    }
+
 }
