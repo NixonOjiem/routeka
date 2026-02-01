@@ -59,6 +59,7 @@ export interface RideGroupMember {
   id: number;
   user_id: number;
   user_name: string;
+  category: string;
   pickup: RideLocation;
   dropoff: RideLocation;
   guest_id: string | null;
@@ -67,6 +68,7 @@ export interface RideGroupMember {
 export interface RideGroup {
   group_id: string;
   chat_room_id: string | null;
+  group_type: string;
   meetup_point: {
     lat: number;
     lng: number;

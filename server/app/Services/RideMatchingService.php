@@ -17,118 +17,126 @@ class RideMatchingService
     public function getGroupedRides()
     {
         try {
-            // Check if status column exists
             $hasStatusColumn = Schema::hasColumn('ride_requests', 'status');
 
-            // 1. Get all ride requests
+            // 1. Get all pending requests
             $query = RideRequest::with('user');
-
-            // Only filter by status if the column exists
             if ($hasStatusColumn) {
                 $query->where('status', 'pending');
             }
-
             $allRequests = $query->get();
 
-            $groups = [];
-            $processedIds = [];
+            // The master list of groups to return
+            $allGroups = [];
 
-            // Grid size in degrees (approximately 1 mile)
-            $gridSize = 0.0145; // ~1 mile in degrees
+            // --- A. STRICT CATEGORY MATCHING ---
+            // We group by category first, then run logic inside each bucket
+            $categories = ['corporate', 'neighborhood', 'events', 'university'];
 
-            foreach ($allRequests as $request) {
-                if (in_array($request->id, $processedIds)) {
-                    continue;
-                }
+            foreach ($categories as $category) {
+                // Filter requests for this category
+                $catRequests = $allRequests->where('category', $category);
 
-                // Calculate grid coordinates
-                $pickupGrid = $this->calculateGrid($request->pickup_lat, $request->pickup_lng, $gridSize);
-                $dropoffGrid = $this->calculateGrid($request->dropoff_lat, $request->dropoff_lng, $gridSize);
+                // Find groups strictly within this category
+                $catGroups = $this->runGridMatching($catRequests, $category);
 
-                // Build matches query
-                $matchesQuery = RideRequest::query()
-                    ->where('id', '!=', $request->id)
-                    ->whereNotIn('id', $processedIds)
-                    ->whereRaw("
-                        ABS(pickup_lat - ?) <= ? AND
-                        ABS(pickup_lng - ?) <= ? AND
-                        ABS(dropoff_lat - ?) <= ? AND
-                        ABS(dropoff_lng - ?) <= ?
-                    ", [
-                        $request->pickup_lat, $gridSize,
-                        $request->pickup_lng, $gridSize,
-                        $request->dropoff_lat, $gridSize,
-                        $request->dropoff_lng, $gridSize
-                    ])
-                    ->with('user');
-
-                // Only filter by status if the column exists
-                if ($hasStatusColumn) {
-                    $matchesQuery->where('status', 'pending');
-                }
-
-                $matches = $matchesQuery->get();
-
-                if ($matches->count() > 0) {
-                    // Create group with matches
-                    $groupMembers = $matches->push($request);
-
-                    foreach ($groupMembers as $member) {
-                        $processedIds[] = $member->id;
-                    }
-
-                    // Create or get chat room for this group
-                    $chatRoom = $this->getOrCreateChatRoom($groupMembers, $pickupGrid, $dropoffGrid);
-
-                    $groups[] = [
-                        'group_id' => 'group_' . $request->id,
-                        'chat_room_id' => $chatRoom->room_id,
-                        'meetup_point' => $this->calculateCentroid($groupMembers),
-                        'pickup_grid' => $pickupGrid,
-                        'dropoff_grid' => $dropoffGrid,
-                        'member_count' => $groupMembers->count(),
-                        'members' => $groupMembers->map(function($member) {
-                            return [
-                                'id' => $member->id,
-                                'user_id' => $member->user_id,
-                                'user_name' => $member->user->name ?? 'Guest',
-                                'pickup' => [
-                                    'lat' => $member->pickup_lat,
-                                    'lng' => $member->pickup_lng,
-                                    'address' => $member->pickup_address
-                                ],
-                                'dropoff' => [
-                                    'lat' => $member->dropoff_lat,
-                                    'lng' => $member->dropoff_lng,
-                                    'address' => $member->dropoff_address
-                                ]
-                            ];
-                        })
-                    ];
-                } else {
-                    // Solo ride
-                    $groups[] = [
-                        'group_id' => 'solo_' . $request->id,
-                        'chat_room_id' => null,
-                        'meetup_point' => [
-                            'lat' => $request->pickup_lat,
-                            'lng' => $request->pickup_lng
-                        ],
-                        'pickup_grid' => $pickupGrid,
-                        'dropoff_grid' => $dropoffGrid,
-                        'member_count' => 1,
-                        'members' => [$request]
-                    ];
-                    $processedIds[] = $request->id;
-                }
+                // Merge into master list
+                $allGroups = array_merge($allGroups, $catGroups);
             }
 
-            return $groups;
+            // --- B. SUGGESTED (MIXED) MATCHING ---
+            // Run logic on ALL requests, ignoring category.
+            // We label these as 'suggested'.
+            $mixedGroups = $this->runGridMatching($allRequests, 'suggested');
+
+            // Optimization: Only add mixed groups that are "better" (e.g., have members)
+            // or simply add them all. For now, we add them all but filter purely distinct
+            // single riders might be redundant, but good for UI "Suggested" tab.
+            $allGroups = array_merge($allGroups, $mixedGroups);
+
+            return $allGroups;
 
         } catch (\Exception $e) {
             Log::error('Error in getGroupedRides: ' . $e->getMessage());
             return [];
         }
+    }
+
+    /**
+     * Reusable matching logic
+     * @param $requests - Collection of RideRequest
+     * @param $groupType - string (corporate, suggested, etc)
+     */
+    private function runGridMatching($requests, $groupType)
+    {
+        $groups = [];
+        $processedIds = []; // Local to this run
+        $gridSize = 0.0145; // ~1 mile
+
+        // Sort by ID to ensure consistent grouping order
+        $sortedRequests = $requests->sortBy('id');
+
+        foreach ($sortedRequests as $request) {
+            if (in_array($request->id, $processedIds)) continue;
+
+            $pickupGrid = $this->calculateGrid($request->pickup_lat, $request->pickup_lng, $gridSize);
+            $dropoffGrid = $this->calculateGrid($request->dropoff_lat, $request->dropoff_lng, $gridSize);
+
+            // Find matches within the passed collection
+            $matches = $sortedRequests->filter(function ($item) use ($request, $processedIds, $gridSize) {
+                return $item->id !== $request->id
+                    && !in_array($item->id, $processedIds)
+                    && abs($item->pickup_lat - $request->pickup_lat) <= $gridSize
+                    && abs($item->pickup_lng - $request->pickup_lng) <= $gridSize
+                    && abs($item->dropoff_lat - $request->dropoff_lat) <= $gridSize
+                    && abs($item->dropoff_lng - $request->dropoff_lng) <= $gridSize;
+            });
+
+            // Form the group
+            $groupMembers = $matches->push($request);
+
+            // Mark processed
+            foreach ($groupMembers as $member) $processedIds[] = $member->id;
+
+            // Only create "Suggested" groups if they actually have mixed users or > 1 user
+            // to avoid duplicates of solo rides in every tab
+            if ($groupType === 'suggested' && $groupMembers->count() < 2) {
+                continue;
+            }
+
+            // Chat Room Logic (Append groupType to ID to allow different chats for different group contexts)
+            $chatRoom = $this->getOrCreateChatRoom($groupMembers, $pickupGrid, $dropoffGrid, $groupType);
+
+            $groups[] = [
+                'group_id' => $groupType . '_' . $request->id, // e.g. corporate_105
+                'group_type' => $groupType, // IMPORTANT: Used by Frontend for Tabs
+                'chat_room_id' => $chatRoom->room_id,
+                'meetup_point' => $this->calculateCentroid($groupMembers),
+                'pickup_grid' => $pickupGrid,
+                'dropoff_grid' => $dropoffGrid,
+                'member_count' => $groupMembers->count(),
+                'members' => $groupMembers->map(function($member) {
+                    return [
+                        'id' => $member->id,
+                        'user_id' => $member->user_id,
+                        'user_name' => $member->user->name ?? 'Guest',
+                        'category' => $member->category, // Send category to frontend
+                        'pickup' => [
+                            'lat' => $member->pickup_lat,
+                            'lng' => $member->pickup_lng,
+                            'address' => $member->pickup_address
+                        ],
+                        'dropoff' => [
+                            'lat' => $member->dropoff_lat,
+                            'lng' => $member->dropoff_lng,
+                            'address' => $member->dropoff_address
+                        ]
+                    ];
+                })->values()
+            ];
+        }
+
+        return $groups;
     }
 
     /**
@@ -138,43 +146,38 @@ class RideMatchingService
     {
         $latGrid = floor($lat / $gridSize);
         $lngGrid = floor($lng / $gridSize);
-
         return "{$latGrid}_{$lngGrid}";
     }
 
     /**
      * Get or create chat room for a group
      */
-    private function getOrCreateChatRoom($groupMembers, $pickupGrid, $dropoffGrid)
+    private function getOrCreateChatRoom($groupMembers, $pickupGrid, $dropoffGrid, $context = 'general')
     {
         $rideIds = $groupMembers->pluck('id')->toArray();
         $userIds = $groupMembers->pluck('user_id')->filter()->unique()->toArray();
 
-        // Generate unique room ID based on grid and member count
-        $roomId = "chat_" . md5($pickupGrid . '_' . $dropoffGrid . '_' . implode('_', $rideIds));
+        // Unique Room ID includes context so a 'suggested' chat is different from a 'corporate' chat
+        $hash = md5($pickupGrid . '_' . $dropoffGrid . '_' . implode('_', $rideIds) . '_' . $context);
+        $roomId = "chat_" . $hash;
 
         $chatRoom = ChatRoom::where('room_id', $roomId)->first();
 
         if (!$chatRoom) {
             $chatRoom = ChatRoom::create([
                 'room_id' => $roomId,
-                'name' => "Ride Group - " . Str::random(6),
+                'name' => ucfirst($context) . " Ride Group",
                 'ride_ids' => $rideIds,
                 'user_ids' => $userIds,
                 'pickup_grid' => $pickupGrid,
                 'dropoff_grid' => $dropoffGrid
             ]);
         } else {
-            // Update existing room with new members if needed
-            $existingRideIds = $chatRoom->ride_ids;
-            $newRideIds = array_unique(array_merge($existingRideIds, $rideIds));
-
-            if (count($newRideIds) > count($existingRideIds)) {
-                $chatRoom->update([
-                    'ride_ids' => $newRideIds,
-                    'user_ids' => array_unique(array_merge($chatRoom->user_ids ?? [], $userIds))
-                ]);
-            }
+            // Update logic (simplified for brevity)
+             $chatRoom->update([
+                'ride_ids' => $rideIds,
+                'user_ids' => $userIds
+            ]);
         }
 
         return $chatRoom;
@@ -185,19 +188,15 @@ class RideMatchingService
      */
     private function calculateCentroid($rides)
     {
-        $totalLat = 0;
-        $totalLng = 0;
-        $count = $rides->count();
-
+        $totalLat = 0; $totalLng = 0;
         foreach ($rides as $ride) {
             $totalLat += $ride->pickup_lat;
             $totalLng += $ride->pickup_lng;
         }
-
         return [
-            'lat' => $totalLat / $count,
-            'lng' => $totalLng / $count,
-            'name' => 'Suggested Meetup Spot'
+            'lat' => $totalLat / $rides->count(),
+            'lng' => $totalLng / $rides->count(),
+            'name' => 'Suggested Meetup'
         ];
     }
 
