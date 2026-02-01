@@ -13,7 +13,16 @@ return new class extends Migration
     {
         Schema::table('ride_requests', function (Blueprint $table) {
             //
+                 // The type of travel (neighborhood, corporate, etc.)
+        $table->string('category')->default('neighborhood')->after('status');
+
+        // Flexible storage for category-specific details
+        $table->json('category_metadata')->nullable()->after('category');
+
+        // Indexing the category for faster searching/filtering
+        $table->index('category');
         });
+
     }
 
     /**
@@ -23,6 +32,10 @@ return new class extends Migration
     {
         Schema::table('ride_requests', function (Blueprint $table) {
             //
+            $table->dropIndex(['category']);
+            // Drop the columns
+            $table->dropColumn('category_metadata'); $table->dropColumn('category');
+
         });
     }
 };

@@ -86,44 +86,6 @@ export const rideRequestService = {
       throw error;
     }
   },
-  // async submitRideRequest(data: ApiRideRequestData) {
-  //   try {
-  //     // Transform data to match your API endpoint format
-  //     const payload = {
-  //       pickup: { lat: data.pickup_lat, lng: data.pickup_lng },
-  //       dropoff: { lat: data.dropoff_lat, lng: data.dropoff_lng },
-  //       commute_time: this.formatCommuteTime(data.commute_time),
-  //       frequency: this.capitalizeFrequency(data.frequency),
-  //       guest_name: data.user_id ? null : (data.guest_name ?? data.name ?? ""),
-  //       guest_email: data.user_id
-  //         ? null
-  //         : (data.guest_email ?? data.email ?? ""),
-  //       guest_phone: data.user_id
-  //         ? null
-  //         : (data.guest_phone ?? data.phone ?? ""),
-  //     };
-
-  //     // Get ID directly from our helper
-  //     const guestId = this.getOrCreateGuestId();
-
-  //     const response = await axios.post(
-  //       `${API_BASE_URL}/rides/request`,
-  //       payload,
-  //       {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           "X-Guest-ID": guestId,
-  //           Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //         },
-  //       },
-  //     );
-
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error("Failed to submit ride request:", error);
-  //     throw error;
-  //   }
-  // },
 
   /**
    * Get user's ride requests
