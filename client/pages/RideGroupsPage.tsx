@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { apiService, RideGroup, User } from "../services/api"; // Ensure API types match response
+import { apiService, RideGroup, User } from "../services/api";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -15,7 +15,7 @@ import {
   CalendarIcon,
   SparklesIcon,
   StarIcon,
-  ArrowNarrowRightIcon, // Import Arrow for visual
+  ArrowNarrowRightIcon,
   ExclamationCircleIcon,
 } from "@heroicons/react/outline";
 
@@ -27,12 +27,26 @@ type TabType =
   | "university"
   | "events";
 
+// Helper to find the ride_id for the current user in a group
+const getUserRideId = (
+  group: RideGroup,
+  currentUser: User | null,
+  guestId: string | null,
+) => {
+  const member = group.members.find(
+    (m) =>
+      (currentUser && m.user_id === currentUser.id) ||
+      (guestId && String(m.id) === String(guestId)),
+  );
+  return member ? member.id : null;
+};
+
 const RideGroupsPage: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const [groups, setGroups] = useState<RideGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>("my_rides"); // Default to My Rides
+  const [activeTab, setActiveTab] = useState<TabType>("my_rides");
   const navigate = useNavigate();
   const guestId = localStorage.getItem("chat_guest_id");
 
@@ -53,7 +67,6 @@ const RideGroupsPage: React.FC = () => {
     }
   };
 
-  // Helper to check if user is in a group
   const isGroupRelevant = (group: RideGroup) => {
     return group.members.some((member) => {
       if (currentUser && member.user_id === currentUser.id) return true;
@@ -101,13 +114,11 @@ const RideGroupsPage: React.FC = () => {
     },
   ];
 
-  // Logic to render specific tab content
   const renderTabContent = () => {
-    // 1. MY RIDES TAB (Special Arrow UI)
     if (activeTab === "my_rides") {
-      const myGroups = groups.filter(isGroupRelevant);
+      const myRawGroups = groups.filter(isGroupRelevant);
 
-      if (myGroups.length === 0) {
+      if (myRawGroups.length === 0) {
         return (
           <div className="bg-white p-8 rounded-lg shadow-md text-center">
             <h3 className="text-gray-900 font-medium">
@@ -123,9 +134,46 @@ const RideGroupsPage: React.FC = () => {
         );
       }
 
+      // --- DEDUPLICATION LOGIC ---
+      const uniqueRides: Record<
+        string,
+        { primaryGroup: RideGroup; hasSuggestedMatch: boolean }
+      > = {};
+
+      myRawGroups.forEach((group) => {
+        const rideId = getUserRideId(group, currentUser, guestId);
+        if (!rideId) return;
+
+        if (!uniqueRides[rideId]) {
+          uniqueRides[rideId] = {
+            primaryGroup: group,
+            hasSuggestedMatch: false,
+          };
+        }
+
+        const entry = uniqueRides[rideId];
+
+        if (group.group_type === "suggested") {
+          if (group.member_count > 1) entry.hasSuggestedMatch = true;
+          if (
+            entry.primaryGroup.group_type === "suggested" &&
+            group.member_count > entry.primaryGroup.member_count
+          ) {
+            entry.primaryGroup = group;
+          }
+        } else {
+          // Corporate/Uni etc. takes priority over the generic 'suggested' view
+          if (entry.primaryGroup.group_type === "suggested") {
+            entry.primaryGroup = group;
+          }
+        }
+      });
+
+      const displayGroups = Object.values(uniqueRides);
+
       return (
         <div className="space-y-6">
-          {myGroups.map((group) => {
+          {displayGroups.map(({ primaryGroup: group, hasSuggestedMatch }) => {
             const isMatched = group.member_count > 1;
 
             return (
@@ -133,12 +181,28 @@ const RideGroupsPage: React.FC = () => {
                 key={group.group_id}
                 className="bg-white rounded-xl shadow-md p-6 border border-gray-100"
               >
-                <h3 className="font-bold text-lg mb-4 text-gray-800">
-                  My Ride Request Status
-                </h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-lg text-gray-800">
+                    My Ride Request{" "}
+                    <span className="text-gray-400 font-normal text-sm">
+                      ({group.group_type})
+                    </span>
+                  </h3>
+                  {group.members[0]?.scheduled_time && (
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full flex items-center">
+                      <ClockIcon className="w-3 h-3 mr-1" />
+                      {new Date(
+                        group.members[0].scheduled_time,
+                      ).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  )}
+                </div>
 
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  {/* Left: My Request */}
+                  {/* Left: Request Info */}
                   <div className="flex-1 bg-gray-50 p-4 rounded-lg border border-gray-200 w-full">
                     <div className="flex items-center text-sm font-bold text-gray-700 mb-2">
                       <UserGroupIcon className="h-5 w-5 mr-2 text-brand" />
@@ -150,7 +214,7 @@ const RideGroupsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Center: Logic/Arrow */}
+                  {/* Center: Arrow Icon */}
                   <div className="flex flex-col items-center justify-center text-center px-4">
                     {isMatched ? (
                       <>
@@ -173,7 +237,7 @@ const RideGroupsPage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Right: Result */}
+                  {/* Right: Result Area */}
                   <div
                     className={`flex-1 p-4 rounded-lg border w-full ${isMatched ? "bg-blue-50 border-blue-200" : "bg-red-50 border-red-200"}`}
                   >
@@ -196,16 +260,39 @@ const RideGroupsPage: React.FC = () => {
                     ) : (
                       <div className="text-center md:text-left">
                         <p className="text-sm font-bold text-red-600 mb-1">
-                          Unmatched
+                          Unmatched in {group.group_type}
                         </p>
-                        {/* SPECIFIC TEXT REQUIRED BY PROMPT */}
                         <p className="text-sm text-gray-700 italic">
-                          "No current users on the same route."
+                          "No users in this category yet."
                         </p>
                       </div>
                     )}
                   </div>
                 </div>
+
+                {/* Suggested Match Banner */}
+                {!isMatched && hasSuggestedMatch && (
+                  <div className="mt-4 bg-purple-50 border border-purple-200 rounded-lg p-3 flex items-center justify-between">
+                    <div className="flex items-center">
+                      <SparklesIcon className="h-5 w-5 text-purple-600 mr-2" />
+                      <div>
+                        <p className="text-sm font-bold text-purple-900">
+                          Good News!
+                        </p>
+                        <p className="text-xs text-purple-700">
+                          We found a match for you in the{" "}
+                          <span className="font-bold">Suggested</span> category.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab("suggested")}
+                      className="text-xs bg-purple-600 text-white px-3 py-2 rounded shadow-sm hover:bg-purple-700 whitespace-nowrap ml-3"
+                    >
+                      View Suggested
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -213,18 +300,8 @@ const RideGroupsPage: React.FC = () => {
       );
     }
 
-    // 2. OTHER TABS (Standard Card View)
-    let filteredGroups = groups;
-    if (activeTab === "corporate")
-      filteredGroups = groups.filter((g) => g.group_type === "corporate");
-    if (activeTab === "neighborhood")
-      filteredGroups = groups.filter((g) => g.group_type === "neighborhood");
-    if (activeTab === "university")
-      filteredGroups = groups.filter((g) => g.group_type === "university");
-    if (activeTab === "events")
-      filteredGroups = groups.filter((g) => g.group_type === "events");
-    if (activeTab === "suggested")
-      filteredGroups = groups.filter((g) => g.group_type === "suggested");
+    // --- Standard Card View for Other Tabs ---
+    let filteredGroups = groups.filter((g) => g.group_type === activeTab);
 
     if (filteredGroups.length === 0) {
       return (
@@ -241,24 +318,12 @@ const RideGroupsPage: React.FC = () => {
         {filteredGroups.map((group) => (
           <div
             key={group.group_id}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border-l-4"
-            style={{
-              borderLeftColor:
-                activeTab === "corporate"
-                  ? "#2563EB"
-                  : activeTab === "neighborhood"
-                    ? "#16A34A"
-                    : activeTab === "university"
-                      ? "#EA580C"
-                      : activeTab === "events"
-                        ? "#DB2777"
-                        : "#9333EA",
-            }}
+            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border-l-4 border-l-brand"
           >
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 capitalize flex items-center">
+                  <h3 className="text-lg font-semibold text-gray-900 capitalize">
                     {activeTab} Group
                   </h3>
                   <div className="flex items-center mt-1 text-sm text-gray-500">
@@ -272,29 +337,16 @@ const RideGroupsPage: React.FC = () => {
                   {group.member_count} Riders
                 </span>
               </div>
-
-              <div className="mb-4">
-                <h4 className="text-xs uppercase tracking-wider text-gray-500 font-bold mb-2">
-                  Members
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {group.members.slice(0, 4).map((m, i) => (
-                    <span
-                      key={i}
-                      className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs border border-slate-200"
-                    >
-                      {m.user_name}
-                    </span>
-                  ))}
-                  {group.members.length > 4 && (
-                    <span className="text-xs text-gray-500 pt-1">
-                      +{group.members.length - 4} more
-                    </span>
-                  )}
-                </div>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {group.members.slice(0, 4).map((m, i) => (
+                  <span
+                    key={i}
+                    className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs border border-slate-200"
+                  >
+                    {m.user_name}
+                  </span>
+                ))}
               </div>
-
-              {/* Show "Join" if user is matched here, or standard details */}
               <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
                 <span className="text-sm text-gray-500 flex items-center">
                   <MapIcon className="h-4 w-4 mr-1" /> Match within 1hr
@@ -320,30 +372,33 @@ const RideGroupsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header & Tabs */}
       <div className="bg-white rounded-lg shadow-sm">
         <div className="p-6 border-b border-gray-100">
           <h1 className="text-2xl font-bold text-gray-900">Ride Matches</h1>
         </div>
         <div className="overflow-x-auto">
-          <nav className="flex space-x-2 px-4" aria-label="Tabs">
+          <nav className="flex space-x-2 px-4">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
-              // Count logic
               const count =
                 tab.id === "my_rides"
-                  ? groups.filter(isGroupRelevant).length
+                  ? Object.keys(
+                      groups.filter(isGroupRelevant).reduce(
+                        (acc, g) => {
+                          const id = getUserRideId(g, currentUser, guestId);
+                          if (id) acc[id] = true;
+                          return acc;
+                        },
+                        {} as Record<string, boolean>,
+                      ),
+                    ).length
                   : groups.filter((g) => g.group_type === tab.id).length;
 
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`${
-                    isActive
-                      ? "border-brand text-brand bg-blue-50/50"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  } whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm flex items-center transition-colors`}
+                  className={`${isActive ? "border-brand text-brand bg-blue-50/50" : "border-transparent text-gray-500 hover:text-gray-700"} whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm flex items-center transition-colors`}
                 >
                   <tab.icon
                     className={`w-5 h-5 mr-2 ${isActive ? tab.color : "text-gray-400"}`}
@@ -360,8 +415,6 @@ const RideGroupsPage: React.FC = () => {
           </nav>
         </div>
       </div>
-
-      {/* Main Content Area */}
       {renderTabContent()}
     </div>
   );
