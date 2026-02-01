@@ -77,10 +77,7 @@ function AppContent() {
             path="/"
             element={<HomePage onRequestRoute={() => navigate("/request")} />}
           />
-          {/* <Route
-            path="/request"
-            element={<RequestPage showNotification={showNotification} />}
-          /> */}
+
           <Route path="/test" element={<TestPage />} />
           <Route path="/signin" element={<AuthenticationPage />} />
           <Route path="/signup" element={<AuthenticationPage />} />

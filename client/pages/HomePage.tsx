@@ -4,7 +4,7 @@ import { CategoryGrid } from "../components/homePageComponent/CategoryGrid";
 import { ValueProposition } from "../components/homePageComponent/ValueProposition";
 
 interface HomePageProps {
-  onRequestRoute: () => void;
+  onRequestRoute: (categoryId: string) => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ onRequestRoute }) => {
