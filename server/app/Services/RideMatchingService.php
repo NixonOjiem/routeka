@@ -145,6 +145,7 @@ class RideMatchingService
                 })->values()
             ];
         }
+        Log::info('meet point', $groups);
 
         return $groups;
     }
@@ -198,18 +199,34 @@ class RideMatchingService
      * Calculate centroid of group
      */
     private function calculateCentroid($rides)
-    {
-        $totalLat = 0; $totalLng = 0;
-        foreach ($rides as $ride) {
-            $totalLat += $ride->pickup_lat;
-            $totalLng += $ride->pickup_lng;
-        }
-        return [
-            'lat' => $totalLat / $rides->count(),
-            'lng' => $totalLng / $rides->count(),
-            'name' => 'Suggested Meetup'
-        ];
+{
+    $totalLat = 0;
+    $totalLng = 0;
+
+    foreach ($rides as $ride) {
+        $totalLat += $ride->pickup_lat;
+        $totalLng += $ride->pickup_lng;
     }
+
+    $avgLat = $totalLat / $rides->count();
+    $avgLng = $totalLng / $rides->count();
+
+    // Log the values clearly
+    Log::info('Calculated centroid', [
+        'totalLat' => $totalLat,
+        'totalLng' => $totalLng,
+        'avgLat'   => $avgLat,
+        'avgLng'   => $avgLng,
+        'count'    => $rides->count()
+    ]);
+
+    return [
+        'lat' => $avgLat,
+        'lng' => $avgLng,
+        'name' => 'Suggested Meetup'
+    ];
+}
+
 
     /**
      * Get all available chat rooms for a user/guest

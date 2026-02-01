@@ -17,6 +17,7 @@ import {
   StarIcon,
   ArrowNarrowRightIcon,
   ExclamationCircleIcon,
+  LockClosedIcon, // Imported for the disabled state
 } from "@heroicons/react/outline";
 
 type TabType =
@@ -115,6 +116,7 @@ const RideGroupsPage: React.FC = () => {
   ];
 
   const renderTabContent = () => {
+    // 1. MY RIDES TAB (Full Access, Specific Logic)
     if (activeTab === "my_rides") {
       const myRawGroups = groups.filter(isGroupRelevant);
 
@@ -188,11 +190,11 @@ const RideGroupsPage: React.FC = () => {
                       ({group.group_type})
                     </span>
                   </h3>
-                  {group.members[0]?.scheduled_time && (
+                  {group.members[0]?.commute_time && (
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full flex items-center">
                       <ClockIcon className="w-3 h-3 mr-1" />
                       {new Date(
-                        group.members[0].scheduled_time,
+                        group.members[0].commute_time,
                       ).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -300,8 +302,13 @@ const RideGroupsPage: React.FC = () => {
       );
     }
 
-    // --- Standard Card View for Other Tabs ---
+    // 2. OTHER TABS (Corporate, Uni, etc, AND Suggested)
+    // Filter by type only (showing ALL rides in that category regardless of user)
     let filteredGroups = groups.filter((g) => g.group_type === activeTab);
+
+    // Logic: Only allow chat if this is the 'suggested' tab.
+    // Corporate/Uni/Events/Neighborhood are view-only here.
+    const isChatEnabled = activeTab === "suggested";
 
     if (filteredGroups.length === 0) {
       return (
@@ -351,13 +358,28 @@ const RideGroupsPage: React.FC = () => {
                 <span className="text-sm text-gray-500 flex items-center">
                   <MapIcon className="h-4 w-4 mr-1" /> Match within 1hr
                 </span>
+
+                {/* Chat Button Logic */}
                 {group.chat_room_id && (
-                  <Link
-                    to={`/chat/${group.chat_room_id}`}
-                    className="text-brand hover:underline text-sm font-medium"
-                  >
-                    View Chat
-                  </Link>
+                  <>
+                    {isChatEnabled ? (
+                      <Link
+                        to={`/chat/${group.chat_room_id}`}
+                        className="text-brand hover:underline text-sm font-medium"
+                      >
+                        View Chat
+                      </Link>
+                    ) : (
+                      <button
+                        disabled
+                        className="text-gray-400 text-sm font-medium flex items-center cursor-not-allowed bg-gray-50 px-2 py-1 rounded"
+                        title="Go to My Rides to chat"
+                      >
+                        <LockClosedIcon className="w-3 h-3 mr-1" />
+                        View Only
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
