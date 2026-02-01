@@ -232,4 +232,5 @@ class RideMatchingService
             return [];
         }
     }
+
 }
