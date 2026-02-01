@@ -75,7 +75,13 @@ function AppContent() {
           {/* ✅ Keep existing routes */}
           <Route
             path="/"
-            element={<HomePage onRequestRoute={() => navigate("/request")} />}
+            element={
+              <HomePage
+                onRequestRoute={(id) =>
+                  navigate("/request", { state: { categoryId: id } })
+                }
+              />
+            }
           />
 
           <Route path="/test" element={<TestPage />} />

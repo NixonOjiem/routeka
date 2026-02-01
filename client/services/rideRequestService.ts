@@ -27,6 +27,7 @@ interface ApiRideRequestData {
   name?: string;
   email?: string;
   phone?: string;
+  category: string;
 }
 
 export const rideRequestService = {
@@ -52,6 +53,7 @@ export const rideRequestService = {
         dropoff: { lat: data.dropoff_lat, lng: data.dropoff_lng },
         commute_time: this.formatCommuteTime(data.commute_time),
         frequency: this.capitalizeFrequency(data.frequency),
+        category: data.category,
         // No guest fields sent anymore
       };
 

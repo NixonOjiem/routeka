@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RequestRouteForm } from "../components/homePageComponent/forms/RequestRouteForm";
 import {
@@ -19,15 +19,22 @@ export const RequestPage: React.FC<RequestPageProps> = ({
   showNotification,
 }) => {
   const navigate = useNavigate();
-  //const dispatch = useDispatch();
   const dispatch = useDispatch<AppDispatch>();
+  const location = useLocation() as { state: { categoryId?: string } };
   // Get Redux state
   const { user } = useSelector((state: RootState) => state.auth);
   const { loading, error, success } = useSelector(
     (state: RootState) => state.rideRequest,
   );
+  const selectedCategoryId = location.state?.categoryId;
 
   const handleRouteRequestSubmit = async (data: any) => {
+    const modifiedData = {
+      ...data,
+      category: selectedCategoryId,
+    };
+    data = modifiedData;
+    console.log({ data });
     // Dispatch the Redux action instead of calling storageService
     dispatch(submitRideRequest(data));
   };
