@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ChatRoom;
 use App\Models\RideRequest;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -47,7 +48,12 @@ class RideMatchingService
             // --- B. SUGGESTED (MIXED) MATCHING ---
             // Run logic on ALL requests, ignoring category.
             // We label these as 'suggested'.
+            #$mixedGroups = $this->runGridMatching($allRequests, 'suggested');
             $mixedGroups = $this->runGridMatching($allRequests, 'suggested');
+
+            $mixedGroups = array_filter($mixedGroups, function($group) {
+                return $group['member_count'] > 1;
+            });
 
             // Optimization: Only add mixed groups that are "better" (e.g., have members)
             // or simply add them all. For now, we add them all but filter purely distinct
@@ -81,35 +87,40 @@ class RideMatchingService
 
             $pickupGrid = $this->calculateGrid($request->pickup_lat, $request->pickup_lng, $gridSize);
             $dropoffGrid = $this->calculateGrid($request->dropoff_lat, $request->dropoff_lng, $gridSize);
-
+            Log::info('Request from ride matching service:', $request->toArray());
+            $reqTime = Carbon::parse($request->commute_time ?? $request->commute_time);
             // Find matches within the passed collection
-            $matches = $sortedRequests->filter(function ($item) use ($request, $processedIds, $gridSize) {
+            $matches = $sortedRequests->filter(function ($item) use ($request, $processedIds, $gridSize, $reqTime) {
+
+                // Parse item time
+                $itemTime = Carbon::parse($item->scheduled_time ?? $item->created_at);
+
+                // TIME CHECK: Absolute difference in hours
+                $hoursDiff = $reqTime->diffInHours($itemTime);
+
                 return $item->id !== $request->id
                     && !in_array($item->id, $processedIds)
+                    // Location Checks (1 Mile Grid)
                     && abs($item->pickup_lat - $request->pickup_lat) <= $gridSize
                     && abs($item->pickup_lng - $request->pickup_lng) <= $gridSize
                     && abs($item->dropoff_lat - $request->dropoff_lat) <= $gridSize
-                    && abs($item->dropoff_lng - $request->dropoff_lng) <= $gridSize;
+                    && abs($item->dropoff_lng - $request->dropoff_lng) <= $gridSize
+                    // Time Check (Within 1 hour)
+                    && $hoursDiff <= 1;
             });
 
-            // Form the group
             $groupMembers = $matches->push($request);
-
             // Mark processed
             foreach ($groupMembers as $member) $processedIds[] = $member->id;
 
-            // Only create "Suggested" groups if they actually have mixed users or > 1 user
-            // to avoid duplicates of solo rides in every tab
-            if ($groupType === 'suggested' && $groupMembers->count() < 2) {
-                continue;
-            }
+            // For specific category tabs, we include Solo riders (waiting for match)
+            // For suggested, we usually only want actual matches (handled in parent function)
 
-            // Chat Room Logic (Append groupType to ID to allow different chats for different group contexts)
             $chatRoom = $this->getOrCreateChatRoom($groupMembers, $pickupGrid, $dropoffGrid, $groupType);
 
             $groups[] = [
-                'group_id' => $groupType . '_' . $request->id, // e.g. corporate_105
-                'group_type' => $groupType, // IMPORTANT: Used by Frontend for Tabs
+                'group_id' => $groupType . '_' . $request->id,
+                'group_type' => $groupType,
                 'chat_room_id' => $chatRoom->room_id,
                 'meetup_point' => $this->calculateCentroid($groupMembers),
                 'pickup_grid' => $pickupGrid,
@@ -120,16 +131,15 @@ class RideMatchingService
                         'id' => $member->id,
                         'user_id' => $member->user_id,
                         'user_name' => $member->user->name ?? 'Guest',
-                        'category' => $member->category, // Send category to frontend
+                        'category' => $member->category,
+                        'scheduled_time' => $member->scheduled_time, // Send time to frontend
                         'pickup' => [
                             'lat' => $member->pickup_lat,
                             'lng' => $member->pickup_lng,
-                            'address' => $member->pickup_address
                         ],
                         'dropoff' => [
                             'lat' => $member->dropoff_lat,
                             'lng' => $member->dropoff_lng,
-                            'address' => $member->dropoff_address
                         ]
                     ];
                 })->values()
@@ -138,6 +148,7 @@ class RideMatchingService
 
         return $groups;
     }
+
 
     /**
      * Calculate grid identifier for coordinates
