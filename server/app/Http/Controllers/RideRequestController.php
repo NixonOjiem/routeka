@@ -154,6 +154,7 @@ public function index(Request $request)
         'dropoff.lng' => 'required|numeric',
         'commute_time' => 'required|date',
         'frequency' => 'required|string',
+        'category' => 'required|string',
     ]);
 
     // 4. Prepare data for saving
@@ -165,6 +166,7 @@ public function index(Request $request)
         'dropoff_lng' => $request->input('dropoff.lng'),
         'commute_time' => $request->input('commute_time'),
         'frequency' => $request->input('frequency'),
+        'category' => $request->input('category'),
     ];
 
     $ride = RideRequest::create($data);
