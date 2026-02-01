@@ -98,7 +98,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
               >
                 Home
               </button>
-              <button
+              {/* <button
                 onClick={() => handleNavClick("request")}
                 className={`px-4 sm:px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 transform active:scale-95 ${
                   currentView === "request"
@@ -107,7 +107,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                 }`}
               >
                 Request/View Route
-              </button>
+              </button> */}
               <button
                 onClick={() => handleNavigate("/rides")}
                 className={`px-4 sm:px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 transform active:scale-95 ${
@@ -200,7 +200,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
               >
                 <span>Home</span>
               </button>
-              <button
+              {/* <button
                 onClick={() => handleNavClick("request")}
                 className={`flex items-center px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 active:scale-[0.98] ${
                   currentView === "request"
@@ -209,7 +209,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                 }`}
               >
                 <span>Request/View Route</span>
-              </button>
+              </button> */}
               <button
                 onClick={() => handleNavigate("/rides")}
                 className={`flex items-center px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 active:scale-[0.98] ${
