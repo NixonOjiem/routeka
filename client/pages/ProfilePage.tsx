@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
 import { apiService } from "@/services/api";
+import { useSelector, useDispatch } from "react-redux";
+import { logout, reset } from "@/redux/slices/authSlice";
+import { AppDispatch, RootState } from "@/redux/store";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -145,6 +146,19 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>(); // 2. Initialize dispatch
+  const onLogout = async () => {
+    try {
+      // 3. Use the Redux action instead of the direct api call
+      await dispatch(logout()).unwrap();
+      dispatch(reset());
+      navigate("/");
+    } catch (error) {
+      // Even if the API call fails, we want to clear local state
+      dispatch(reset());
+      navigate("/");
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -426,11 +440,12 @@ export default function ProfilePage() {
                   </h4>
                   <div className="flex flex-wrap gap-3">
                     <button
+                      onClick={() => onLogout()}
                       className="px-5 py-2.5 bg-white border border-red-200 text-red-600 
                                       rounded-xl hover:bg-red-50 transition-all flex items-center gap-2"
                     >
                       <LogOut size={18} />
-                      Sign Out All
+                      Sign Out
                     </button>
                   </div>
                 </div>
