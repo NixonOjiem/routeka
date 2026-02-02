@@ -166,7 +166,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
 
                   {/* Desktop Dropdown Content */}
                   {isProfileDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-stone-100 py-3 z-[60] animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-stone-100 py-3 z-60 animate-in fade-in slide-in-from-top-2">
                       <div className="px-4 py-3 border-b border-stone-100">
                         <p className="font-bold text-stone-900">{user.name}</p>
                         <p className="text-xs text-stone-500">{user.email}</p>
@@ -221,7 +221,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                   </button>
 
                   {isProfileDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border z-[60]">
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border z-60">
                       <button
                         onClick={() => handleNavigate("/profile")}
                         className="w-full text-left px-4 py-3 text-stone-700 flex items-center gap-2"
