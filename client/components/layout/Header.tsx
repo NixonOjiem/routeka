@@ -103,13 +103,16 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
           >
             {/* Logo */}
             <div
-              className="flex items-center gap-3 cursor-pointer group active:scale-95 transition-transform"
+              className="flex items-center gap-3 cursor-pointer group select-none active:scale-95 transition-transform duration-200"
               onClick={() => handleNavClick("home")}
             >
-              <div className="relative text-brand p-2">
-                <Car className="w-6 h-6 relative z-10" />
+              <div className="relative text-brand p-2 rounded-xl overflow-hidden">
+                <div className="absolute inset-0 bg-brand-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                <div className="relative z-10 group-hover:translate-x-2 transition-transform duration-500 ease-in-out">
+                  <Car className="w-6 h-6" />
+                </div>
               </div>
-              <span className="font-bold text-xl sm:text-2xl text-brand tracking-tight">
+              <span className="font-display font-bold text-xl sm:text-2xl text-brand tracking-tight">
                 Route KA
               </span>
             </div>
