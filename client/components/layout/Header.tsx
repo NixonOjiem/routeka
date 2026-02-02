@@ -219,7 +219,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                     onClick={() =>
                       setIsProfileDropdownOpen(!isProfileDropdownOpen)
                     }
-                    className="group relative w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm hover:ring-4 hover:ring-indigo-100 transition-all duration-200 overflow-hidden"
+                    className="group relative w-10 h-10 bg-brand rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm hover:ring-4 hover:ring-indigo-100 transition-all duration-200 overflow-hidden"
                   >
                     <span className="relative z-10">{getUserInitials()}</span>
                     {/* Subtle overlay on hover */}
