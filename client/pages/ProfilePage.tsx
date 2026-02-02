@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "@/services/api";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { logout, reset } from "@/redux/slices/authSlice";
-import { AppDispatch, RootState } from "@/redux/store";
+import { AppDispatch } from "@/redux/store";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -36,7 +36,7 @@ const ProfileSkeleton = () => (
   <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
     {/* Header Skeleton */}
     <div className="flex flex-col gap-4">
-      <div className="h-10 w-80 bg-gradient-to-r from-brand/10 to-brand/5 rounded-xl animate-pulse"></div>
+      <div className="h-10 w-80 bg-linear-to-r from-brand/10 to-brand/5 rounded-xl animate-pulse"></div>
       <div className="h-4 w-60 bg-stone-200 rounded animate-pulse"></div>
     </div>
 
@@ -104,9 +104,9 @@ const InfoCard = ({
   >
     <div className="flex items-start gap-4">
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-brand/20 to-transparent rounded-xl blur-sm"></div>
+        <div className="absolute inset-0 bg-linear-to-br from-brand/20 to-transparent rounded-xl blur-sm"></div>
         <div
-          className="relative p-3 rounded-xl bg-gradient-to-br from-brand/5 to-brand/10 
+          className="relative p-3 rounded-xl bg-linear-to-br from-brand/5 to-brand/10 
                        group-hover:from-brand/10 group-hover:to-brand/20 transition-colors"
         >
           <Icon
@@ -179,7 +179,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <div className="bg-gradient-to-b from-brand/5 via-white to-brand/[0.02]">
+      <div className="bg-linear-to-b from-brand/5 via-white to-brand/2">
         {/* Decorative Elements */}
         <div className="fixed inset-0 pointer-events-none">
           <div className="absolute top-0 left-0 w-96 h-96 bg-brand/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
@@ -189,7 +189,7 @@ export default function ProfilePage() {
         {/* Header Banner */}
         <div className="relative overflow-hidden rounded-b-[2.5rem] shadow-lg">
           {/* Main Background Container */}
-          <div className="h-64 bg-gradient-to-r from-brand via-brand/90 to-brand/80 flex items-center justify-center relative">
+          <div className="h-64 bg-linear-to-r from-brand via-brand/90 to-brand/80 flex items-center justify-center relative">
             {/* SVG Pattern Overlay - Using pointer-events-none so it doesn't interfere with clicks */}
             <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20 pointer-events-none"></div>
 
@@ -199,7 +199,7 @@ export default function ProfilePage() {
             </h1>
 
             {/* Bottom Inner Shadow for Depth */}
-            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-black/10 to-transparent pointer-events-none"></div>
           </div>
         </div>
         {/* Floating Elements */}
@@ -234,11 +234,11 @@ export default function ProfilePage() {
                 {/* Profile Avatar */}
                 <div className="relative mb-8">
                   <div
-                    className="absolute -inset-4 bg-gradient-to-r from-brand/30 to-brand/10 rounded-3xl 
+                    className="absolute -inset-4 bg-linear-to-r from-brand/30 to-brand/10 rounded-3xl 
                                 blur-xl opacity-70"
                   ></div>
                   <div
-                    className="relative w-40 h-40 mx-auto bg-gradient-to-br from-brand to-brand/70 
+                    className="relative w-40 h-40 mx-auto bg-linear-to-br from-brand to-brand/70 
                                 rounded-3xl flex items-center justify-center text-5xl font-bold text-white 
                                 border-8 border-white shadow-2xl overflow-hidden"
                   >
@@ -271,7 +271,7 @@ export default function ProfilePage() {
                 <div className="space-y-4">
                   <button
                     onClick={() => navigate("/profile/edit")}
-                    className="w-full bg-gradient-to-r from-brand to-brand/80 text-white py-4 
+                    className="w-full bg-linear-to-r from-brand to-brand/80 text-white py-4 
                               rounded-2xl font-semibold hover:shadow-lg hover:shadow-brand/20 
                               transition-all flex items-center justify-center gap-3 group"
                   >
@@ -294,7 +294,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-brand to-brand/70 rounded-full 
+                      className="h-full bg-linear-to-r from-brand to-brand/70 rounded-full 
                                   w-[98%] animate-pulse"
                     ></div>
                   </div>
@@ -336,7 +336,7 @@ export default function ProfilePage() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 ${
                       activeTab === tab.id
-                        ? "bg-gradient-to-r from-brand to-brand/80 text-white shadow-md"
+                        ? "bg-linear-to-r from-brand to-brand/80 text-white shadow-md"
                         : "text-stone-600 hover:text-brand hover:bg-brand/5"
                     }`}
                   >
@@ -432,7 +432,7 @@ export default function ProfilePage() {
               {/* Quick Actions Bar */}
               <AnimatedCard delay={0.3}>
                 <div
-                  className="mt-8 p-6 bg-gradient-to-r from-brand/10 to-transparent 
+                  className="mt-8 p-6 bg-linear-to-r from-brand/10 to-transparent 
                               rounded-3xl border border-brand/20"
                 >
                   <h4 className="text-lg font-bold text-stone-900 mb-4">
