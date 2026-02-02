@@ -43,10 +43,11 @@ api.interceptors.response.use(
 
 // Types
 export interface User {
-  id: number;
+  id?: number;
   name: string;
   email: string;
   user_name?: string;
+  email_verified_at?: string;
 }
 
 export interface RideLocation {
@@ -147,6 +148,8 @@ export const apiService = {
 
   getGriddedRides: (gridSize?: number) =>
     api.get("/rides/grids", { params: { grid_size: gridSize } }),
+
+  getUserProfile: (config?: any) => api.get("/auth/profile", config),
 
   // Chat endpoints
   getChatRooms: () =>
