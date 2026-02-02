@@ -60,7 +60,7 @@ function AppContent() {
       )}
 
       <main
-        className={`flex-grow ${
+        className={`grow ${
           !isAuthPage ? "container mx-auto px-4 md:px-6 py-6 max-w-7xl" : ""
         }`}
       >
