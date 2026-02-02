@@ -20,7 +20,7 @@ import { HomePage } from "./pages/HomePage";
 import { RequestPage } from "./pages/RequestPage";
 import AuthenticationPage from "./pages/AuthenticationPage";
 import TestPage from "./pages/TestPage";
-
+import ProfilePage from "./pages/ProfilePage";
 // ✅ New pages
 import RideGroupsPage from "@/pages/RideGroupsPage";
 import ChatPage from "@/pages/ChatPage";
@@ -100,6 +100,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <RequestPage showNotification={showNotification} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage showNotification={showNotification} />
               </ProtectedRoute>
             }
           />
