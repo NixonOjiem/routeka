@@ -238,12 +238,6 @@ export default function ProfilePage() {
                       profile?.name?.[0]
                     )}
                   </div>
-                  <div
-                    className="absolute -bottom-3 -right-3 bg-gradient-to-r from-amber-400 to-amber-500 
-                                text-white p-2 rounded-xl shadow-lg"
-                  >
-                    <Crown size={20} />
-                  </div>
                 </div>
 
                 {/* Profile Info */}
@@ -257,45 +251,6 @@ export default function ProfilePage() {
                     </span>
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                   </div>
-                  <p className="text-stone-500 mt-4">Senior Product Designer</p>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-4 mb-8">
-                  {[
-                    {
-                      value: "42",
-                      label: "Projects",
-                      icon: <Zap size={16} className="text-brand" />,
-                    },
-                    {
-                      value: "128",
-                      label: "Connects",
-                      icon: <User size={16} className="text-brand" />,
-                    },
-                    {
-                      value: "98%",
-                      label: "Complete",
-                      icon: <CheckCircle size={16} className="text-brand" />,
-                    },
-                  ].map((stat, index) => (
-                    <div
-                      key={index}
-                      className="p-4 rounded-2xl bg-gradient-to-b from-brand/5 to-transparent 
-                                   border border-brand/10 text-center group hover:border-brand/30 
-                                   transition-all cursor-pointer"
-                    >
-                      <div className="flex justify-center mb-2 opacity-70 group-hover:opacity-100">
-                        {stat.icon}
-                      </div>
-                      <div className="text-2xl font-bold text-brand mb-1">
-                        {stat.value}
-                      </div>
-                      <div className="text-xs font-medium text-stone-500 uppercase tracking-wider">
-                        {stat.label}
-                      </div>
-                    </div>
-                  ))}
                 </div>
 
                 {/* Action Buttons */}
@@ -313,23 +268,6 @@ export default function ProfilePage() {
                       className="opacity-0 group-hover:opacity-100 transition-opacity"
                     />
                   </button>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      className="p-3 rounded-xl border border-brand/20 text-brand 
-                                      hover:bg-brand/5 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Eye size={18} />
-                      <span className="text-sm font-medium">Preview</span>
-                    </button>
-                    <button
-                      className="p-3 rounded-xl border border-stone-200 text-stone-600 
-                                      hover:bg-stone-50 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Download size={18} />
-                      <span className="text-sm font-medium">Export</span>
-                    </button>
-                  </div>
                 </div>
 
                 {/* Quick Stats */}
@@ -415,32 +353,17 @@ export default function ProfilePage() {
                       />
                       <InfoCard
                         icon={Calendar}
-                        label="Member Since"
-                        value="October 2023"
+                        label="Verified Since"
+                        value={
+                          profile?.email_verified_at
+                            ? `${new Intl.DateTimeFormat("en-US", {
+                                month: "long",
+                                day: "numeric",
+                                year: "numeric",
+                              }).format(new Date(profile.email_verified_at))}`
+                            : "Not verified"
+                        }
                         subtext="2 years active"
-                      />
-                      <InfoCard
-                        icon={Phone}
-                        label="Phone Number"
-                        value={profile?.phone || "+1 (234) 567-8900"}
-                        onClick={() => toast.info("Click to add phone")}
-                      />
-                      <InfoCard
-                        icon={MapPin}
-                        label="Location"
-                        value={profile?.location || "San Francisco, CA"}
-                      />
-                      <InfoCard
-                        icon={Globe}
-                        label="Website"
-                        value="nixon.dev"
-                        className="md:col-span-2"
-                      />
-                      <InfoCard
-                        icon={Bell}
-                        label="Notifications"
-                        value="All active"
-                        subtext="Configure"
                       />
                     </div>
                   </motion.div>
@@ -453,36 +376,6 @@ export default function ProfilePage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-6"
                   >
-                    {/* Security Alert */}
-                    <div
-                      className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-3xl p-6 
-                                  border border-amber-200"
-                    >
-                      <div className="flex items-start gap-4">
-                        <AlertTriangle
-                          className="text-amber-500 mt-1"
-                          size={24}
-                        />
-                        <div className="flex-1">
-                          <h4 className="font-bold text-amber-900 mb-2">
-                            Security Recommendation
-                          </h4>
-                          <p className="text-amber-700 mb-4">
-                            Enable two-factor authentication to better protect
-                            your account from unauthorized access.
-                          </p>
-                          <button
-                            className="px-5 py-2.5 bg-amber-500 text-white rounded-xl 
-                                          font-medium hover:bg-amber-600 transition-colors 
-                                          flex items-center gap-2"
-                          >
-                            <Key size={16} />
-                            Enable 2FA
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Security Actions */}
                     <div className="grid md:grid-cols-2 gap-4">
                       {[
@@ -490,21 +383,6 @@ export default function ProfilePage() {
                           icon: Shield,
                           label: "Change Password",
                           action: "Update",
-                        },
-                        {
-                          icon: LogOut,
-                          label: "Active Sessions",
-                          action: "3 active",
-                        },
-                        {
-                          icon: Bell,
-                          label: "Login Alerts",
-                          action: "Enabled",
-                        },
-                        {
-                          icon: Download,
-                          label: "Download Data",
-                          action: "Export",
                         },
                       ].map((item, index) => (
                         <AnimatedCard key={index} delay={index * 0.1}>
