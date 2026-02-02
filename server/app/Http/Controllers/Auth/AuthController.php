@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -77,6 +78,21 @@ class AuthController extends Controller
         return response()->json(auth('api')->user());
     }
 
+    public function profile() {
+    if (!auth('api')->check()) {
+        return response()->json(['message' => 'Please login to continue'], 401);
+    }
+
+    $user = auth('api')->user();
+    $userData = [
+        'name' => $user->name,
+        'email' => $user->email,
+        'user_name' => $user->user_name,
+        'email_verified_at' => $user->email_verified_at
+        ];
+    Log::info($userData);
+    return response()->json([ 'message' => 'Profile retrieved successfully', 'data' => $userData ]);
+    }
     // Log the user out (Invalidate the token)
     public function logout()
     {

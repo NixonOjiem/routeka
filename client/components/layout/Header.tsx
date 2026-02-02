@@ -1,9 +1,9 @@
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { logout, reset } from "@/redux/slices/authSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useNavigate } from "react-router-dom";
-import { Car, Loader2, Menu, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Car, Loader2, Menu, X, User, LogOut, ChevronDown } from "lucide-react";
 
 interface HeaderProps {
   onViewChange: (view: string) => void;
@@ -14,9 +14,16 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { user, isLoading } = useSelector((state: RootState) => state.auth);
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
+  // SEPARATE REFS for Desktop and Mobile to avoid conflicts
+  const desktopRef = useRef<HTMLDivElement>(null);
+  const mobileRef = useRef<HTMLDivElement>(null);
+
+  // Handle Scroll effect
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -25,15 +32,37 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // We remove the "overflow: hidden" on body because this is an expanding header,
-  // not a full-screen takeover, though you can keep it if you want to lock scrolling.
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
 
-  const onLogout = async () => {
+      // Check if click was outside BOTH desktop and mobile dropdown containers
+      const clickedOutsideDesktop =
+        desktopRef.current && !desktopRef.current.contains(target);
+      const clickedOutsideMobile =
+        mobileRef.current && !mobileRef.current.contains(target);
+
+      if (clickedOutsideDesktop && clickedOutsideMobile) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const onLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevents the click from bubbling
+
     try {
       await dispatch(logout()).unwrap();
-      dispatch(reset());
-      navigate("/signin");
     } catch (error) {
+      console.error("Logout failed", error);
+    } finally {
+      setIsProfileDropdownOpen(false);
+      setIsMenuOpen(false);
       dispatch(reset());
       navigate("/signin");
     }
@@ -42,28 +71,35 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
   const handleNavClick = (view: string) => {
     onViewChange(view);
     setIsMenuOpen(false);
+    setIsProfileDropdownOpen(false);
   };
 
   const handleNavigate = (path: string) => {
     navigate(path);
     setIsMenuOpen(false);
+    setIsProfileDropdownOpen(false);
+  };
+
+  const getUserInitials = () => {
+    if (!user?.name) return "U";
+    return user.name
+      .split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 transition-all duration-500 ease-in-out overflow-hidden ${
+        className={`fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 transition-all duration-300 ease-in-out ${
           scrolled ? "shadow-md" : ""
         }`}
-        style={{
-          // If menu is open, we let it grow. If not, it's constrained by padding/content.
-          maxHeight: isMenuOpen ? "500px" : scrolled ? "64px" : "80px",
-        }}
       >
         <div className="container mx-auto px-4 sm:px-6">
-          {/* Top Bar: Logo and Icons */}
           <div
-            className={`flex justify-between items-center transition-all duration-500 ${scrolled ? "h-16" : "h-20"}`}
+            className={`flex justify-between items-center transition-all duration-300 ${scrolled ? "h-16" : "h-20"}`}
           >
             {/* Logo */}
             <div
@@ -107,122 +143,146 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
               </div>
 
               {user ? (
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-600">
-                    Hi, <strong>{user.user_name}</strong>
-                  </span>
+                <div className="relative" ref={desktopRef}>
                   <button
-                    onClick={onLogout}
-                    className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm"
+                    onClick={() =>
+                      setIsProfileDropdownOpen(!isProfileDropdownOpen)
+                    }
+                    className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-stone-50 transition-colors"
                   >
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      "Logout"
-                    )}
+                    <div className="w-9 h-9 bg-brand rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      {getUserInitials()}
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="text-sm font-medium text-stone-800 leading-tight">
+                        {user.user_name}
+                      </span>
+                      <span className="text-xs text-stone-500 leading-tight">
+                        {user.email?.split("@")[0]}
+                      </span>
+                    </div>
+                    <ChevronDown
+                      size={16}
+                      className={`transition-transform ${isProfileDropdownOpen ? "rotate-180" : ""}`}
+                    />
                   </button>
+
+                  {/* Desktop Dropdown Content */}
+                  {isProfileDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-stone-100 py-3 z-60 animate-in fade-in slide-in-from-top-2">
+                      <div className="px-4 py-3 border-b border-stone-100">
+                        <p className="font-bold text-stone-900">{user.name}</p>
+                        <p className="text-xs text-stone-500">{user.email}</p>
+                      </div>
+                      <div className="py-2">
+                        <button
+                          onClick={() => handleNavigate("/profile")}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-stone-700 hover:bg-stone-50"
+                        >
+                          <User size={18} className="text-stone-500" />
+                          <span className="font-medium">My Profile</span>
+                        </button>
+                      </div>
+                      <div className="px-3 pt-2 border-t border-stone-100">
+                        <button
+                          onClick={onLogout}
+                          disabled={isLoading}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 disabled:opacity-50"
+                        >
+                          {isLoading ? (
+                            <Loader2 className="animate-spin" size={18} />
+                          ) : (
+                            <LogOut size={18} />
+                          )}
+                          <span>{isLoading ? "Logging out..." : "Logout"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <button
                   onClick={() => handleNavigate("/signin")}
-                  className="bg-[#3E6272] text-white px-4 py-2 rounded-lg text-sm"
+                  className="bg-brand text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-all"
                 >
                   Sign In
                 </button>
               )}
             </nav>
 
-            {/* Mobile Menu Toggle */}
+            {/* Mobile Menu Actions */}
             <div className="flex items-center lg:hidden">
+              {user && (
+                <div className="relative mr-2" ref={mobileRef}>
+                  <button
+                    onClick={() =>
+                      setIsProfileDropdownOpen(!isProfileDropdownOpen)
+                    }
+                    className="w-9 h-9 bg-brand rounded-full flex items-center justify-center text-white text-sm"
+                  >
+                    {getUserInitials()}
+                  </button>
+
+                  {isProfileDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border z-60">
+                      <button
+                        onClick={() => handleNavigate("/profile")}
+                        className="w-full text-left px-4 py-3 text-stone-700 flex items-center gap-2"
+                      >
+                        <User size={16} /> My Profile
+                      </button>
+                      <button
+                        onClick={onLogout}
+                        className="w-full text-left px-4 py-3 text-red-600 border-t flex items-center gap-2"
+                      >
+                        <LogOut size={16} /> Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-all duration-300"
+                className="p-2 text-gray-600"
               >
-                {/* Smooth Icon Swap Animation */}
-                <div className="relative w-6 h-6">
-                  <div
-                    className={`absolute inset-0 transition-all duration-500 transform ${isMenuOpen ? "rotate-90 opacity-0" : "rotate-0 opacity-100"}`}
-                  >
-                    <Menu className="w-6 h-6" />
-                  </div>
-                  <div
-                    className={`absolute inset-0 transition-all duration-500 transform ${isMenuOpen ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"}`}
-                  >
-                    <X className="w-6 h-6" />
-                  </div>
-                </div>
+                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
           </div>
 
-          {/* Expanded Mobile Content */}
-          <div
-            className={`lg:hidden transition-all duration-500 ease-in-out ${
-              isMenuOpen
-                ? "opacity-100 translate-y-0 pb-8"
-                : "opacity-0 -translate-y-4 pointer-events-none"
-            }`}
-          >
-            <nav className="flex flex-col space-y-2">
-              <button
-                onClick={() => handleNavClick("home")}
-                className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${
-                  currentView === "home"
-                    ? "bg-stone-100 text-brand font-bold"
-                    : "text-stone-700"
-                }`}
-              >
-                Home
-              </button>
-              <button
-                onClick={() => handleNavigate("/rides")}
-                className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${
-                  currentView === "rides"
-                    ? "bg-stone-100 text-brand font-bold"
-                    : "text-stone-700"
-                }`}
-              >
-                Rides
-              </button>
-
-              <div className="pt-4 mt-4 border-t border-gray-100">
-                {user ? (
-                  <div className="space-y-4">
-                    <div className="px-4">
-                      <p className="text-xs text-gray-500 uppercase">Account</p>
-                      <p className="text-lg font-semibold text-gray-800">
-                        {user.user_name}
-                      </p>
-                    </div>
-                    <button
-                      onClick={onLogout}
-                      className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-medium flex justify-center items-center gap-2"
-                    >
-                      {isLoading ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        "Logout"
-                      )}
-                    </button>
-                  </div>
-                ) : (
+          {/* Expanded Mobile Menu */}
+          {isMenuOpen && (
+            <div className="lg:hidden pb-6 animate-in slide-in-from-top duration-300">
+              <nav className="flex flex-col space-y-2">
+                <button
+                  onClick={() => handleNavClick("home")}
+                  className="px-4 py-3 text-left hover:bg-stone-50 rounded-xl"
+                >
+                  Home
+                </button>
+                <button
+                  onClick={() => handleNavigate("/rides")}
+                  className="px-4 py-3 text-left hover:bg-stone-50 rounded-xl"
+                >
+                  Rides
+                </button>
+                {!user && (
                   <button
                     onClick={() => handleNavigate("/signin")}
-                    className="w-full bg-[#3E6272] text-white py-3 rounded-xl font-medium"
+                    className="mt-4 w-full bg-brand text-white py-3 rounded-xl"
                   >
                     Sign In
                   </button>
                 )}
-              </div>
-            </nav>
-          </div>
+              </nav>
+            </div>
+          )}
         </div>
       </header>
 
-      {/* Spacer */}
-      <div
-        className={`${scrolled ? "h-16" : "h-20"} transition-all duration-500`}
-      />
+      {/* Spacer to prevent content from jumping under fixed header */}
+      <div className={scrolled ? "h-16" : "h-20"} />
     </>
   );
 };
