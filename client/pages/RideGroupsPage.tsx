@@ -94,9 +94,21 @@ const RideGroupsPage: React.FC = () => {
   };
 
   // Helper to format the grid object into a string
-  const formatGrid = (grid: { lat: number; lng: number } | string) => {
-    if (typeof grid === "string") return grid; // Handle legacy strings if any
-    return `${grid.lat.toFixed(4)}, ${grid.lng.toFixed(4)}`;
+  const formatGrid = (grid: any) => {
+    // 1. If we have a human-readable name, use it
+    if (grid?.name && grid.name !== "Unknown Area") {
+      return grid.name;
+    }
+
+    // 2. Handle legacy string format
+    if (typeof grid === "string") return grid;
+
+    // 3. Fallback to coordinates if lat/lng exist
+    if (grid?.lat && grid?.lng) {
+      return `${Number(grid.lat).toFixed(4)}, ${Number(grid.lng).toFixed(4)}`;
+    }
+
+    return "Unknown Location";
   };
 
   const isGroupRelevant = (group: RideGroup) => {

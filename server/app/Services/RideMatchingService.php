@@ -9,6 +9,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class RideMatchingService
 {
@@ -117,13 +119,23 @@ class RideMatchingService
 
             $chatRoom = $this->getOrCreateChatRoom($groupMembers, $pickupGridCenter, $dropoffGridCenter, $groupType);
 
+            // --- NEW: Fetch Names for the Response ---
+            // We fetch the name for the GRID CENTER, not the specific user point,
+            // so everyone in the group sees the same "Area Name"
+            $pickupName = $this->getAreaName($pickupGridCenter['lat'], $pickupGridCenter['lng']);
+            $dropoffName = $this->getAreaName($dropoffGridCenter['lat'], $dropoffGridCenter['lng']);
+
+            // Inject names into the grid arrays for the response
+            $pickupGridCenter['name'] = $pickupName;
+            $dropoffGridCenter['name'] = $dropoffName;
+
             $groups[] = [
                 'group_id' => $groupType . '_' . $request->id,
                 'group_type' => $groupType,
                 'chat_room_id' => $chatRoom->room_id,
                 'meetup_point' => $this->calculateCentroid($groupMembers),
-                'pickup_grid' => $pickupGridCenter, // Now contains lat/lng
-                'dropoff_grid' => $dropoffGridCenter, // Now contains lat/lng
+                'pickup_grid' => $pickupGridCenter,
+                'dropoff_grid' => $dropoffGridCenter,
                 'member_count' => $groupMembers->count(),
                 'members' => $groupMembers->map(function($member) {
                     return [
@@ -249,10 +261,12 @@ class RideMatchingService
             'count' => $total
         ]);
 
+        $areaName = $this->getAreaName($centroidLat, $centroidLng);
+
         return [
             'lat' => $centroidLat,
             'lng' => $centroidLng,
-            'name' => 'Suggested Meetup'
+            'name' => $areaName.'Suggested Meetup'
         ];
     }
 
@@ -290,6 +304,41 @@ class RideMatchingService
             Log::error('Error in getAvailableChatRooms: ' . $e->getMessage());
             return [];
         }
+    }
+
+    /**
+     * Get rough area name using MapTiler Reverse Geocoding
+     */
+    private function getAreaName($lat, $lng)
+    {
+        // Round coordinates slightly to improve cache hit rate (4 decimal places is ~11m)
+        $latKey = round($lat, 4);
+        $lngKey = round($lng, 4);
+
+        return Cache::remember("geo_name_{$latKey}_{$lngKey}", 86400, function () use ($lat, $lng) {
+            try {
+                $apiKey = env('MAPTILLER_KEY'); // Note: ensure spelling matches your .env
+                if (!$apiKey) return "Unknown Area";
+
+                // MapTiler expects: longitude,latitude
+                $url = "https://api.maptiler.com/geocoding/{$lng},{$lat}.json?key={$apiKey}";
+
+                $response = Http::timeout(3)->get($url);
+
+                if ($response->successful()) {
+                    $features = $response->json()['features'] ?? [];
+                    if (!empty($features)) {
+                        // Return the text of the first result (usually the most relevant area name)
+                        return $features[0]['text'] ?? $features[0]['place_name'] ?? "Unknown Area";
+                    }
+                }
+
+                return "Unknown Area";
+            } catch (\Exception $e) {
+                Log::error('MapTiler Error: ' . $e->getMessage());
+                return "Unknown Area";
+            }
+        });
     }
 
 }

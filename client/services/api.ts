@@ -81,10 +81,14 @@ export interface RideGroup {
   pickup_grid: {
     lat: number;
     lng: number;
+    grid_cell: string;
+    name: string;
   };
   dropoff_grid: {
     lat: number;
     lng: number;
+    grid_cell: string;
+    name: string;
   };
   member_count: number;
   members: RideGroupMember[];
