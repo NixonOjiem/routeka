@@ -214,29 +214,58 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
             <div className="flex items-center lg:hidden">
               {user && (
                 <div className="relative mr-2" ref={mobileRef}>
+                  {/* Avatar Button */}
                   <button
                     onClick={() =>
                       setIsProfileDropdownOpen(!isProfileDropdownOpen)
                     }
-                    className="w-9 h-9 bg-brand rounded-full flex items-center justify-center text-white text-sm"
+                    className="group relative w-10 h-10 bg-brand rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm hover:ring-4 hover:ring-indigo-100 transition-all duration-200 overflow-hidden"
                   >
-                    {getUserInitials()}
+                    <span className="relative z-10">{getUserInitials()}</span>
+                    {/* Subtle overlay on hover */}
+                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
 
+                  {/* Dropdown Menu */}
                   {isProfileDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border z-60">
-                      <button
-                        onClick={() => handleNavigate("/profile")}
-                        className="w-full text-left px-4 py-3 text-stone-700 flex items-center gap-2"
-                      >
-                        <User size={16} /> My Profile
-                      </button>
-                      <button
-                        onClick={onLogout}
-                        className="w-full text-left px-4 py-3 text-red-600 border-t flex items-center gap-2"
-                      >
-                        <LogOut size={16} /> Logout
-                      </button>
+                    <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-60 overflow-hidden ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-100">
+                      {/* User Info Header */}
+                      <div className="px-5 py-4 bg-gray-50/50 border-b border-gray-100">
+                        <p className="text-sm font-bold text-gray-900 truncate">
+                          {user.name || "User Name"}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {user.email || "user@example.com"}
+                        </p>
+                      </div>
+
+                      {/* Menu Actions */}
+                      <div className="p-2">
+                        <button
+                          onClick={() => handleNavigate("/profile")}
+                          className="w-full text-left px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg flex items-center gap-3 transition-colors group"
+                        >
+                          <div className="p-1.5 bg-gray-100 group-hover:bg-indigo-100 rounded-md transition-colors">
+                            <User
+                              size={16}
+                              className="text-gray-500 group-hover:text-indigo-600"
+                            />
+                          </div>
+                          My Profile
+                        </button>
+
+                        <div className="my-1 border-t border-gray-100" />
+
+                        <button
+                          onClick={onLogout}
+                          className="w-full text-left px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-3 transition-colors group"
+                        >
+                          <div className="p-1.5 bg-red-50 group-hover:bg-red-100 rounded-md transition-colors">
+                            <LogOut size={16} className="text-red-500" />
+                          </div>
+                          Logout
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>

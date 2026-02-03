@@ -64,6 +64,7 @@ export interface RideGroupMember {
   pickup: RideLocation;
   dropoff: RideLocation;
   guest_id: string | null;
+  commute_time?: string;
 }
 
 export interface RideGroup {
