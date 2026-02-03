@@ -93,6 +93,24 @@ const RideGroupsPage: React.FC = () => {
     }
   };
 
+  // Helper to format the grid object into a string
+  const formatGrid = (grid: any) => {
+    // 1. If we have a human-readable name, use it
+    if (grid?.name && grid.name !== "Unknown Area") {
+      return grid.name;
+    }
+
+    // 2. Handle legacy string format
+    if (typeof grid === "string") return grid;
+
+    // 3. Fallback to coordinates if lat/lng exist
+    if (grid?.lat && grid?.lng) {
+      return `${Number(grid.lat).toFixed(4)}, ${Number(grid.lng).toFixed(4)}`;
+    }
+
+    return "Unknown Location";
+  };
+
   const isGroupRelevant = (group: RideGroup) => {
     return group.members.some((member) => {
       if (currentUser && member.user_id === currentUser.id) return true;
@@ -265,8 +283,8 @@ const RideGroupsPage: React.FC = () => {
 
                     <div className="pl-2">
                       <RouteVisualizer
-                        from={group.pickup_grid}
-                        to={group.dropoff_grid}
+                        from={formatGrid(group.pickup_grid)}
+                        to={formatGrid(group.dropoff_grid)}
                       />
                     </div>
                   </div>
@@ -408,13 +426,22 @@ const RideGroupsPage: React.FC = () => {
               <div>
                 <div className="flex items-start space-x-3 mb-4">
                   <LocationMarkerIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-gray-700">
+                  {/* <div className="text-sm text-gray-700">
                     <span className="block font-medium text-gray-900">
                       {group.pickup_grid}
                     </span>
                     <span className="block text-gray-400 text-xs my-0.5 ml-0.5 border-l-2 border-gray-200 h-3"></span>
                     <span className="block font-medium text-gray-900">
                       {group.dropoff_grid}
+                    </span>
+                  </div> */}
+                  <div className="text-sm text-gray-700">
+                    <span className="block font-medium text-gray-900">
+                      {formatGrid(group.pickup_grid)}
+                    </span>
+                    <span className="block text-gray-400 text-xs my-0.5 ml-0.5 border-l-2 border-gray-200 h-3"></span>
+                    <span className="block font-medium text-gray-900">
+                      {formatGrid(group.dropoff_grid)}
                     </span>
                   </div>
                 </div>
