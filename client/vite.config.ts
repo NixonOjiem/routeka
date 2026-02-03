@@ -9,7 +9,8 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: "0.0.0.0",
-      allowedHosts: ["requires-edges-maiden-shakespeare.trycloudflare.com"],
+      //allowedHosts: ["requires-edges-maiden-shakespeare.trycloudflare.com"],
+      allowedHosts: true,
     },
     plugins: [react(), tailwindcss()],
     define: {

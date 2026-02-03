@@ -48,16 +48,12 @@ class RideMatchingService
             // --- B. SUGGESTED (MIXED) MATCHING ---
             // Run logic on ALL requests, ignoring category.
             // We label these as 'suggested'.
-            #$mixedGroups = $this->runGridMatching($allRequests, 'suggested');
             $mixedGroups = $this->runGridMatching($allRequests, 'suggested');
 
             $mixedGroups = array_filter($mixedGroups, function($group) {
                 return $group['member_count'] > 1;
             });
 
-            // Optimization: Only add mixed groups that are "better" (e.g., have members)
-            // or simply add them all. For now, we add them all but filter purely distinct
-            // single riders might be redundant, but good for UI "Suggested" tab.
             $allGroups = array_merge($allGroups, $mixedGroups);
 
             return $allGroups;
@@ -85,10 +81,13 @@ class RideMatchingService
         foreach ($sortedRequests as $request) {
             if (in_array($request->id, $processedIds)) continue;
 
-            $pickupGrid = $this->calculateGrid($request->pickup_lat, $request->pickup_lng, $gridSize);
-            $dropoffGrid = $this->calculateGrid($request->dropoff_lat, $request->dropoff_lng, $gridSize);
+            // Calculate grid centers for pickup and dropoff
+            $pickupGridCenter = $this->calculateGridCenter($request->pickup_lat, $request->pickup_lng, $gridSize);
+            $dropoffGridCenter = $this->calculateGridCenter($request->dropoff_lat, $request->dropoff_lng, $gridSize);
+
             Log::info('Request from ride matching service:', $request->toArray());
             $reqTime = Carbon::parse($request->commute_time ?? $request->commute_time);
+
             // Find matches within the passed collection
             $matches = $sortedRequests->filter(function ($item) use ($request, $processedIds, $gridSize, $reqTime) {
 
@@ -116,15 +115,15 @@ class RideMatchingService
             // For specific category tabs, we include Solo riders (waiting for match)
             // For suggested, we usually only want actual matches (handled in parent function)
 
-            $chatRoom = $this->getOrCreateChatRoom($groupMembers, $pickupGrid, $dropoffGrid, $groupType);
+            $chatRoom = $this->getOrCreateChatRoom($groupMembers, $pickupGridCenter, $dropoffGridCenter, $groupType);
 
             $groups[] = [
                 'group_id' => $groupType . '_' . $request->id,
                 'group_type' => $groupType,
                 'chat_room_id' => $chatRoom->room_id,
                 'meetup_point' => $this->calculateCentroid($groupMembers),
-                'pickup_grid' => $pickupGrid,
-                'dropoff_grid' => $dropoffGrid,
+                'pickup_grid' => $pickupGridCenter, // Now contains lat/lng
+                'dropoff_grid' => $dropoffGridCenter, // Now contains lat/lng
                 'member_count' => $groupMembers->count(),
                 'members' => $groupMembers->map(function($member) {
                     return [
@@ -132,7 +131,7 @@ class RideMatchingService
                         'user_id' => $member->user_id,
                         'user_name' => $member->user->name ?? 'Guest',
                         'category' => $member->category,
-                        'scheduled_time' => $member->scheduled_time, // Send time to frontend
+                        'scheduled_time' => $member->scheduled_time,
                         'pickup' => [
                             'lat' => $member->pickup_lat,
                             'lng' => $member->pickup_lng,
@@ -152,13 +151,23 @@ class RideMatchingService
 
 
     /**
-     * Calculate grid identifier for coordinates
+     * Calculate grid center coordinates
      */
-    private function calculateGrid($lat, $lng, $gridSize)
+    private function calculateGridCenter($lat, $lng, $gridSize)
     {
+        // Calculate which grid cell the point falls into
         $latGrid = floor($lat / $gridSize);
         $lngGrid = floor($lng / $gridSize);
-        return "{$latGrid}_{$lngGrid}";
+
+        // Calculate the center of that grid cell
+        $centerLat = ($latGrid * $gridSize) + ($gridSize / 2);
+        $centerLng = ($lngGrid * $gridSize) + ($gridSize / 2);
+
+        return [
+            'lat' => $centerLat,
+            'lng' => $centerLng,
+            'grid_cell' => "{$latGrid}_{$lngGrid}" // Keep string version if needed for reference
+        ];
     }
 
     /**
@@ -169,8 +178,12 @@ class RideMatchingService
         $rideIds = $groupMembers->pluck('id')->toArray();
         $userIds = $groupMembers->pluck('user_id')->filter()->unique()->toArray();
 
+        // Use grid cell strings for hash to maintain uniqueness
+        $pickupGridStr = $pickupGrid['grid_cell'];
+        $dropoffGridStr = $dropoffGrid['grid_cell'];
+
         // Unique Room ID includes context so a 'suggested' chat is different from a 'corporate' chat
-        $hash = md5($pickupGrid . '_' . $dropoffGrid . '_' . implode('_', $rideIds) . '_' . $context);
+        $hash = md5($pickupGridStr . '_' . $dropoffGridStr . '_' . implode('_', $rideIds) . '_' . $context);
         $roomId = "chat_" . $hash;
 
         $chatRoom = ChatRoom::where('room_id', $roomId)->first();
@@ -181,14 +194,18 @@ class RideMatchingService
                 'name' => ucfirst($context) . " Ride Group",
                 'ride_ids' => $rideIds,
                 'user_ids' => $userIds,
-                'pickup_grid' => $pickupGrid,
-                'dropoff_grid' => $dropoffGrid
+                'pickup_grid' => json_encode($pickupGrid), // Store as JSON
+                'dropoff_grid' => json_encode($dropoffGrid), // Store as JSON
+                'pickup_grid_str' => $pickupGridStr, // Keep string version for quick reference
+                'dropoff_grid_str' => $dropoffGridStr
             ]);
         } else {
-            // Update logic (simplified for brevity)
-             $chatRoom->update([
+            // Update logic
+            $chatRoom->update([
                 'ride_ids' => $rideIds,
-                'user_ids' => $userIds
+                'user_ids' => $userIds,
+                'pickup_grid' => json_encode($pickupGrid),
+                'dropoff_grid' => json_encode($dropoffGrid)
             ]);
         }
 
@@ -196,37 +213,48 @@ class RideMatchingService
     }
 
     /**
-     * Calculate centroid of group
+     * Calculate geographic centroid (vector method) of group
      */
     private function calculateCentroid($rides)
-{
-    $totalLat = 0;
-    $totalLng = 0;
+    {
+        $x = 0.0;
+        $y = 0.0;
+        $z = 0.0;
 
-    foreach ($rides as $ride) {
-        $totalLat += $ride->pickup_lat;
-        $totalLng += $ride->pickup_lng;
+        foreach ($rides as $ride) {
+            $latRad = deg2rad($ride->pickup_lat);
+            $lngRad = deg2rad($ride->pickup_lng);
+
+            $x += cos($latRad) * cos($lngRad);
+            $y += cos($latRad) * sin($lngRad);
+            $z += sin($latRad);
+        }
+
+        $total = $rides->count();
+        $x /= $total;
+        $y /= $total;
+        $z /= $total;
+
+        $lng = atan2($y, $x);
+        $hyp = sqrt($x * $x + $y * $y);
+        $lat = atan2($z, $hyp);
+
+        $centroidLat = rad2deg($lat);
+        $centroidLng = rad2deg($lng);
+
+        // Log the values clearly
+        Log::info('Calculated geographic centroid', [
+            'lat' => $centroidLat,
+            'lng' => $centroidLng,
+            'count' => $total
+        ]);
+
+        return [
+            'lat' => $centroidLat,
+            'lng' => $centroidLng,
+            'name' => 'Suggested Meetup'
+        ];
     }
-
-    $avgLat = $totalLat / $rides->count();
-    $avgLng = $totalLng / $rides->count();
-
-    // Log the values clearly
-    Log::info('Calculated centroid', [
-        'totalLat' => $totalLat,
-        'totalLng' => $totalLng,
-        'avgLat'   => $avgLat,
-        'avgLng'   => $avgLng,
-        'count'    => $rides->count()
-    ]);
-
-    return [
-        'lat' => $avgLat,
-        'lng' => $avgLng,
-        'name' => 'Suggested Meetup'
-    ];
-}
-
 
     /**
      * Get all available chat rooms for a user/guest
@@ -243,11 +271,15 @@ class RideMatchingService
             return $query->with(['messages' => function($q) {
                 $q->orderBy('created_at', 'desc')->limit(20);
             }])->get()->map(function($room) {
+                // Decode JSON grid data
+                $pickupGrid = json_decode($room->pickup_grid, true) ?? ['lat' => 0, 'lng' => 0];
+                $dropoffGrid = json_decode($room->dropoff_grid, true) ?? ['lat' => 0, 'lng' => 0];
+
                 return [
                     'room_id' => $room->room_id,
                     'name' => $room->name,
-                    'pickup_grid' => $room->pickup_grid,
-                    'dropoff_grid' => $room->dropoff_grid,
+                    'pickup_grid' => $pickupGrid,
+                    'dropoff_grid' => $dropoffGrid,
                     'member_count' => count($room->ride_ids),
                     'last_message' => $room->messages->first(),
                     'message_count' => $room->messages->count()

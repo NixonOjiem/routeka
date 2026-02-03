@@ -61,10 +61,12 @@ export interface RideGroupMember {
   user_id: number;
   user_name: string;
   category: string;
-  pickup: RideLocation;
-  dropoff: RideLocation;
+  //pickup: RideLocation;
+  //dropoff: RideLocation;
   guest_id: string | null;
   commute_time?: string;
+  pickup: { lat: number; lng: number };
+  dropoff: { lat: number; lng: number };
 }
 
 export interface RideGroup {
@@ -76,8 +78,14 @@ export interface RideGroup {
     lng: number;
     name: string;
   };
-  pickup_grid: string;
-  dropoff_grid: string;
+  pickup_grid: {
+    lat: number;
+    lng: number;
+  };
+  dropoff_grid: {
+    lat: number;
+    lng: number;
+  };
   member_count: number;
   members: RideGroupMember[];
 }

@@ -61,9 +61,9 @@ export const Footer = () => {
               >
                 Find Rides
               </button>
-              <button className="hover:text-brand transition-colors">
+              {/* <button className="hover:text-brand transition-colors">
                 Privacy Policy
-              </button>
+              </button> */}
             </nav>
           </div>
 
