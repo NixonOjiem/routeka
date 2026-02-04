@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { ProtectedRoute } from "./components/authPages/ProtectedRoute";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   useNavigate,
+  Navigate,
   useLocation,
 } from "react-router-dom";
 import { ViewState, NotificationType } from "./types";
@@ -18,7 +20,7 @@ import { HomePage } from "./pages/HomePage";
 import { RequestPage } from "./pages/RequestPage";
 import AuthenticationPage from "./pages/AuthenticationPage";
 import TestPage from "./pages/TestPage";
-
+import ProfilePage from "./pages/ProfilePage";
 // ✅ New pages
 import RideGroupsPage from "@/pages/RideGroupsPage";
 import ChatPage from "@/pages/ChatPage";
@@ -27,7 +29,7 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAuthPage = location.pathname === "/auth";
+  const isAuthPage = /^\/(auth|signin|signup)/.test(location.pathname);
 
   const getCurrentView = (): ViewState => {
     return location.pathname === "/request" ? "request" : "home";
@@ -58,7 +60,7 @@ function AppContent() {
       )}
 
       <main
-        className={`flex-grow ${
+        className={`grow ${
           !isAuthPage ? "container mx-auto px-4 md:px-6 py-6 max-w-7xl" : ""
         }`}
       >
@@ -73,20 +75,42 @@ function AppContent() {
           {/* ✅ Keep existing routes */}
           <Route
             path="/"
-            element={<HomePage onRequestRoute={() => navigate("/request")} />}
+            element={
+              <HomePage
+                onRequestRoute={(id) =>
+                  navigate("/request", { state: { categoryId: id } })
+                }
+              />
+            }
           />
-          <Route
-            path="/request"
-            element={<RequestPage showNotification={showNotification} />}
-          />
+
           <Route path="/test" element={<TestPage />} />
-          <Route path="/auth" element={<AuthenticationPage />} />
+          <Route path="/signin" element={<AuthenticationPage />} />
+          <Route path="/signup" element={<AuthenticationPage />} />
+          <Route path="/auth" element={<Navigate to="/signin" replace />} />
+          {/* <Route path="/auth" element={<AuthenticationPage />} /> */}
 
           {/* ✅ Add new routes */}
           <Route path="rides" element={<RideGroupsPage />} />
           <Route path="chat/:roomId" element={<ChatPage />} />
-          {/* <Route path="login" element={<LoginPage />} />
-          <Route path="register" element={<RegisterPage />} /> */}
+
+          {/* protected routes */}
+          <Route
+            path="/request"
+            element={
+              <ProtectedRoute>
+                <RequestPage showNotification={showNotification} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage showNotification={showNotification} />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </main>
 

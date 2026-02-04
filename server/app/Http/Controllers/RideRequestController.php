@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\RideRequest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use App\Services\RideMatchingService;
-use Illuminate\Validation\ValidationException;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Tymon\JWTAuth\Exceptions\JWTException;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Services\RideMatchingService;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Illuminate\Validation\ValidationException;
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Exceptions\TokenInvalidException;
+
 class RideRequestController extends Controller
 {
     protected $rideService;
@@ -20,13 +23,18 @@ class RideRequestController extends Controller
     }
 
     // 2. Fetch Grouped Data (For Admin or "My Matches" view)
-     public function index()
+
+public function index(Request $request)
 {
     try {
         $groupedRides = $this->rideService->getGroupedRides();
 
         // Check if user is logged in via JWT
         $user = Auth::guard('api')->user();
+
+        // Get Guest ID from Header (sent by interceptor)
+        $guestId = $request->header('X-Guest-ID');
+        Log::info('Detected guest ID from index function: ' . $guestId);
 
         $chatRooms = $this->rideService->getAvailableChatRooms(
             $user ? $user->id : null
@@ -39,17 +47,16 @@ class RideRequestController extends Controller
             'user' => $user ? [
                 'id' => $user->id,
                 'name' => $user->name
-            ] : null
+            ] : null,
+            // Return the detected guest ID to help frontend matching
+            'detected_guest_id' => $guestId
         ]);
 
     } catch (\Exception $e) {
         Log::error('Error in RideRequestController index: ' . $e->getMessage());
-
         return response()->json([
             'success' => false,
-            'message' => 'Failed to load ride groups',
-            'groups' => [],
-            'chat_rooms' => []
+            'message' => 'Failed to load ride groups'
         ], 500);
     }
 }
@@ -118,27 +125,28 @@ class RideRequestController extends Controller
     // 1. Store the Ride Request
     public function store(Request $request)
 {
-    $user = null;
+
     try {
+        // 1. Authenticate the user via JWT
         $user = JWTAuth::parseToken()->authenticate();
-        Log::info('JWT user', ['user' => $user]);
-        }
-        catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e)
-        {
-            Log::warning('Token expired');
-        } catch
-        (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e)
-        {
-            Log::warning('Token invalid');
-        } catch (\Exception $e) {
-         Log::warning('Token parse error', ['err' => $e->getMessage()]);
+
+        // 2. Check if the user is verified
+        if (!$user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Your email address is not verified.',
+                'error' => 'email_unverified'
+            ], 403);
         }
 
-// inside store(Request $request)
-    Log::info('Request headers', $request->headers->all());
+    } catch (TokenExpiredException $e) {
+        return response()->json(['message' => 'Token expired', 'error' => 'token_expired'], 401);
+    } catch (TokenInvalidException $e) {
+        return response()->json(['message' => 'Token invalid', 'error' => 'token_invalid'], 401);
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Authorization error'], 401);
+    }
 
-    //Log::info('Authenticated user:', ['user' => $user]);
-    // Validation
+    // 3. Validation (Removed guest fields as they are no longer allowed)
     $validated = $request->validate([
         'pickup.lat' => 'required|numeric',
         'pickup.lng' => 'required|numeric',
@@ -146,53 +154,30 @@ class RideRequestController extends Controller
         'dropoff.lng' => 'required|numeric',
         'commute_time' => 'required|date',
         'frequency' => 'required|string',
-        // Make guest fields nullable but check content if no user
-        'guest_name' => 'nullable|string',
-        'guest_email' => 'nullable|email',
-        'guest_phone' => 'nullable|string',
+        'category' => 'required|string',
     ]);
 
-    // Custom validation for guests
-    if (!$user) {
-        if (empty($request->input('guest_name'))) {
-            throw ValidationException::withMessages([
-                'guest_name' => ['The guest name field is required for guest users.'],
-            ]);
-        }
-        if (empty($request->input('guest_email'))) {
-            throw ValidationException::withMessages([
-                'guest_email' => ['The guest email field is required for guest users.'],
-            ]);
-        }
-        if (empty($request->input('guest_phone'))) {
-            throw ValidationException::withMessages([
-                'guest_phone' => ['The guest phone field is required for guest users.'],
-            ]);
-        }
-    }
-
-    // Prepare data for saving
+    // 4. Prepare data for saving
     $data = [
-        'user_id' => $user ? $user->id : null,
-        'guest_name' => $user ? null : $request->input('guest_name'),
-        'guest_email' => $user ? $user->email : $request->input('guest_email'),
-        'guest_phone' => $user ? null : $request->input('guest_phone'),
+        'user_id' => $user->id,
         'pickup_lat' => $request->input('pickup.lat'),
         'pickup_lng' => $request->input('pickup.lng'),
         'dropoff_lat' => $request->input('dropoff.lat'),
         'dropoff_lng' => $request->input('dropoff.lng'),
         'commute_time' => $request->input('commute_time'),
         'frequency' => $request->input('frequency'),
+        'category' => $request->input('category'),
+        'status' => 'pending',
+
     ];
 
     $ride = RideRequest::create($data);
-
+    #Log::info("stored ride details for user:", $user);
     return response()->json([
         'message' => 'Ride request submitted successfully',
         'data' => $ride
     ], 201);
 }
-
 
 
 }

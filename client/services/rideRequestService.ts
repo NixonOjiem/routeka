@@ -1,5 +1,5 @@
 import axios from "axios";
-
+import { useState } from "react";
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
@@ -27,28 +27,37 @@ interface ApiRideRequestData {
   name?: string;
   email?: string;
   phone?: string;
+  category: string;
 }
 
 export const rideRequestService = {
   /**
    * Submit a ride request to the API
    */
+  /**
+   * Retrieves or generates a Guest ID from localStorage
+   */
+  getOrCreateGuestId() {
+    let guestId = localStorage.getItem("chat_guest_id");
+    if (!guestId) {
+      guestId = Math.random().toString(36).substring(2, 15);
+      localStorage.setItem("chat_guest_id", guestId);
+    }
+    return guestId;
+  },
+
   async submitRideRequest(data: ApiRideRequestData) {
     try {
-      // Transform data to match your API endpoint format
       const payload = {
         pickup: { lat: data.pickup_lat, lng: data.pickup_lng },
         dropoff: { lat: data.dropoff_lat, lng: data.dropoff_lng },
         commute_time: this.formatCommuteTime(data.commute_time),
         frequency: this.capitalizeFrequency(data.frequency),
-        guest_name: data.user_id ? null : (data.guest_name ?? data.name ?? ""),
-        guest_email: data.user_id
-          ? null
-          : (data.guest_email ?? data.email ?? ""),
-        guest_phone: data.user_id
-          ? null
-          : (data.guest_phone ?? data.phone ?? ""),
+        category: data.category,
+        // No guest fields sent anymore
       };
+
+      const token = localStorage.getItem("token");
 
       const response = await axios.post(
         `${API_BASE_URL}/rides/request`,
@@ -56,14 +65,26 @@ export const rideRequestService = {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         },
       );
 
       return response.data;
-    } catch (error) {
-      console.error("Failed to submit ride request:", error);
+    } catch (error: any) {
+      // Check if the error is 401 (Unauthorized/Expired)
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        // Redirect to signin
+        window.location.href = "/signin";
+      }
+
+      // Check for unverified email (403)
+      if (error.response?.status === 403) {
+        console.error("Email not verified");
+      }
+
       throw error;
     }
   },

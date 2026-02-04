@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 interface CategoryGridProps {
-  onRequestRoute: () => void;
+  onRequestRoute: (id: string) => void;
 }
 
 export const CategoryGrid = ({ onRequestRoute }: CategoryGridProps) => {
@@ -91,7 +91,7 @@ export const CategoryGrid = ({ onRequestRoute }: CategoryGridProps) => {
           </div>
 
           <button
-            onClick={onRequestRoute}
+            onClick={() => onRequestRoute(cat.id)}
             className="
               w-full lg:w-auto
               lg:mt-auto

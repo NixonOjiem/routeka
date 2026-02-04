@@ -21,6 +21,9 @@ class RideRequest extends Model
         'commute_time',
         'frequency',
         'status',
+        'guest_id',
+        'category',
+        'category_metadata',
     ];
 
     public function user()

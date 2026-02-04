@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RequestRouteForm } from "../components/homePageComponent/forms/RequestRouteForm";
 import {
@@ -19,15 +19,22 @@ export const RequestPage: React.FC<RequestPageProps> = ({
   showNotification,
 }) => {
   const navigate = useNavigate();
-  //const dispatch = useDispatch();
   const dispatch = useDispatch<AppDispatch>();
+  const location = useLocation() as { state: { categoryId?: string } };
   // Get Redux state
   const { user } = useSelector((state: RootState) => state.auth);
   const { loading, error, success } = useSelector(
     (state: RootState) => state.rideRequest,
   );
+  const selectedCategoryId = location.state?.categoryId;
 
   const handleRouteRequestSubmit = async (data: any) => {
+    const modifiedData = {
+      ...data,
+      category: selectedCategoryId,
+    };
+    data = modifiedData;
+    console.log({ data });
     // Dispatch the Redux action instead of calling storageService
     dispatch(submitRideRequest(data));
   };
@@ -42,7 +49,7 @@ export const RequestPage: React.FC<RequestPageProps> = ({
 
       // Navigate back to home after a short delay
       const timer = setTimeout(() => {
-        navigate("/");
+        navigate("/rides");
         // Reset the ride request state
         dispatch(clearRideRequestState());
       }, 2000);
@@ -108,7 +115,7 @@ export const RequestPage: React.FC<RequestPageProps> = ({
               </h3>
               <p className="text-stone-500 text-sm leading-relaxed">
                 Your route request has been sent successfully. You'll be
-                redirected to the home page shortly.
+                redirected to the rides page shortly.
               </p>
             </div>
           </div>

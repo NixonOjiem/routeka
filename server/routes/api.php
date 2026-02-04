@@ -5,16 +5,28 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\RideRequestController;
+use App\Http\Controllers\Auth\VerificationController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
+//Auth routes
 Route::group(['prefix' => 'auth'], function(){
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
     Route::get('me', [AuthController::class, 'me'])->middleware('auth:api');
+    Route::get('profile', [AuthController::class, 'profile'])->middleware('auth:api');
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api');
+});
+
+// Email Verification Routes
+// 1. Verify Email (Does not require login, uses signed URL)
+Route::get('email/verify/{id}', [VerificationController::class, 'verify'])->name('verification.verify');
+
+// 2. Resend Email (Requires user to be logged in with token)
+Route::group(['middleware' => 'auth:api'], function () {
+    Route::get('email/resend', [VerificationController::class, 'resend'])->name('verification.resend');
 });
 
 

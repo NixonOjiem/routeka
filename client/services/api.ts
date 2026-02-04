@@ -1,4 +1,3 @@
-// src/services/api.ts
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -44,9 +43,11 @@ api.interceptors.response.use(
 
 // Types
 export interface User {
-  id: number;
+  id?: number;
   name: string;
   email: string;
+  user_name?: string;
+  email_verified_at?: string;
 }
 
 export interface RideLocation {
@@ -59,20 +60,36 @@ export interface RideGroupMember {
   id: number;
   user_id: number;
   user_name: string;
-  pickup: RideLocation;
-  dropoff: RideLocation;
+  category: string;
+  //pickup: RideLocation;
+  //dropoff: RideLocation;
+  guest_id: string | null;
+  commute_time?: string;
+  pickup: { lat: number; lng: number };
+  dropoff: { lat: number; lng: number };
 }
 
 export interface RideGroup {
   group_id: string;
   chat_room_id: string | null;
+  group_type: string;
   meetup_point: {
     lat: number;
     lng: number;
     name: string;
   };
-  pickup_grid: string;
-  dropoff_grid: string;
+  pickup_grid: {
+    lat: number;
+    lng: number;
+    grid_cell: string;
+    name: string;
+  };
+  dropoff_grid: {
+    lat: number;
+    lng: number;
+    grid_cell: string;
+    name: string;
+  };
   member_count: number;
   members: RideGroupMember[];
 }
@@ -101,9 +118,10 @@ export interface ChatMessage {
 
 // Auth API calls (keep your existing functions)
 export const signin = async (credentials: {
-  email: string;
+  login: string; // Changed from 'email' to 'login'
   password: string;
 }) => {
+  // The backend now expects 'login' and 'password'
   const response = await api.post(`${API_URL}/auth/login`, credentials);
   if (response.data.token) {
     localStorage.setItem("token", response.data.token);
@@ -115,13 +133,10 @@ export const signin = async (credentials: {
 export const signup = async (data: {
   name: string;
   email: string;
+  user_name: string;
   password: string;
 }) => {
   const response = await api.post(`${API_URL}/auth/register`, data);
-  if (response.data.token) {
-    localStorage.setItem("token", response.data.token);
-    localStorage.setItem("user", JSON.stringify(response.data.user));
-  }
   return response.data;
 };
 
@@ -138,13 +153,16 @@ export const signout = async () => {
 // Ride and Chat API calls
 export const apiService = {
   // Ride endpoints
-  getGroupedRides: () =>
+  getGroupedRides: (config?: any) =>
     api.get<{ groups: RideGroup[]; chat_rooms: ChatRoom[]; user: User | null }>(
       "/rides/groups",
+      config,
     ),
 
   getGriddedRides: (gridSize?: number) =>
     api.get("/rides/grids", { params: { grid_size: gridSize } }),
+
+  getUserProfile: (config?: any) => api.get("/auth/profile", config),
 
   // Chat endpoints
   getChatRooms: () =>
