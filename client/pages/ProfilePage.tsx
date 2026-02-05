@@ -320,16 +320,6 @@ export default function ProfilePage() {
                     label: "Security",
                     icon: <ShieldCheck size={18} />,
                   },
-                  // {
-                  //   id: "activity",
-                  //   label: "Activity",
-                  //   icon: <Zap size={18} />,
-                  // },
-                  // {
-                  //   id: "billing",
-                  //   label: "Billing",
-                  //   icon: <CreditCard size={18} />,
-                  // },
                 ].map((tab) => (
                   <button
                     key={tab.id}
