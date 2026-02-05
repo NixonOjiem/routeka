@@ -12,7 +12,9 @@ class VerificationController extends Controller
     public function verify($id, Request $request)
     {
         if (!$request->hasValidSignature()) {
-            return redirect(env('FRONTEND_URL') . '/auth?error=invalid_link', 401);
+            # return redirect(env('FRONTEND_URL') . '/auth?error=invalid_link', 401);
+            return redirect(env('FRONTEND_URL') . '/auth?error=invalid_link');
+            // By default, this uses 302, which is what browsers need to actually move.
         }
 
         $user = User::find($id);
