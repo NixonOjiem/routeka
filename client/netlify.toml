@@ -10,6 +10,12 @@
 
 # This replaces the need for a _redirects file in a public folder
 [[redirects]]
+  from = "/api/*"
+  to = "http://20.200.125.13/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
