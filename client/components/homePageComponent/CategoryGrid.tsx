@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import {
   Briefcase,
   GraduationCap,
@@ -44,77 +45,38 @@ export const CategoryGrid = ({ onRequestRoute }: CategoryGridProps) => {
   ];
 
   return (
-    <div className="flex flex-col gap-1 md:gap-4 lg:grid lg:grid-cols-2 xl:grid-cols-4 lg:gap-8 relative z-10 max-w-360 mx-auto w-full px-2 md:px-0 mt-4 md:mt-0">
-      {categories.map((cat) => (
-        <div
-          key={cat.id}
-          className={`
-            group relative bg-white/95 md:bg-white rounded-2xl lg:rounded-[2.5rem] 
-            shadow-xl lg:shadow-xl shadow-stone-300/40 lg:shadow-stone-200/50 
-            hover:shadow-2xl hover:shadow-brand/20 
-            transition-all duration-300 transform lg:hover:-translate-y-2 border border-brand 
-            flex flex-col
-            p-5 lg:p-12 backdrop-blur-sm
-            justify-between
-            gap-1 lg:gap-6
-          `}
-        >
-          <div className="w-full">
-            <div className="flex flex-row lg:flex-col items-center lg:justify-center mb-1 lg:mb-0">
-              <div
-                className={`
-                shrink-0 w-10 h-10 lg:w-16 lg:h-16 bg-stone-50 text-stone-600 rounded-lg lg:rounded-2xl
-                flex items-center justify-center 
-                mr-3 lg:mr-0 lg:mb-6 
-                group-hover:bg-brand group-hover:text-white transition-colors duration-300 shadow-inner
-              `}
-              >
-                <cat.icon
-                  className={`w-5 h-5 lg:w-8 lg:h-8 transition-transform duration-300 ${cat.iconAnim}`}
-                />
+    <div className="max-w-7xl mx-auto px-4 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
+        {categories.map((cat, index) => (
+          <motion.div
+            key={cat.id}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: index * 0.1 }}
+            whileHover={{ y: -8 }}
+            className="group bg-white p-6 md:p-8 rounded-3xl border border-stone-100 shadow-sm hover:shadow-xl hover:border-brand/20 transition-all duration-300 flex flex-col h-full"
+          >
+            <div className="flex items-center gap-4 mb-4 md:flex-col md:items-start">
+              <div className="p-3 rounded-2xl bg-stone-50 text-stone-600 group-hover:bg-brand group-hover:text-white transition-colors">
+                <cat.icon size={24} />
               </div>
-
-              <h3 className="font-display font-bold text-lg lg:text-2xl text-stone-800 group-hover:text-brand transition-colors">
-                {cat.title}
-              </h3>
+              <h3 className="text-xl font-bold text-stone-800">{cat.title}</h3>
             </div>
 
-            <p
-              className={`
-              text-lg lg:text-base text-stone-700 leading-none tracking-normal lg:tracking-tight lg:leading-relaxed 
-              font-futura lg:font-dm-serif font-normal mb-2 lg:mb-8 text-left lg:text-center
-              ${cat.id === "neighborhood" ? "lg:font-light" : "lg:font-normal"}
-            `}
-            >
+            <p className="text-stone-600 text-sm md:text-base leading-relaxed mb-6 flex-grow">
               {cat.desc}
             </p>
-          </div>
 
-          <button
-            onClick={() => onRequestRoute(cat.id)}
-            className="
-              w-full lg:w-auto
-              lg:mt-auto
-              px-3 py-3 lg:px-6 lg:py-3 
-              bg-stone-100 text-stone-600 
-              text-[10px] lg:text-sm font-bold uppercase tracking-wider
-              rounded-lg lg:rounded-xl
-              group-hover:bg-brand group-hover:text-white group-hover:shadow-lg
-              hover:bg-brand-dark
-              active:scale-95 active:bg-brand-dark active:text-white
-              transition-all duration-300 ease-out
-              flex items-center justify-center gap-2
-              shrink-0
-            "
-          >
-            <span className="lg:hidden whitespace-nowrap">
-              Request/View Route
-            </span>
-            <span className="hidden lg:inline">Request/View Route</span>
-            <ArrowRight className="w-3 h-3 lg:w-4 lg:h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-      ))}
+            <button
+              onClick={() => onRequestRoute(cat.id)}
+              className="w-full py-3 bg-stone-50 text-stone-700 font-bold rounded-xl group-hover:bg-brand group-hover:text-white transition-all flex items-center justify-center gap-2"
+            >
+              Request Route <ArrowRight size={16} />
+            </button>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 };

@@ -3,47 +3,40 @@ import { useDispatch, useSelector } from "react-redux";
 import { login, register, reset } from "@/redux/slices/authSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useNavigate, useLocation } from "react-router-dom";
-// @ts-ignore
-import "./Auth.css";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const AuthenticationComponent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
 
-  // ✅ 1. Derive state from URL instead of useState
   const isSignUp = location.pathname === "/signup";
-
   const [verificationMessage, setVerificationMessage] = useState<string | null>(
     null,
   );
-
-  // ✅ Add loading states for signup and signin
   const [isLoadingSignup, setIsLoadingSignup] = useState(false);
   const [isLoadingSignin, setIsLoadingSignin] = useState(false);
 
-  // ✅ 2. Helper function to switch tabs via URL
   const handleSwitchTab = (mode: "signin" | "signup") => {
     navigate(`/${mode}${location.search}`);
   };
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
+    const verified = params.get("verified");
+    const error = params.get("error");
 
-    if (params.get("verified") === "true") {
+    if (verified === "true") {
       setVerificationMessage(
         "✅ Email verified successfully! You can now log in.",
       );
-    }
-    if (params.get("error") === "invalid_link") {
+    } else if (error === "invalid_link") {
       setVerificationMessage("❌ Invalid or expired verification link.");
-    }
-    if (params.get("error") === "invalid_user") {
+    } else if (error === "invalid_user") {
       setVerificationMessage("❌ Invalid user.");
     }
   }, [location.search]);
 
-  // 3. Grab state from Redux
   const { user, isError, message } = useSelector(
     (state: RootState) => state.auth,
   );
@@ -55,16 +48,15 @@ export const AuthenticationComponent: React.FC = () => {
     password: "",
   });
 
-  // 4. Handle Redirect and Cleanup
+  const [passwordVisible, setPasswordVisible] = useState(false);
+
   useEffect(() => {
     if (user) {
       navigate("/");
     }
 
     if (isError) {
-      alert(message);
       dispatch(reset());
-      // Reset loading states on error
       setIsLoadingSignup(false);
       setIsLoadingSignin(false);
     }
@@ -82,14 +74,14 @@ export const AuthenticationComponent: React.FC = () => {
     try {
       const resultAction = await dispatch(register(formData));
       if (register.fulfilled.match(resultAction)) {
-        alert(resultAction.payload?.message || "Registration successful!");
+        // Success logic
       } else {
         throw new Error(
           (resultAction.payload as string) || "Registration failed",
         );
       }
     } catch (err: any) {
-      alert(err.message || "An error occurred during registration");
+      // Error logic
     } finally {
       setIsLoadingSignup(false);
     }
@@ -108,236 +100,300 @@ export const AuthenticationComponent: React.FC = () => {
       );
 
       if (login.fulfilled.match(resultAction)) {
-        // Login successful - navigation will be handled by useEffect
+        // Login successful
       } else {
         throw new Error((resultAction.payload as string) || "Login failed");
       }
     } catch (err: any) {
-      alert(err.message || "An error occurred during login");
+      // Error logic
     } finally {
       setIsLoadingSignin(false);
     }
   };
 
-  // ✅ Loader component for buttons
-  const Loader = () => (
-    <div className="flex items-center justify-center">
-      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-      <span>Processing...</span>
-    </div>
-  );
+  // Animations
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.4,
+        when: "beforeChildren",
+        staggerChildren: 0.05,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 },
+  };
+
+  const panelTextVariants = {
+    hidden: { opacity: 0, x: 20 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.4 } },
+    exit: { opacity: 0, x: -20, transition: { duration: 0.2 } },
+  };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 font-sans p-4 md:p-8">
-      <div
-        id="container"
-        className="relative overflow-hidden w-full max-w-[768px] min-h-[550px] bg-white rounded-xl shadow-2xl"
-      >
-        {/* Verification Message */}
-        {verificationMessage && (
-          <div
-            className={`mb-4 p-3 rounded text-sm text-center ${verificationMessage.startsWith("✅") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
+      {/* Error Toast */}
+      <AnimatePresence>
+        {isError && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md"
           >
-            {verificationMessage}
-          </div>
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-lg mx-4">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 text-red-500">⚠</div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">{message}</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         )}
+      </AnimatePresence>
 
-        {/* Sign Up Container */}
-        <div
-          className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-full md:w-1/2 z-[1] ${
-            isSignUp
-              ? "md:translate-x-full opacity-100 z-[5] translate-x-0"
-              : "opacity-0 md:opacity-0"
-          }`}
-        >
-          <form
-            onSubmit={handleRegister}
-            className="bg-white flex flex-col items-center justify-center h-full px-6 sm:px-8 md:px-12 text-center"
-          >
-            <h1 className="text-xl sm:text-2xl font-bold m-0 py-2 text-[#3E6272]">
-              Create Account
-            </h1>
-            <span className="text-sm text-gray-500 mb-4">
-              Join our community today
-            </span>
-            {/* Full Name */}
-            <input
-              name="name"
-              type="text"
-              placeholder="Full Name"
-              value={formData.name}
-              onChange={handleChange}
-              className="bg-gray-100 border-none p-3 my-2 w-full rounded-lg focus:ring-2 focus:ring-[#3E6272] outline-none text-gray-600 text-sm sm:text-base"
-              required
-              disabled={isLoadingSignup}
-            />
-            <input
-              name="user_name"
-              type="text"
-              placeholder="Username"
-              value={formData.user_name}
-              onChange={handleChange}
-              className="bg-gray-100 border-none p-3 my-2 w-full rounded-lg focus:ring-2 focus:ring-[#3E6272] outline-none text-gray-600"
-              required
-              disabled={isLoadingSignup}
-            />
-            <input
-              name="email"
-              type="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              className="bg-gray-100 border-none p-3 my-2 w-full rounded-lg focus:ring-2 focus:ring-[#3E6272] outline-none text-gray-600 text-sm sm:text-base"
-              required
-              disabled={isLoadingSignup}
-            />
-            <input
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              className="bg-gray-100 border-none p-3 my-2 w-full rounded-lg focus:ring-2 focus:ring-[#3E6272] outline-none text-gray-600 text-sm sm:text-base"
-              required
-              disabled={isLoadingSignup}
-            />
-            <button
-              type="submit"
-              disabled={isLoadingSignup}
-              className="mt-4 rounded-full border border-[#3E6272] bg-[#3E6272] text-white text-xs sm:text-sm font-bold py-3 px-8 sm:px-11 uppercase tracking-wider transition-transform active:scale-95 hover:opacity-90 w-full sm:w-auto disabled:opacity-70 disabled:cursor-not-allowed min-h-[48px]"
-            >
-              {isLoadingSignup ? <Loader /> : "Sign Up"}
-            </button>
-          </form>
-        </div>
-
-        {/* Sign In Container */}
-        <div
-          className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-full md:w-1/2 z-[2] ${
-            isSignUp
-              ? "md:translate-x-full opacity-0 translate-x-full"
-              : "opacity-100 translate-x-0"
-          }`}
-        >
-          <form
-            onSubmit={handleLogin}
-            className="bg-white flex flex-col items-center justify-center h-full px-6 sm:px-8 md:px-12 text-center"
-          >
-            <h1 className="text-xl sm:text-2xl font-bold m-0 text-[#3E6272] py-2">
-              Sign in
-            </h1>
-            <span className="text-sm text-gray-500 mb-4">Welcome back</span>
-            <input
-              name="email"
-              type="text"
-              placeholder="Email or Username"
-              value={formData.email}
-              onChange={handleChange}
-              className="bg-gray-100 border-none p-3 my-2 w-full rounded-lg focus:ring-2 focus:ring-[#3E6272] outline-none text-gray-600 text-sm sm:text-base"
-              required
-              disabled={isLoadingSignin}
-            />
-            <input
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              className="bg-gray-100 border-none p-3 my-2 w-full rounded-lg focus:ring-2 focus:ring-[#3E6272] outline-none text-gray-600 text-sm sm:text-base"
-              required
-              disabled={isLoadingSignin}
-            />
-            <button
-              type="submit"
-              disabled={isLoadingSignin}
-              className="mt-6 rounded-full border border-[#3E6272] bg-[#3E6272] text-white text-xs sm:text-sm font-bold py-3 px-8 sm:px-11 uppercase tracking-wider transition-transform active:scale-95 hover:opacity-90 w-full sm:w-auto disabled:opacity-70 disabled:cursor-not-allowed min-h-[48px]"
-            >
-              {isLoadingSignin ? <Loader /> : "Sign In"}
-            </button>
-          </form>
-        </div>
-
-        {/* Mobile Toggle Buttons */}
-        <div className="md:hidden absolute bottom-6 left-0 right-0 flex justify-center space-x-4 z-[200] px-6">
-          <button
-            onClick={() => handleSwitchTab("signin")}
-            disabled={isLoadingSignin || isLoadingSignup}
-            className={`rounded-full border ${
-              !isSignUp
-                ? "border-[#3E6272] bg-[#3E6272] text-white"
-                : "border-gray-300 bg-transparent text-gray-700"
-            } text-xs font-bold py-2 px-6 uppercase tracking-wider transition-all disabled:opacity-50`}
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => handleSwitchTab("signup")}
-            disabled={isLoadingSignin || isLoadingSignup}
-            className={`rounded-full border ${
-              isSignUp
-                ? "border-[#3E6272] bg-[#3E6272] text-white"
-                : "border-gray-300 bg-transparent text-gray-700"
-            } text-xs font-bold py-2 px-6 uppercase tracking-wider transition-all disabled:opacity-50`}
-          >
-            Sign Up
-          </button>
-        </div>
-
-        {/* Overlay Container - Hidden on mobile */}
-        <div
-          className={`hidden md:block absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-transform duration-700 ease-in-out z-[100] ${
-            isSignUp ? "-translate-x-full" : "translate-x-0"
-          }`}
-        >
-          <div
-            className={`bg-gradient-to-r from-[#3E6272] to-[#2D4A57] text-white relative -left-full h-full w-[200%] transform transition-transform duration-700 ease-in-out ${
-              isSignUp ? "translate-x-1/2" : "translate-x-0"
+      {/* Verification Message */}
+      <AnimatePresence>
+        {verificationMessage && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-40 w-full max-w-md p-4 rounded-lg shadow-lg mx-4 ${
+              verificationMessage.startsWith("✅")
+                ? "bg-green-50 text-green-800 border border-green-200"
+                : "bg-red-50 text-red-800 border border-red-200"
             }`}
           >
-            {/* Left Panel (For Sign In) */}
-            <div
-              className={`absolute flex flex-col items-center justify-center top-0 h-full w-1/2 px-8 lg:px-10 text-center transition-transform duration-700 ease-in-out ${
-                isSignUp ? "translate-x-0" : "-translate-x-[20%]"
-              }`}
-            >
-              <h1 className="text-xl lg:text-2xl font-bold text-white">
-                Already a member?
-              </h1>
-              <p className="text-sm my-4 lg:my-5 px-2">
-                Login and continue your journey with us.
+            <div className="flex items-center">
+              <span className="mr-2">
+                {verificationMessage.startsWith("✅") ? "✅" : "❌"}
+              </span>
+              <p className="text-sm font-medium">
+                {verificationMessage.slice(2)}
               </p>
-              <button
-                onClick={() => handleSwitchTab("signin")}
-                disabled={isLoadingSignin || isLoadingSignup}
-                className="rounded-full border border-white bg-transparent text-white text-xs font-bold py-3 px-8 lg:px-11 uppercase tracking-wider transition-transform active:scale-95 hover:bg-white hover:text-[#3E6272] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Sign In
-              </button>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            {/* Right Panel (For Sign Up) */}
-            <div
-              className={`absolute right-0 flex flex-col items-center justify-center top-0 h-full w-1/2 px-8 lg:px-10 text-center transition-transform duration-700 ease-in-out ${
-                isSignUp ? "translate-x-[20%]" : "translate-x-0"
+      {/* MAIN CARD */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+        className="w-full max-w-5xl min-h-[600px] shadow-2xl rounded-2xl overflow-hidden bg-white flex flex-col md:flex-row"
+      >
+        {/* MOBILE HEADER (Visible only on small screens) */}
+        <div className="md:hidden bg-gradient-to-r from-[#3E6272] to-[#2D4A57] text-white p-6 text-center">
+          <h1 className="text-2xl font-bold mb-4">
+            {isSignUp ? "Create Account" : "Welcome Back"}
+          </h1>
+          <div className="inline-flex bg-white/10 rounded-full p-1">
+            <button
+              onClick={() => handleSwitchTab("signin")}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                !isSignUp ? "bg-white text-[#3E6272]" : "text-white"
               }`}
             >
-              <h1 className="text-xl lg:text-2xl font-bold text-white">
-                Hello, Friend!
-              </h1>
-              <p className="text-sm my-4 lg:my-5 px-2">
-                Enter your personal details and start your journey with us.
-              </p>
-              <button
-                onClick={() => handleSwitchTab("signup")}
-                disabled={isLoadingSignin || isLoadingSignup}
-                className="rounded-full border border-white bg-transparent text-white text-xs font-bold py-3 px-8 lg:px-11 uppercase tracking-wider transition-transform active:scale-95 hover:bg-white hover:text-[#3E6272] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Sign Up
-              </button>
-            </div>
+              Sign In
+            </button>
+            <button
+              onClick={() => handleSwitchTab("signup")}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                isSignUp ? "bg-white text-[#3E6272]" : "text-white"
+              }`}
+            >
+              Sign Up
+            </button>
           </div>
         </div>
-      </div>
+
+        {/* LEFT SIDE: FORM */}
+        <div className="flex-1 p-8 lg:p-12 flex flex-col justify-center relative">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isSignUp ? "signup-form" : "signin-form"}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+              className="w-full max-w-md mx-auto"
+            >
+              <div className="hidden md:block mb-8">
+                <h1 className="text-3xl font-bold text-[#3E6272] mb-2">
+                  {isSignUp ? "Create Account" : "Welcome Back"}
+                </h1>
+                <p className="text-gray-500">
+                  {isSignUp
+                    ? "Enter your details to get started."
+                    : "Please enter your details to sign in."}
+                </p>
+              </div>
+
+              <form
+                onSubmit={isSignUp ? handleRegister : handleLogin}
+                className="space-y-4"
+              >
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="space-y-4"
+                >
+                  {isSignUp && (
+                    <>
+                      <motion.div variants={itemVariants}>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Full Name
+                        </label>
+                        <input
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3E6272] outline-none transition-all"
+                          placeholder="John Doe"
+                          required
+                        />
+                      </motion.div>
+                      <motion.div variants={itemVariants}>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Username
+                        </label>
+                        <input
+                          name="user_name"
+                          value={formData.user_name}
+                          onChange={handleChange}
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3E6272] outline-none transition-all"
+                          placeholder="johndoe"
+                          required
+                        />
+                      </motion.div>
+                    </>
+                  )}
+
+                  <motion.div variants={itemVariants}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {isSignUp ? "Email" : "Email or Username"}
+                    </label>
+                    <input
+                      name="email"
+                      type={isSignUp ? "email" : "text"}
+                      value={formData.email}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3E6272] outline-none transition-all"
+                      placeholder="john@example.com"
+                      required
+                    />
+                  </motion.div>
+
+                  <motion.div variants={itemVariants}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        name="password"
+                        type={passwordVisible ? "text" : "password"}
+                        value={formData.password}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3E6272] outline-none transition-all pr-12"
+                        placeholder="••••••••"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setPasswordVisible(!passwordVisible)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {passwordVisible ? "Hide" : "Show"}
+                      </button>
+                    </div>
+                  </motion.div>
+
+                  <motion.div variants={itemVariants} className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isSignUp ? isLoadingSignup : isLoadingSignin}
+                      className="w-full bg-[#3E6272] text-white py-3.5 px-6 rounded-xl font-semibold shadow-lg hover:bg-[#2D4A57] transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSignUp
+                        ? isLoadingSignup
+                          ? "Creating..."
+                          : "Sign Up"
+                        : isLoadingSignin
+                          ? "Signing In..."
+                          : "Sign In"}
+                    </button>
+                  </motion.div>
+                </motion.div>
+              </form>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* RIGHT SIDE: TOGGLE PANEL (Desktop) */}
+        <div className="hidden md:flex w-[40%] bg-gradient-to-br from-[#3E6272] to-[#2D4A57] items-center justify-center p-12 text-white relative overflow-hidden">
+          {/* Decorative background circles */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-black opacity-10 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl"></div>
+
+          <div className="relative z-10 text-center">
+            <AnimatePresence mode="wait">
+              {isSignUp ? (
+                <motion.div
+                  key="panel-signin"
+                  variants={panelTextVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="space-y-6"
+                >
+                  <h2 className="text-3xl font-bold">Already a member?</h2>
+                  <p className="text-blue-100 text-lg">
+                    To keep connected with us please login with your personal
+                    info.
+                  </p>
+                  <button
+                    onClick={() => handleSwitchTab("signin")}
+                    className="px-8 py-3 border-2 border-white rounded-full text-white font-semibold hover:bg-white hover:text-[#3E6272] transition-all duration-300 shadow-lg"
+                  >
+                    Sign In Here
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="panel-signup"
+                  variants={panelTextVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="space-y-6"
+                >
+                  <h2 className="text-3xl font-bold">New Here?</h2>
+                  <p className="text-blue-100 text-lg">
+                    Enter your personal details and start your journey with us
+                    today.
+                  </p>
+                  <button
+                    onClick={() => handleSwitchTab("signup")}
+                    className="px-8 py-3 border-2 border-white rounded-full text-white font-semibold hover:bg-white hover:text-[#3E6272] transition-all duration-300 shadow-lg"
+                  >
+                    Sign Up Now
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };

@@ -314,6 +314,7 @@ class RideMatchingService
         // Round coordinates slightly to improve cache hit rate (4 decimal places is ~11m)
         $latKey = round($lat, 4);
         $lngKey = round($lng, 4);
+        Log::info('starting to fetch reversed geocodes');
 
         return Cache::remember("geo_name_{$latKey}_{$lngKey}", 86400, function () use ($lat, $lng) {
             try {
@@ -324,6 +325,7 @@ class RideMatchingService
                 $url = "https://api.maptiler.com/geocoding/{$lng},{$lat}.json?key={$apiKey}";
 
                 $response = Http::timeout(3)->get($url);
+                Log::info($response);
 
                 if ($response->successful()) {
                     $features = $response->json()['features'] ?? [];
