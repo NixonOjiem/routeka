@@ -1,0 +1,15 @@
+[build]
+  # Tell Netlify to move into the client folder first
+  base = "client"
+  
+  # Command to run inside the client folder
+  command = "npm run build"
+  
+  # Where the finished files are located (relative to the base)
+  publish = "dist"
+
+# This replaces the need for a _redirects file in a public folder
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

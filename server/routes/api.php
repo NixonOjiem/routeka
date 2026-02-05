@@ -7,10 +7,6 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\RideRequestController;
 use App\Http\Controllers\Auth\VerificationController;
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
-
 //Auth routes
 Route::group(['prefix' => 'auth'], function(){
     Route::post('register', [AuthController::class, 'register']);
