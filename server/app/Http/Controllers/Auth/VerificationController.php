@@ -20,7 +20,7 @@ class VerificationController extends Controller
         $user = User::find($id);
 
         if (!$user) {
-            return redirect(env('FRONTEND_URL') . '/auth?error=invalid_user', 401);
+            return redirect(env('FRONTEND_URL') . '/auth?error=invalid_user',);
         }
 
         if (!$user->hasVerifiedEmail()) {
@@ -34,7 +34,7 @@ class VerificationController extends Controller
     public function resend(Request $request)
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect(env('FRONTEND_URL'). '/auth?verified=true', 400);
+            return redirect(env('FRONTEND_URL'). '/auth?verified=true', );
         }
 
         $request->user()->sendEmailVerificationNotification();
