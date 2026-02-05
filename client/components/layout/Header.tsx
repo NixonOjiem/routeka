@@ -439,14 +439,14 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                         <span className="font-medium">My Rides</span>
                       </motion.button>
 
-                      <motion.button
+                      {/* <motion.button
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleNavigate("/schedule")}
                         className="px-4 py-3 text-left rounded-lg hover:bg-gray-100 flex items-center gap-3"
                       >
                         <Calendar size={20} />
                         <span className="font-medium">Schedule</span>
-                      </motion.button>
+                      </motion.button> */}
 
                       {user && (
                         <>
