@@ -20,6 +20,10 @@ Route::group(['prefix' => 'auth'], function(){
 // 1. Verify Email (Does not require login, uses signed URL)
 Route::get('email/verify/{id}', [VerificationController::class, 'verify'])->name('verification.verify');
 
+Route::get('/test', function () {
+    return "server working";
+});
+
 // 2. Resend Email (Requires user to be logged in with token)
 Route::group(['middleware' => 'auth:api'], function () {
     Route::get('email/resend', [VerificationController::class, 'resend'])->name('verification.resend');
