@@ -35,4 +35,6 @@ return [
         ],
     ],
 
+    'maptiler' => ['key' => env('MAPTILLER_KEY')],
+
 ];
