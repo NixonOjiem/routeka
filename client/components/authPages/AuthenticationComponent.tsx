@@ -75,6 +75,9 @@ export const AuthenticationComponent: React.FC = () => {
       const resultAction = await dispatch(register(formData));
       if (register.fulfilled.match(resultAction)) {
         // Success logic
+        alert(
+          "Registration successful! Please check your email to verify your account.",
+        );
       } else {
         throw new Error(
           (resultAction.payload as string) || "Registration failed",

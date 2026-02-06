@@ -325,7 +325,12 @@ class RideMatchingService
                 $url = "https://api.maptiler.com/geocoding/{$lng},{$lat}.json?key={$apiKey}";
 
                 $response = Http::timeout(3)->get($url);
-                Log::info($response);
+                Log::warning('response from reversed geocodes', [
+                    'status' => $response->status(),
+                    'success' => $response->successful(),
+                    'body' => $response->json(), // full JSON payload
+                    ]);
+
 
                 if ($response->successful()) {
                     $features = $response->json()['features'] ?? [];
