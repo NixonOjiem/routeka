@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { login, register, reset } from "@/redux/slices/authSlice";
 import { AppDispatch, RootState } from "@/redux/store";
-import { useNavigate, useLocation, redirect } from "react-router-dom";
+import { useNavigate, useLocation, redirect, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 export const AuthenticationComponent: React.FC = () => {
@@ -153,7 +153,7 @@ export const AuthenticationComponent: React.FC = () => {
           >
             <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-lg mx-4">
               <div className="flex items-center">
-                <div className="flex-shrink-0 text-red-500">⚠</div>
+                <div className="shrink-0 text-red-500">⚠</div>
                 <div className="ml-3">
                   <p className="text-sm text-red-700">{message}</p>
                 </div>
@@ -337,6 +337,23 @@ export const AuthenticationComponent: React.FC = () => {
                           : "Sign In"}
                     </button>
                   </motion.div>
+                  <div className="text-center text-sm text-gray-500 mt-4">
+                    {!user && (
+                      <>
+                        <Link
+                          to="/forgot-password"
+                          className="opacity-70 hover:underline"
+                        >
+                          Forgot password? Click here
+                        </Link>
+                        <br />
+                      </>
+                    )}
+
+                    <Link to="/" className="ml-1 hover:underline">
+                      Go to Home Page
+                    </Link>
+                  </div>
                 </motion.div>
               </form>
             </motion.div>
@@ -344,7 +361,7 @@ export const AuthenticationComponent: React.FC = () => {
         </div>
 
         {/* RIGHT SIDE: TOGGLE PANEL (Desktop) */}
-        <div className="hidden md:flex w-[40%] bg-gradient-to-br from-[#3E6272] to-[#2D4A57] items-center justify-center p-12 text-white relative overflow-hidden">
+        <div className="hidden md:flex w-[40%] bg-linear-to-br from-[#3E6272] to-[#2D4A57] items-center justify-center p-12 text-white relative overflow-hidden">
           {/* Decorative background circles */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-black opacity-10 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl"></div>
