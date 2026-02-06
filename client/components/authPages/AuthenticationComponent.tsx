@@ -78,7 +78,7 @@ export const AuthenticationComponent: React.FC = () => {
         alert(
           "Registration successful! Please check your email to verify your account.",
         );
-        redirect("/signin");
+        navigate("/signin");
       } else {
         throw new Error(
           (resultAction.payload as string) || "Registration failed",
