@@ -29,7 +29,7 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAuthPage = /^\/(auth|signin|signup)/.test(location.pathname);
+  const isAuthPage = /^\/(auth|signin|signup|chat)/.test(location.pathname);
 
   const getCurrentView = (): ViewState => {
     return location.pathname === "/request" ? "request" : "home";
