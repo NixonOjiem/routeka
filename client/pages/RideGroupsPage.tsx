@@ -300,13 +300,23 @@ const RideGroupsPage: React.FC = () => {
                         <p className="text-xs text-gray-500 mb-3">
                           Travel companions found nearby.
                         </p>
-                        <Link
-                          to={`/chat/${group.chat_room_id}`}
-                          className="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors"
-                        >
-                          <ChatAlt2Icon className="w-4 h-4 mr-2" />
-                          Chat with Group
-                        </Link>
+                        {user ? (
+                          <Link
+                            to={`/chat/${group.chat_room_id}`}
+                            className="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors"
+                          >
+                            <ChatAlt2Icon className="w-4 h-4 mr-2" />
+                            Chat with Group
+                          </Link>
+                        ) : (
+                          <Link
+                            to={"/signin"}
+                            className="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors"
+                          >
+                            <ChatAlt2Icon className="w-4 h-4 mr-2" />
+                            Sign in to Chat
+                          </Link>
+                        )}
                       </div>
                     ) : (
                       <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 w-full text-center md:text-right">
@@ -463,21 +473,31 @@ const RideGroupsPage: React.FC = () => {
 
                 {group.chat_room_id && (
                   <>
-                    {isChatEnabled ? (
-                      <Link
-                        to={`/chat/${group.chat_room_id}`}
-                        className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
-                      >
-                        Join Chat
-                      </Link>
+                    {user ? (
+                      isChatEnabled ? (
+                        <Link
+                          to={`/chat/${group.chat_room_id}`}
+                          className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
+                        >
+                          Join Chat
+                        </Link>
+                      ) : (
+                        <div
+                          className="flex items-center text-gray-400 text-xs"
+                          title="Join via 'My Requests' to chat"
+                        >
+                          <LockClosedIcon className="w-3 h-3 mr-1" />
+                          <span className="font-medium">View Only</span>
+                        </div>
+                      )
                     ) : (
-                      <div
-                        className="flex items-center text-gray-400 text-xs"
-                        title="Join via 'My Requests' to chat"
+                      <Link
+                        to={"/signin"}
+                        className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors flex items-center"
                       >
                         <LockClosedIcon className="w-3 h-3 mr-1" />
-                        <span className="font-medium">View Only</span>
-                      </div>
+                        Sign in to Chat
+                      </Link>
                     )}
                   </>
                 )}
