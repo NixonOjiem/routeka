@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { login, register, reset } from "@/redux/slices/authSlice";
 import { AppDispatch, RootState } from "@/redux/store";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, redirect } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 export const AuthenticationComponent: React.FC = () => {
@@ -78,6 +78,7 @@ export const AuthenticationComponent: React.FC = () => {
         alert(
           "Registration successful! Please check your email to verify your account.",
         );
+        redirect("/signin");
       } else {
         throw new Error(
           (resultAction.payload as string) || "Registration failed",
