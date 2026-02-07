@@ -349,7 +349,8 @@ export const AuthenticationComponent: React.FC = () => {
                       className="w-full flex items-center justify-center gap-2 bg-white border border-brand text-brand py-3.5 px-6 rounded-xl font-semibold shadow-sm hover:bg-brand hover:text-white transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <img
-                        src="/resources/google-icon.png"
+                        //src="/resources/google-icon.png"
+                        src="/google-icon.png"
                         alt="Google"
                         className="w-5 h-5"
                       />
