@@ -337,6 +337,26 @@ export const AuthenticationComponent: React.FC = () => {
                           : "Sign In"}
                     </button>
                   </motion.div>
+
+                  <div className="text-center text-sm text-gray-500 mt-4">
+                    or continue with
+                  </div>
+
+                  <motion.div variants={itemVariants} className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isSignUp ? isLoadingSignup : isLoadingSignin}
+                      className="w-full flex items-center justify-center gap-2 bg-white border border-brand text-brand py-3.5 px-6 rounded-xl font-semibold shadow-sm hover:bg-brand hover:text-white transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <img
+                        src="/resources/google-icon.png"
+                        alt="Google"
+                        className="w-5 h-5"
+                      />
+                      Login with Google
+                    </button>
+                  </motion.div>
+
                   <div className="text-center text-sm text-gray-500 mt-4">
                     {!user && (
                       <>
