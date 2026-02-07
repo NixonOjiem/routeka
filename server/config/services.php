@@ -37,4 +37,10 @@ return [
 
     'maptiler' => ['key' => env('MAPTILLER_KEY')],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => rtrim(env('FRONTEND_URL'), '/') . '/auth/callback',
+    ],
+
 ];

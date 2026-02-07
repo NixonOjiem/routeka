@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Validator;
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Str;
+use Exception;
 
 class AuthController extends Controller
 {
@@ -112,8 +115,71 @@ class AuthController extends Controller
             'expires_in' => auth('api')->factory()->getTTL() * 60
         ]);
     }
-    public function googleAuthentication()
+    public function googleAuthentication(Request $request)
     {
-        return response()->json(['message' => 'google auth']);
+        try {
+            // 1. Get the 'token' sent from React
+            $token = $request->input('token');
+
+            if (!$token) {
+                return response()->json(['error' => 'Token is required'], );
+            }
+
+            // 2. Verify the token with Google using Socialite 'stateless'
+            // 'stateless()' is crucial for APIs as we don't use sessions
+            $googleUser = Socialite::driver('google')->stateless()->userFromToken($token);
+
+            // 3. Find user by google_id or email
+            $user = User::where('google_id', $googleUser->getId())
+                ->orWhere('email', $googleUser->getEmail())
+                ->first();
+
+            if ($user) {
+                // If user exists but doesn't have google_id yet (registered via email previously), link them
+                if (!$user->google_id) {
+                    $user->update([
+                        'google_id' => $googleUser->getId(),
+                        'avatar' => $googleUser->getAvatar(),
+                    ]);
+                }
+            } else {
+                // 4. Create new user
+                // Generate a unique user_name based on their name or email
+                $baseUsername = Str::slug($googleUser->getName());
+                $username = $baseUsername . rand(1000, 9999);
+
+                $user = User::create([
+                    'name' => $googleUser->getName(),
+                    'email' => $googleUser->getEmail(),
+                    'google_id' => $googleUser->getId(),
+                    'user_name' => $username, // Mandatory field in your DB
+                    'avatar' => $googleUser->getAvatar(),
+                    'password' => null, // Or bcrypt(Str::random(16)) if password cannot be null
+                    'email_verified_at' => now(), // Google emails are verified
+                ]);
+            }
+
+            // 5. Login the user and generate a token
+            // Assuming you use Passport or Sanctum.
+            // Adjust the token creation line based on your specific setup.
+
+            // Example for Sanctum/Passport:
+            $tokenResult = $user->createToken('GoogleAuthToken')->accessToken;
+            // Note: If using Sanctum, it is ->plainTextToken instead of ->accessToken
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'User logged in successfully',
+                'user' => $user,
+                'token' => $tokenResult,
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Google Authentication Failed',
+                'error' => $e->getMessage()
+            ], 401);
+        }
     }
 }
