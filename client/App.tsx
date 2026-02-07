@@ -8,6 +8,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import { ViewState, NotificationType } from "./types";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
@@ -121,10 +122,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <Provider store={store}>
-      <Router>
-        <AppContent />
-      </Router>
-    </Provider>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <Provider store={store}>
+        <Router>
+          <AppContent />
+        </Router>
+      </Provider>
+    </GoogleOAuthProvider>
   );
 }

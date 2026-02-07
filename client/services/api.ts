@@ -48,6 +48,7 @@ export interface User {
   email: string;
   user_name?: string;
   email_verified_at?: string;
+  avatar?: string;
 }
 
 export interface RideLocation {
@@ -148,6 +149,17 @@ export const signout = async () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
   }
+};
+
+export const googleAuthentication = async (token: string) => {
+  // We send the token in the body as expected by your Laravel controller
+  const response = await api.post(`${API_URL}/auth/google-auth`, { token });
+
+  if (response.data.token) {
+    localStorage.setItem("token", response.data.token);
+    localStorage.setItem("user", JSON.stringify(response.data.user));
+  }
+  return response.data;
 };
 
 // Ride and Chat API calls

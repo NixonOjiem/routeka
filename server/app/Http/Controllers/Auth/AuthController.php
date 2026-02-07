@@ -160,7 +160,7 @@ class AuthController extends Controller
                     'user_name' => $username,
                     'avatar' => $googleUser->getAvatar(),
                     // Set a random password so the DB doesn't complain if the column is not nullable
-                    'password' => Hash::make(Str::random(16)),
+                    // 'password' => Hash::make(Str::random(16)),
                     'email_verified_at' => now(), // Google emails are verified by default
                 ]);
             }
