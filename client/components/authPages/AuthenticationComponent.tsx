@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { login, register, reset } from "@/redux/slices/authSlice";
+import { login, register, reset, googleLogin } from "@/redux/slices/authSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useNavigate, useLocation, redirect, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useGoogleLogin } from "@react-oauth/google";
 
 export const AuthenticationComponent: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,8 @@ export const AuthenticationComponent: React.FC = () => {
   );
   const [isLoadingSignup, setIsLoadingSignup] = useState(false);
   const [isLoadingSignin, setIsLoadingSignin] = useState(false);
+  // Add state for Google Loading
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleSwitchTab = (mode: "signin" | "signup") => {
     navigate(`/${mode}${location.search}`);
@@ -114,6 +117,32 @@ export const AuthenticationComponent: React.FC = () => {
       setIsLoadingSignin(false);
     }
   };
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsGoogleLoading(true);
+      try {
+        // The tokenResponse contains 'access_token' which Socialite needs
+        const resultAction = await dispatch(
+          googleLogin(tokenResponse.access_token),
+        );
+
+        if (googleLogin.fulfilled.match(resultAction)) {
+          // Success handled by useEffect that watches 'user'
+        } else {
+          throw new Error("Google login failed via redux");
+        }
+      } catch (err) {
+        console.error("Google Auth Error", err);
+      } finally {
+        setIsGoogleLoading(false);
+      }
+    },
+    onError: (error) => {
+      console.log("Login Failed:", error);
+      setIsGoogleLoading(false);
+    },
+  });
 
   // Animations
   const containerVariants = {
@@ -344,17 +373,29 @@ export const AuthenticationComponent: React.FC = () => {
 
                   <motion.div variants={itemVariants} className="pt-2">
                     <button
-                      type="submit"
-                      disabled={isSignUp ? isLoadingSignup : isLoadingSignin}
-                      className="w-full flex items-center justify-center gap-2 bg-white border border-brand text-brand py-3.5 px-6 rounded-xl font-semibold shadow-sm hover:bg-brand hover:text-white transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      type="button" // Changed to button to prevent form submit
+                      onClick={() => handleGoogleLogin()} // Attach the hook here
+                      disabled={
+                        isSignUp
+                          ? isLoadingSignup
+                          : isLoadingSignin || isGoogleLoading
+                      }
+                      className="w-full flex items-center justify-center gap-2 bg-white border border-brand text-brand py-3.5 px-6 rounded-xl font-semibold shadow-sm hover:bg-gray-50 transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <img
-                        //src="/resources/google-icon.png"
-                        src="/google-icon.png"
-                        alt="Google"
-                        className="w-5 h-5"
-                      />
-                      Login with Google
+                      {isGoogleLoading ? (
+                        <span className="text-sm">Connecting to Google...</span>
+                      ) : (
+                        <>
+                          <img
+                            src="/google-icon.png"
+                            alt="Google"
+                            className="w-5 h-5"
+                          />
+                          {isSignUp
+                            ? "Sign Up with Google"
+                            : "Login with Google"}
+                        </>
+                      )}
                     </button>
                   </motion.div>
 

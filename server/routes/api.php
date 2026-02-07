@@ -8,9 +8,10 @@ use App\Http\Controllers\RideRequestController;
 use App\Http\Controllers\Auth\VerificationController;
 
 //Auth routes
-Route::group(['prefix' => 'auth'], function(){
+Route::group(['prefix' => 'auth'], function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('google-auth', [AuthController::class, 'googleAuthentication']);
     Route::get('me', [AuthController::class, 'me'])->middleware('auth:api');
     Route::get('profile', [AuthController::class, 'profile'])->middleware('auth:api');
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api');
@@ -30,7 +31,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 });
 
 
-Route::group(['prefix' => 'rides'], function(){
+Route::group(['prefix' => 'rides'], function () {
     Route::post('request', [RideRequestController::class, 'store']);
     Route::get('groups', [RideRequestController::class, 'index']);
 });

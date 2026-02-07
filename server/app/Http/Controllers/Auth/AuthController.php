@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Validator;
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Str;
+use Exception;
 
 class AuthController extends Controller
 {
@@ -20,7 +23,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
-            'user_name'=> 'required|string|max:100'
+            'user_name' => 'required|string|max:100'
         ]);
 
         if ($validator->fails()) {
@@ -31,13 +34,13 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'user_name'=> $request->user_name,
+            'user_name' => $request->user_name,
         ]);
 
         // trigger event to send email
 
         event(new Registered($user));
-        return response()->json([ 'message' => 'Registration successful. Please verify your email before logging in.' ], 201);
+        return response()->json(['message' => 'Registration successful. Please verify your email before logging in.'], 201);
     }
 
     // Login
@@ -53,20 +56,20 @@ class AuthController extends Controller
         // 3. Merge the specific field into the credentials
         $credentials = [
             $loginField => $loginData,
-            'password'  => $password,
+            'password' => $password,
         ];
 
         // 4. Attempt login
-        if (! $token = auth('api')->attempt($credentials)) {
+        if (!$token = auth('api')->attempt($credentials)) {
             return response()->json(['message' => 'Unauthorized. Check your credentials.'], 401);
         }
 
         $user = auth('api')->user();
 
         // 5. Check Email Verification
-        if(! $user->hasVerifiedEmail()){
+        if (!$user->hasVerifiedEmail()) {
             auth('api')->logout();
-            return response()->json([ 'message' => 'Please verify your email before logging in.' ], 403);
+            return response()->json(['message' => 'Please verify your email before logging in.'], 403);
         }
 
         return $this->respondWithToken($token, $user, $user->user_name);
@@ -78,20 +81,21 @@ class AuthController extends Controller
         return response()->json(auth('api')->user());
     }
 
-    public function profile() {
-    if (!auth('api')->check()) {
-        return response()->json(['message' => 'Please login to continue'], 401);
-    }
+    public function profile()
+    {
+        if (!auth('api')->check()) {
+            return response()->json(['message' => 'Please login to continue'], 401);
+        }
 
-    $user = auth('api')->user();
-    $userData = [
-        'name' => $user->name,
-        'email' => $user->email,
-        'user_name' => $user->user_name,
-        'email_verified_at' => $user->email_verified_at
+        $user = auth('api')->user();
+        $userData = [
+            'name' => $user->name,
+            'email' => $user->email,
+            'user_name' => $user->user_name,
+            'email_verified_at' => $user->email_verified_at
         ];
-    Log::info($userData);
-    return response()->json([ 'message' => 'Profile retrieved successfully', 'data' => $userData ]);
+        Log::info($userData);
+        return response()->json(['message' => 'Profile retrieved successfully', 'data' => $userData]);
     }
     // Log the user out (Invalidate the token)
     public function logout()
@@ -106,9 +110,74 @@ class AuthController extends Controller
         return response()->json([
             'token' => $token,
             'user' => $user,
-            'user_name'=>$user_name,
+            'user_name' => $user_name,
             'token_type' => 'bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60
         ]);
+    }
+    public function googleAuthentication(Request $request)
+    {
+        try {
+            // 1. Get the 'token' sent from frontend
+            $token = $request->input('token');
+
+            if (!$token) {
+                return response()->json(['error' => 'Token is required'], 400);
+            }
+
+            // 2. Verify the token with Google
+            $googleUser = Socialite::driver('google')->stateless()->userFromToken($token);
+
+            // 3. Find user by google_id or email
+            $user = User::where('google_id', $googleUser->getId())
+                ->orWhere('email', $googleUser->getEmail())
+                ->first();
+
+            if ($user) {
+                // If user exists via email but no google_id, link them
+                if (!$user->google_id) {
+                    $user->update([
+                        'google_id' => $googleUser->getId(),
+                        'avatar' => $googleUser->getAvatar(),
+                    ]);
+                }
+            } else {
+                // 4. Create new user with UNIQUE username
+                $baseUsername = Str::slug($googleUser->getName());
+                $username = $baseUsername;
+                $counter = 1;
+
+                // Check if username exists, if so, append a number until unique
+                while (User::where('user_name', $username)->exists()) {
+                    $username = $baseUsername . $counter;
+                    $counter++;
+                }
+
+                $user = User::create([
+                    'name' => $googleUser->getName(),
+                    'email' => $googleUser->getEmail(),
+                    'google_id' => $googleUser->getId(),
+                    'user_name' => $username,
+                    'avatar' => $googleUser->getAvatar(),
+                    // Set a random password so the DB doesn't complain if the column is not nullable
+                    // 'password' => Hash::make(Str::random(16)),
+                    'email_verified_at' => now(), // Google emails are verified by default
+                ]);
+            }
+
+            // 5. Login the user using the same driver as your standard login
+            // This generates the JWT token without needing a password
+            $token = auth('api')->login($user);
+
+            // 6. Return response using your existing helper for consistency
+            return $this->respondWithToken($token, $user, $user->user_name);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Google Authentication Failed',
+                'error' => $e->getMessage()
+            ], 401);
+        }
     }
 }

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { signin, signup, signout } from "@/services/api";
+import { signin, signup, signout, googleAuthentication } from "@/services/api";
 
 // Types
 interface User {
@@ -9,6 +9,7 @@ interface User {
   phone?: string;
   email_verified_at?: any;
   user_name?: string;
+  avatar?: string;
 }
 
 interface AuthState {
@@ -19,6 +20,7 @@ interface AuthState {
   isLoading: boolean;
   isError: boolean;
   message: string;
+  isSuccess: boolean;
 }
 
 const getGuestId = (): string => {
@@ -42,6 +44,7 @@ const initialState: AuthState = {
   isLoading: false,
   isError: false,
   message: "",
+  isSuccess: false,
 };
 
 // Thunks
@@ -52,6 +55,23 @@ export const register = createAsyncThunk<any, any, { rejectValue: string }>(
       return await signup(userData);
     } catch (error: any) {
       const message = error.response?.data?.message || error.message;
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
+// google login thunk
+export const googleLogin = createAsyncThunk(
+  "auth/googleLogin",
+  async (token: string, thunkAPI) => {
+    try {
+      return await googleAuthentication(token);
+    } catch (error: any) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
       return thunkAPI.rejectWithValue(message);
     }
   },
@@ -153,6 +173,24 @@ const authSlice = createSlice({
         state.token = null;
         localStorage.removeItem("user");
         localStorage.removeItem("token");
+      })
+      // Google Login
+      .addCase(googleLogin.pending, (state) => {
+        state.isLoading = true; // or whatever your loading state is named
+        state.isError = false;
+        state.message = "";
+      })
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.user = action.payload.user;
+        state.message = "Logged in via Google successfully";
+      })
+      .addCase(googleLogin.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload as string;
+        state.user = null;
       });
   },
 });
