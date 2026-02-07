@@ -118,15 +118,14 @@ class AuthController extends Controller
     public function googleAuthentication(Request $request)
     {
         try {
-            // 1. Get the 'token' sent from React
+            // 1. Get the 'token' sent from frontend
             $token = $request->input('token');
 
             if (!$token) {
-                return response()->json(['error' => 'Token is required'], );
+                return response()->json(['error' => 'Token is required'], 400);
             }
 
-            // 2. Verify the token with Google using Socialite 'stateless'
-            // 'stateless()' is crucial for APIs as we don't use sessions
+            // 2. Verify the token with Google
             $googleUser = Socialite::driver('google')->stateless()->userFromToken($token);
 
             // 3. Find user by google_id or email
@@ -135,7 +134,7 @@ class AuthController extends Controller
                 ->first();
 
             if ($user) {
-                // If user exists but doesn't have google_id yet (registered via email previously), link them
+                // If user exists via email but no google_id, link them
                 if (!$user->google_id) {
                     $user->update([
                         'google_id' => $googleUser->getId(),
@@ -143,36 +142,35 @@ class AuthController extends Controller
                     ]);
                 }
             } else {
-                // 4. Create new user
-                // Generate a unique user_name based on their name or email
+                // 4. Create new user with UNIQUE username
                 $baseUsername = Str::slug($googleUser->getName());
-                $username = $baseUsername . rand(1000, 9999);
+                $username = $baseUsername;
+                $counter = 1;
+
+                // Check if username exists, if so, append a number until unique
+                while (User::where('user_name', $username)->exists()) {
+                    $username = $baseUsername . $counter;
+                    $counter++;
+                }
 
                 $user = User::create([
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
                     'google_id' => $googleUser->getId(),
-                    'user_name' => $username, // Mandatory field in your DB
+                    'user_name' => $username,
                     'avatar' => $googleUser->getAvatar(),
-                    'password' => null, // Or bcrypt(Str::random(16)) if password cannot be null
-                    'email_verified_at' => now(), // Google emails are verified
+                    // Set a random password so the DB doesn't complain if the column is not nullable
+                    'password' => Hash::make(Str::random(16)),
+                    'email_verified_at' => now(), // Google emails are verified by default
                 ]);
             }
 
-            // 5. Login the user and generate a token
-            // Assuming you use Passport or Sanctum.
-            // Adjust the token creation line based on your specific setup.
+            // 5. Login the user using the same driver as your standard login
+            // This generates the JWT token without needing a password
+            $token = auth('api')->login($user);
 
-            // Example for Sanctum/Passport:
-            $tokenResult = $user->createToken('GoogleAuthToken')->accessToken;
-            // Note: If using Sanctum, it is ->plainTextToken instead of ->accessToken
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'User logged in successfully',
-                'user' => $user,
-                'token' => $tokenResult,
-            ]);
+            // 6. Return response using your existing helper for consistency
+            return $this->respondWithToken($token, $user, $user->user_name);
 
         } catch (Exception $e) {
             return response()->json([
