@@ -115,39 +115,45 @@ class AuthController extends Controller
             'expires_in' => auth('api')->factory()->getTTL() * 60
         ]);
     }
+    // Google Authentication
     public function googleAuthentication(Request $request)
     {
         try {
-            // 1. Get the 'token' sent from frontend
             $token = $request->input('token');
 
             if (!$token) {
                 return response()->json(['error' => 'Token is required'], 400);
             }
 
-            // 2. Verify the token with Google
             $googleUser = Socialite::driver('google')->stateless()->userFromToken($token);
 
-            // 3. Find user by google_id or email
+            // Find user by google_id or email
             $user = User::where('google_id', $googleUser->getId())
                 ->orWhere('email', $googleUser->getEmail())
                 ->first();
 
             if ($user) {
-                // If user exists via email but no google_id, link them
+                // 1. Link Google ID if it's missing (e.g. they registered via email/password first)
                 if (!$user->google_id) {
                     $user->update([
                         'google_id' => $googleUser->getId(),
                         'avatar' => $googleUser->getAvatar(),
                     ]);
                 }
+
+                // 2. CRITICAL FIX: Check if email is unverified and verify it.
+                // Since they logged in with Google, we trust the email is verified.
+                if (!$user->hasVerifiedEmail()) {
+                    $user->markEmailAsVerified();
+                    // Or manually: $user->update(['email_verified_at' => now()]);
+                }
+
             } else {
-                // 4. Create new user with UNIQUE username
+                // Create new user
                 $baseUsername = Str::slug($googleUser->getName());
                 $username = $baseUsername;
                 $counter = 1;
 
-                // Check if username exists, if so, append a number until unique
                 while (User::where('user_name', $username)->exists()) {
                     $username = $baseUsername . $counter;
                     $counter++;
@@ -159,17 +165,15 @@ class AuthController extends Controller
                     'google_id' => $googleUser->getId(),
                     'user_name' => $username,
                     'avatar' => $googleUser->getAvatar(),
-                    // Set a random password so the DB doesn't complain if the column is not nullable
-                    // 'password' => Hash::make(Str::random(16)),
-                    'email_verified_at' => now(), // Google emails are verified by default
+                    // Ensure you provide a password if your DB column is not nullable,
+                    // or make the password column nullable in migration.
+                    'password' => Hash::make(Str::random(16)),
+                    'email_verified_at' => now(), // Set verified immediately
                 ]);
             }
 
-            // 5. Login the user using the same driver as your standard login
-            // This generates the JWT token without needing a password
             $token = auth('api')->login($user);
 
-            // 6. Return response using your existing helper for consistency
             return $this->respondWithToken($token, $user, $user->user_name);
 
         } catch (Exception $e) {
@@ -180,4 +184,5 @@ class AuthController extends Controller
             ], 401);
         }
     }
+
 }
