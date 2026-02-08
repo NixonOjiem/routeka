@@ -1,5 +1,12 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { signin, signup, signout, googleAuthentication } from "@/services/api";
+import {
+  signin,
+  signup,
+  signout,
+  googleAuthentication,
+  requestPasswordReset,
+  confirmPasswordReset,
+} from "@/services/api";
 
 // Types
 interface User {
@@ -98,6 +105,36 @@ export const logout = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
   }
 });
 
+export const forgotPassword = createAsyncThunk<
+  any,
+  string,
+  { rejectValue: string }
+>("auth/forgotPassword", async (email, thunkAPI) => {
+  try {
+    return await requestPasswordReset(email);
+  } catch (error: any) {
+    const message = error.response?.data?.message || error.message;
+    return thunkAPI.rejectWithValue(message);
+  }
+});
+
+export const resetNewPassword = createAsyncThunk<
+  any,
+  any,
+  { rejectValue: string }
+>("auth/resetNewPassword", async (data, thunkAPI) => {
+  try {
+    return await confirmPasswordReset(data);
+  } catch (error: any) {
+    const message = error.response?.data?.message || error.message;
+    // If validation errors exist (like password mismatch), return those
+    if (error.response?.data?.password) {
+      return thunkAPI.rejectWithValue(error.response.data.password[0]);
+    }
+    return thunkAPI.rejectWithValue(message);
+  }
+});
+
 // Slice
 const authSlice = createSlice({
   name: "auth",
@@ -119,6 +156,41 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+
+      // Forgot Password Cases
+      .addCase(forgotPassword.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+        state.message = "";
+      })
+      .addCase(forgotPassword.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = action.payload.message; // "We have e-mailed your password reset link."
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload as string;
+      })
+
+      // Reset Password Cases
+      .addCase(resetNewPassword.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+        state.message = "";
+      })
+      .addCase(resetNewPassword.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = action.payload.message; // "Your password has been reset."
+      })
+      .addCase(resetNewPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload as string;
+      })
+
       // Register
       .addCase(register.pending, (state) => {
         state.isLoading = true;
