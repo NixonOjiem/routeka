@@ -162,6 +162,16 @@ export const googleAuthentication = async (token: string) => {
   return response.data;
 };
 
+export const requestPasswordReset = async (email: string) => {
+  const response = await axios.post(`${API_URL}/forgot-password`, { email });
+  return response.data;
+};
+
+export const confirmPasswordReset = async (data: any) => {
+  const response = await axios.post(`${API_URL}/reset-password`, data);
+  return response.data;
+};
+
 // Ride and Chat API calls
 export const apiService = {
   // Ride endpoints
