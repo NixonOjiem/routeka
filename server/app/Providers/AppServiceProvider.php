@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Auth\Notifications\ResetPassword;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Customizing the Reset URL to point to React Frontend
+        ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
+            return env('FRONTEND_URL', ) . "/reset-password?token={$token}&email={$notifiable->getEmailForPasswordReset()}";
+        });
     }
 }
