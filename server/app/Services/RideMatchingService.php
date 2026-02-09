@@ -309,36 +309,62 @@ class RideMatchingService
     /**
      * Get rough area name using MapTiler Reverse Geocoding
      */
-    private function getAreaName($lat, $lng)
-    {
-        // Round coordinates slightly to improve cache hit rate (4 decimal places is ~11m)
-        $latKey = round($lat, 4);
-        $lngKey = round($lng, 4);
+  private function getAreaName($lat, $lng)
+{
+    // Round coordinates slightly to improve cache hit rate (4 decimal places is ~11m)
+    $latKey = round($lat, 4);
+    $lngKey = round($lng, 4);
+    $cacheKey = "geo_name_{$latKey}_{$lngKey}";
 
-        return Cache::remember("geo_name_{$latKey}_{$lngKey}", 86400, function () use ($lat, $lng) {
-            try {
-                $apiKey = env('MAPTILLER_KEY'); // Note: ensure spelling matches your .env
-                if (!$apiKey) return "Unknown Area";
-
-                // MapTiler expects: longitude,latitude
-                $url = "https://api.maptiler.com/geocoding/{$lng},{$lat}.json?key={$apiKey}";
-
-                $response = Http::timeout(3)->get($url);
-
-                if ($response->successful()) {
-                    $features = $response->json()['features'] ?? [];
-                    if (!empty($features)) {
-                        // Return the text of the first result (usually the most relevant area name)
-                        return $features[0]['text'] ?? $features[0]['place_name'] ?? "Unknown Area";
-                    }
-                }
-
-                return "Unknown Area";
-            } catch (\Exception $e) {
-                Log::error('MapTiler Error: ' . $e->getMessage());
-                return "Unknown Area";
-            }
-        });
+    // 1. Check Cache First
+    if ($cachedName = Cache::get($cacheKey)) {
+        return $cachedName;
     }
+
+    Log::info('starting to fetch reversed geocodes');
+
+    try {
+        // FIX: Use config() instead of env() for production safety
+        // Ensure you have 'maptiler' => ['key' => env('MAPTILLER_KEY')] in config/services.php
+        $apiKey = config('services.maptiler.key');
+
+        if (!$apiKey) {
+            Log::error('MapTiler API key is missing in config.');
+            return "Unknown Area";
+        }
+
+        // MapTiler expects: longitude,latitude
+        $url = "https://api.maptiler.com/geocoding/{$lng},{$lat}.json?key={$apiKey}";
+
+        $response = Http::timeout(3)->get($url);
+
+        Log::warning('response from reversed geocodes', [
+            'status' => $response->status(),
+            'success' => $response->successful(),
+        ]);
+
+        if ($response->successful()) {
+            $features = $response->json()['features'] ?? [];
+
+            if (!empty($features)) {
+                $locationName = $features[0]['text'] ?? $features[0]['place_name'] ?? null;
+
+                if ($locationName) {
+                    // 2. SUCCESS: Cache valid names for 2 weeks
+                    Cache::put($cacheKey, $locationName, now()->addWeeks(2));
+                    return $locationName;
+                }
+            }
+        }
+    } catch (\Exception $e) {
+        Log::error('MapTiler Error: ' . $e->getMessage());
+    }
+
+    // 3. FAILURE: Cache "Unknown Area" briefly (e.g., 1 hour)
+    // This protects your API quota from being hammered by requests for the same empty location.
+    Cache::put($cacheKey, "Unknown Area", now()->addHour());
+
+    return "Unknown Area";
+}
 
 }

@@ -1,19 +1,30 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 export const HeroSection = () => {
   return (
-    <div className="space-y-6 md:space-y-12 pt-2 md:pt-10 pb-4 md:pb-8 relative overflow-visible animate-fade-in-up flex flex-col justify-start md:justify-center min-h-[calc(100dvh-80px)] md:min-h-0">
-      <div className="absolute top-10 left-10 md:left-1/4 w-48 h-48 md:w-72 md:h-72 bg-brand-100/60 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-      <div className="absolute top-20 right-10 md:right-1/4 w-48 h-48 md:w-72 md:h-72 bg-cyan-100/60 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
-      <div className="absolute -bottom-8 left-20 md:left-1/3 w-48 h-48 md:w-72 md:h-72 bg-blue-100/60 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+    <section className="relative overflow-hidden pt-12 pb-8 md:pt-20 md:pb-16 flex flex-col items-center justify-center min-h-fit md:min-h-[70vh]">
+      {/* Animated Blobs */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
+        <div className="absolute top-10 left-10 w-48 h-48 bg-brand-100/60 rounded-full blur-3xl animate-blob" />
+        <div className="absolute top-20 right-10 w-48 h-48 bg-cyan-100/60 rounded-full blur-3xl animate-blob animation-delay-2000" />
+      </div>
 
-      <div className="relative z-10 text-center mb-2 md:mb-16 px-2">
-        <h1 className="text-3xl md:text-5xl font-display font-medium text-brand tracking-tight leading-tight mb-2 md:mb-4 drop-shadow-sm">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative z-10 text-center px-4 max-w-5xl"
+      >
+        <h1 className="text-4xl md:text-6xl font-display font-bold text-brand tracking-tight leading-tight mb-6">
           The Affordable Express <br />
-          <span className="italic text-brand-dark relative">
+          <span className="italic text-brand-dark relative inline-block">
             Commute is Here!
-            <svg
-              className="absolute w-full h-1.5 md:h-3 -bottom-1 left-0 text-brand-dark/20 -z-10"
+            <motion.svg
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ delay: 0.8, duration: 1 }}
+              className="absolute w-full h-2 md:h-4 -bottom-2 left-0 text-brand-dark/20"
               viewBox="0 0 100 10"
               preserveAspectRatio="none"
             >
@@ -23,25 +34,35 @@ export const HeroSection = () => {
                 strokeWidth="8"
                 fill="none"
               />
-            </svg>
+            </motion.svg>
           </span>
         </h1>
 
-        <p className="text-[3.2vw] sm:text-[2.8vw] md:text-2xl text-stone-700 mx-auto font-bold leading-tight font-dm-serif mb-6 md:mb-16 tracking-tighter whitespace-nowrap overflow-hidden text-ellipsis">
-          Regular Commute. Shared Cost. Big Savings (up to 60%)
-        </p>
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="inline-block bg-brand/5 border border-brand/10 px-4 py-2 rounded-full mb-8"
+        >
+          <p className="text-sm md:text-lg font-bold text-brand-dark">
+            Regular Commute • Shared Cost • Save up to 60%
+          </p>
+        </motion.div>
 
-        <p className="text-xl md:text-3xl text-stone-950 max-w-4xl mx-auto font-normal leading-[1.14] mt-6 md:mt-12 font-futura block">
+        <p className="text-lg md:text-2xl text-stone-600 font-futura leading-relaxed mb-8 max-w-3xl mx-auto">
           Reduce commuting costs by sharing rideshare fares with your
-          professional and local networks. Our service integrates you into a
-          community of commuters to provide an affordable express experience,
-          ensuring you save both time and capital on every journey.
+          professional and local networks. Enjoy an affordable express
+          experience.
         </p>
 
-        <p className="text-sm md:text-xl mt-2 md:mt-4 font-medium text-brand-dark tracking-wide animate-pulse font-sans px-4">
-          WE ARE LAUNCHING SOON!
-        </p>
-      </div>
-    </div>
+        <motion.p
+          animate={{ opacity: [0.4, 1, 0.4] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+          className="text-xs md:text-sm font-bold tracking-widest text-brand"
+        >
+          WE ARE LAUNCHING SOON
+        </motion.p>
+      </motion.div>
+    </section>
   );
 };

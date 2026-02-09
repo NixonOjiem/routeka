@@ -6,15 +6,15 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\RideRequestController;
 use App\Http\Controllers\Auth\VerificationController;
-
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
+use App\Http\Controllers\Auth\PasswordResetController;
 
 //Auth routes
-Route::group(['prefix' => 'auth'], function(){
+Route::group(['prefix' => 'auth'], function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('google-auth', [AuthController::class, 'googleAuthentication']);
+    Route::post('forgot-password', [PasswordResetController::class, 'sendResetLink']);
+    Route::post('reset-password', [PasswordResetController::class, 'reset']);
     Route::get('me', [AuthController::class, 'me'])->middleware('auth:api');
     Route::get('profile', [AuthController::class, 'profile'])->middleware('auth:api');
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api');
@@ -24,13 +24,17 @@ Route::group(['prefix' => 'auth'], function(){
 // 1. Verify Email (Does not require login, uses signed URL)
 Route::get('email/verify/{id}', [VerificationController::class, 'verify'])->name('verification.verify');
 
+Route::get('/test', function () {
+    return "server working";
+});
+
 // 2. Resend Email (Requires user to be logged in with token)
 Route::group(['middleware' => 'auth:api'], function () {
     Route::get('email/resend', [VerificationController::class, 'resend'])->name('verification.resend');
 });
 
 
-Route::group(['prefix' => 'rides'], function(){
+Route::group(['prefix' => 'rides'], function () {
     Route::post('request', [RideRequestController::class, 'store']);
     Route::get('groups', [RideRequestController::class, 'index']);
 });

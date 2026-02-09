@@ -8,6 +8,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import { ViewState, NotificationType } from "./types";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
@@ -21,15 +22,19 @@ import { RequestPage } from "./pages/RequestPage";
 import AuthenticationPage from "./pages/AuthenticationPage";
 import TestPage from "./pages/TestPage";
 import ProfilePage from "./pages/ProfilePage";
-// ✅ New pages
 import RideGroupsPage from "@/pages/RideGroupsPage";
 import ChatPage from "@/pages/ChatPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPPasswordPage from "@/pages/ResetPPasswordPage";
 
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAuthPage = /^\/(auth|signin|signup)/.test(location.pathname);
+  const isAuthPage =
+    /^\/(auth|signin|signup|chat|forgot-password|reset-password)/.test(
+      location.pathname,
+    );
 
   const getCurrentView = (): ViewState => {
     return location.pathname === "/request" ? "request" : "home";
@@ -88,6 +93,8 @@ function AppContent() {
           <Route path="/signin" element={<AuthenticationPage />} />
           <Route path="/signup" element={<AuthenticationPage />} />
           <Route path="/auth" element={<Navigate to="/signin" replace />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPPasswordPage />} />
           {/* <Route path="/auth" element={<AuthenticationPage />} /> */}
 
           {/* ✅ Add new routes */}
@@ -121,10 +128,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <Provider store={store}>
-      <Router>
-        <AppContent />
-      </Router>
-    </Provider>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <Provider store={store}>
+        <Router>
+          <AppContent />
+        </Router>
+      </Provider>
+    </GoogleOAuthProvider>
   );
 }

@@ -23,7 +23,10 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'name',
         'email',
         'password',
-        'user_name'
+        'user_name',
+        'google_id',
+        'avatar',
+        'email_verified_at',
     ];
 
     /**
@@ -48,7 +51,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
             'password' => 'hashed',
         ];
     }
-   /**
+    /**
      * Get the identifier that will be stored in the subject claim of the JWT.
      *
      * @return mixed

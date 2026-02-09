@@ -1,5 +1,12 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { signin, signup, signout } from "@/services/api";
+import {
+  signin,
+  signup,
+  signout,
+  googleAuthentication,
+  requestPasswordReset,
+  confirmPasswordReset,
+} from "@/services/api";
 
 // Types
 interface User {
@@ -9,6 +16,7 @@ interface User {
   phone?: string;
   email_verified_at?: any;
   user_name?: string;
+  avatar?: string;
 }
 
 interface AuthState {
@@ -19,6 +27,7 @@ interface AuthState {
   isLoading: boolean;
   isError: boolean;
   message: string;
+  isSuccess: boolean;
 }
 
 const getGuestId = (): string => {
@@ -42,6 +51,7 @@ const initialState: AuthState = {
   isLoading: false,
   isError: false,
   message: "",
+  isSuccess: false,
 };
 
 // Thunks
@@ -52,6 +62,23 @@ export const register = createAsyncThunk<any, any, { rejectValue: string }>(
       return await signup(userData);
     } catch (error: any) {
       const message = error.response?.data?.message || error.message;
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
+// google login thunk
+export const googleLogin = createAsyncThunk(
+  "auth/googleLogin",
+  async (token: string, thunkAPI) => {
+    try {
+      return await googleAuthentication(token);
+    } catch (error: any) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
       return thunkAPI.rejectWithValue(message);
     }
   },
@@ -78,6 +105,36 @@ export const logout = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
   }
 });
 
+export const forgotPassword = createAsyncThunk<
+  any,
+  string,
+  { rejectValue: string }
+>("auth/forgotPassword", async (email, thunkAPI) => {
+  try {
+    return await requestPasswordReset(email);
+  } catch (error: any) {
+    const message = error.response?.data?.message || error.message;
+    return thunkAPI.rejectWithValue(message);
+  }
+});
+
+export const resetNewPassword = createAsyncThunk<
+  any,
+  any,
+  { rejectValue: string }
+>("auth/resetNewPassword", async (data, thunkAPI) => {
+  try {
+    return await confirmPasswordReset(data);
+  } catch (error: any) {
+    const message = error.response?.data?.message || error.message;
+    // If validation errors exist (like password mismatch), return those
+    if (error.response?.data?.password) {
+      return thunkAPI.rejectWithValue(error.response.data.password[0]);
+    }
+    return thunkAPI.rejectWithValue(message);
+  }
+});
+
 // Slice
 const authSlice = createSlice({
   name: "auth",
@@ -99,6 +156,41 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+
+      // Forgot Password Cases
+      .addCase(forgotPassword.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+        state.message = "";
+      })
+      .addCase(forgotPassword.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = action.payload.message; // "We have e-mailed your password reset link."
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload as string;
+      })
+
+      // Reset Password Cases
+      .addCase(resetNewPassword.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+        state.message = "";
+      })
+      .addCase(resetNewPassword.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = action.payload.message; // "Your password has been reset."
+      })
+      .addCase(resetNewPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload as string;
+      })
+
       // Register
       .addCase(register.pending, (state) => {
         state.isLoading = true;
@@ -153,6 +245,24 @@ const authSlice = createSlice({
         state.token = null;
         localStorage.removeItem("user");
         localStorage.removeItem("token");
+      })
+      // Google Login
+      .addCase(googleLogin.pending, (state) => {
+        state.isLoading = true; // or whatever your loading state is named
+        state.isError = false;
+        state.message = "";
+      })
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.user = action.payload.user;
+        state.message = "Logged in via Google successfully";
+      })
+      .addCase(googleLogin.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload as string;
+        state.user = null;
       });
   },
 });

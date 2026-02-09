@@ -61,3 +61,6 @@ dist-ssr
 *.env.development
 *.log
 *.yml
+
+# Local Netlify folder
+.netlify
