@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { logout, reset } from "@/redux/slices/authSlice";
 import { AppDispatch, RootState } from "@/redux/store";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ViewState } from "@/types";
 import {
   Car,
@@ -27,12 +27,17 @@ interface HeaderProps {
 
 export const Header = ({ onViewChange, currentView }: HeaderProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
   const { user, isLoading } = useSelector((state: RootState) => state.auth);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+
+  const isHomeActive = currentView === "home" || location.pathname === "/";
+  const isRidesActive =
+    currentView === "rides" || location.pathname === "/rides";
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -199,7 +204,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                   whileTap={{ y: 0 }}
                   onClick={() => handleNavClick("home")}
                   className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-colors relative ${
-                    currentView === "home"
+                    isHomeActive
                       ? "text-brand-600"
                       : "text-gray-600 hover:text-gray-900"
                   }`}
@@ -208,7 +213,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                     <MapPin size={16} />
                     <span>Home</span>
                   </div>
-                  {currentView === "home" && (
+                  {isHomeActive && (
                     <motion.div
                       className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-brand rounded-full"
                       layoutId="activeIndicator"
@@ -221,7 +226,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                   whileTap={{ y: 0 }}
                   onClick={() => handleNavigate("/rides")}
                   className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-colors relative ${
-                    currentView === "rides"
+                    isRidesActive
                       ? "text-brand-600"
                       : "text-gray-600 hover:text-gray-900"
                   }`}
@@ -230,7 +235,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                     <History size={16} />
                     <span>My Rides</span>
                   </div>
-                  {currentView === "rides" && (
+                  {isRidesActive && (
                     <motion.div
                       className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-brand rounded-full"
                       layoutId="activeIndicator"
@@ -409,7 +414,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleNavClick("home")}
                         className={`px-4 py-3 text-left rounded-lg flex items-center gap-3 ${
-                          currentView === "home"
+                          isHomeActive
                             ? "bg-white text-brand shadow-sm"
                             : "hover:bg-gray-100"
                         }`}
@@ -422,7 +427,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleNavigate("/rides")}
                         className={`px-4 py-3 text-left rounded-lg flex items-center gap-3 ${
-                          currentView === "rides"
+                          isRidesActive
                             ? "bg-white text-brand shadow-sm"
                             : "hover:bg-gray-100"
                         }`}
