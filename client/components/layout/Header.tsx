@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout, reset } from "@/redux/slices/authSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useNavigate } from "react-router-dom";
+import { ViewState } from "@/types";
 import {
   Car,
   Loader2,
@@ -19,8 +20,8 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 interface HeaderProps {
-  onViewChange: (view: string) => void;
-  currentView: string;
+  onViewChange: (view: ViewState) => void;
+  currentView: ViewState;
 }
 
 export const Header = ({ onViewChange, currentView }: HeaderProps) => {
