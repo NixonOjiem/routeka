@@ -1,4 +1,4 @@
-export type ViewState = "home" | "request";
+export type ViewState = "home" | "request" | "rides" | "profile";
 export type NotificationType = "success" | "error";
 
 export enum CommunityGroup {

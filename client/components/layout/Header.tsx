@@ -18,6 +18,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Variants } from "framer-motion";
 
 interface HeaderProps {
   onViewChange: (view: ViewState) => void;
@@ -79,7 +80,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
     }
   };
 
-  const handleNavClick = (view: string) => {
+  const handleNavClick = (view: ViewState) => {
     onViewChange(view);
     setIsMenuOpen(false);
     setIsProfileDropdownOpen(false);
@@ -102,7 +103,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
   };
 
   // Animation variants
-  const headerVariants = {
+  const headerVariants: Variants = {
     initial: { y: -100 },
     animate: {
       y: 0,
@@ -114,7 +115,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
     },
   };
 
-  const dropdownVariants = {
+  const dropdownVariants: Variants = {
     hidden: {
       opacity: 0,
       y: 8,
@@ -140,7 +141,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
     },
   };
 
-  const menuVariants = {
+  const menuVariants: Variants = {
     closed: {
       opacity: 0,
       height: 0,
@@ -236,16 +237,6 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                     />
                   )}
                 </motion.button>
-
-                {/* <motion.button
-                  whileHover={{ y: -1 }}
-                  whileTap={{ y: 0 }}
-                  onClick={() => handleNavigate("/schedule")}
-                  className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-lg transition-colors flex items-center gap-2"
-                >
-                  <Calendar size={16} />
-                  <span>Schedule</span>
-                </motion.button> */}
               </div>
 
               {user ? (
@@ -439,15 +430,6 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                         <History size={20} />
                         <span className="font-medium">My Rides</span>
                       </motion.button>
-
-                      {/* <motion.button
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleNavigate("/schedule")}
-                        className="px-4 py-3 text-left rounded-lg hover:bg-gray-100 flex items-center gap-3"
-                      >
-                        <Calendar size={20} />
-                        <span className="font-medium">Schedule</span>
-                      </motion.button> */}
 
                       {user && (
                         <>
