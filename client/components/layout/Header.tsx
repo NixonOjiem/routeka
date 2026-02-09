@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { logout, reset } from "@/redux/slices/authSlice";
 import { AppDispatch, RootState } from "@/redux/store";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ViewState } from "@/types";
 import {
   Car,
@@ -18,6 +18,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Variants } from "framer-motion";
 
 interface HeaderProps {
   onViewChange: (view: ViewState) => void;
@@ -26,12 +27,17 @@ interface HeaderProps {
 
 export const Header = ({ onViewChange, currentView }: HeaderProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
   const { user, isLoading } = useSelector((state: RootState) => state.auth);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+
+  const isHomeActive = currentView === "home" || location.pathname === "/";
+  const isRidesActive =
+    currentView === "rides" || location.pathname === "/rides";
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -79,7 +85,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
     }
   };
 
-  const handleNavClick = (view: string) => {
+  const handleNavClick = (view: ViewState) => {
     onViewChange(view);
     setIsMenuOpen(false);
     setIsProfileDropdownOpen(false);
@@ -102,7 +108,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
   };
 
   // Animation variants
-  const headerVariants = {
+  const headerVariants: Variants = {
     initial: { y: -100 },
     animate: {
       y: 0,
@@ -114,7 +120,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
     },
   };
 
-  const dropdownVariants = {
+  const dropdownVariants: Variants = {
     hidden: {
       opacity: 0,
       y: 8,
@@ -140,7 +146,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
     },
   };
 
-  const menuVariants = {
+  const menuVariants: Variants = {
     closed: {
       opacity: 0,
       height: 0,
@@ -198,7 +204,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                   whileTap={{ y: 0 }}
                   onClick={() => handleNavClick("home")}
                   className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-colors relative ${
-                    currentView === "home"
+                    isHomeActive
                       ? "text-brand-600"
                       : "text-gray-600 hover:text-gray-900"
                   }`}
@@ -207,7 +213,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                     <MapPin size={16} />
                     <span>Home</span>
                   </div>
-                  {currentView === "home" && (
+                  {isHomeActive && (
                     <motion.div
                       className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-brand rounded-full"
                       layoutId="activeIndicator"
@@ -220,7 +226,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                   whileTap={{ y: 0 }}
                   onClick={() => handleNavigate("/rides")}
                   className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-colors relative ${
-                    currentView === "rides"
+                    isRidesActive
                       ? "text-brand-600"
                       : "text-gray-600 hover:text-gray-900"
                   }`}
@@ -229,23 +235,13 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                     <History size={16} />
                     <span>My Rides</span>
                   </div>
-                  {currentView === "rides" && (
+                  {isRidesActive && (
                     <motion.div
                       className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-brand rounded-full"
                       layoutId="activeIndicator"
                     />
                   )}
                 </motion.button>
-
-                {/* <motion.button
-                  whileHover={{ y: -1 }}
-                  whileTap={{ y: 0 }}
-                  onClick={() => handleNavigate("/schedule")}
-                  className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-lg transition-colors flex items-center gap-2"
-                >
-                  <Calendar size={16} />
-                  <span>Schedule</span>
-                </motion.button> */}
               </div>
 
               {user ? (
@@ -418,7 +414,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleNavClick("home")}
                         className={`px-4 py-3 text-left rounded-lg flex items-center gap-3 ${
-                          currentView === "home"
+                          isHomeActive
                             ? "bg-white text-brand shadow-sm"
                             : "hover:bg-gray-100"
                         }`}
@@ -431,7 +427,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleNavigate("/rides")}
                         className={`px-4 py-3 text-left rounded-lg flex items-center gap-3 ${
-                          currentView === "rides"
+                          isRidesActive
                             ? "bg-white text-brand shadow-sm"
                             : "hover:bg-gray-100"
                         }`}
@@ -439,15 +435,6 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                         <History size={20} />
                         <span className="font-medium">My Rides</span>
                       </motion.button>
-
-                      {/* <motion.button
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleNavigate("/schedule")}
-                        className="px-4 py-3 text-left rounded-lg hover:bg-gray-100 flex items-center gap-3"
-                      >
-                        <Calendar size={20} />
-                        <span className="font-medium">Schedule</span>
-                      </motion.button> */}
 
                       {user && (
                         <>
