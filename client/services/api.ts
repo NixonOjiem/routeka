@@ -174,6 +174,14 @@ export const confirmPasswordReset = async (data: any) => {
   return response.data;
 };
 
+export const updateUserProfile = async (updateProfile: {}) => {
+  const response = await api.put(
+    `${API_URL}/auth/profile-update`,
+    updateProfile,
+  );
+  return response.data;
+};
+
 // Ride and Chat API calls
 export const apiService = {
   // Ride endpoints
