@@ -187,5 +187,17 @@ class AuthController extends Controller
             ], 401);
         }
     }
+    public function updateProfileDetails(Request $request)
+    {
+        if (!auth('api')->check()) {
+            return response()->json(['message' => 'Please login to continue']);
+        }
+        $user = auth('api')->user();
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
+            'user_name' => 'sometimes|required|string|max:100|unique:users,user_name,' . $user->id,
+        ]);
 
+    }
 }

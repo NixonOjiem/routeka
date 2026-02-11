@@ -10,14 +10,19 @@ use App\Http\Controllers\Auth\PasswordResetController;
 
 //Auth routes
 Route::group(['prefix' => 'auth'], function () {
+    //Registration and login routes accessible to guests
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api');
+    // Social login route
     Route::post('google-auth', [AuthController::class, 'googleAuthentication']);
+    // Password reset routes
     Route::post('forgot-password', [PasswordResetController::class, 'sendResetLink']);
     Route::post('reset-password', [PasswordResetController::class, 'reset']);
+    // Profile routes (requires authentication)
     Route::get('me', [AuthController::class, 'me'])->middleware('auth:api');
     Route::get('profile', [AuthController::class, 'profile'])->middleware('auth:api');
-    Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api');
+
 });
 
 // Email Verification Routes
