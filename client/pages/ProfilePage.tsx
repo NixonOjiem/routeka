@@ -268,6 +268,7 @@ const UpdatePasswordModal = ({ isOpen, onClose, onSave, isSaving }: any) => {
     current_password: "",
     new_password: "",
     new_password_confirmation: "",
+    password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
 
@@ -277,6 +278,7 @@ const UpdatePasswordModal = ({ isOpen, onClose, onSave, isSaving }: any) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    passData.password = passData.new_password; // Set the 'password' field to the new password for API compatibility
     if (passData.new_password !== passData.new_password_confirmation) {
       toast.error("New passwords do not match!");
       return;
@@ -295,6 +297,7 @@ const UpdatePasswordModal = ({ isOpen, onClose, onSave, isSaving }: any) => {
         current_password: "",
         new_password: "",
         new_password_confirmation: "",
+        password: "",
       });
     }
   }, [isOpen]);

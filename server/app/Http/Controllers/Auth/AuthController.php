@@ -213,6 +213,7 @@ class AuthController extends Controller
 
         // 4. Handle Password Hashing specifically
         // We check if password exists in the validated data array
+        Log::info("Data before password hashing: " . json_encode($data));
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         }

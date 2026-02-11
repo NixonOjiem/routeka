@@ -95,7 +95,7 @@ function AppContent() {
           <Route path="/auth" element={<Navigate to="/signin" replace />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPPasswordPage />} />
-          {/* <Route path="/auth" element={<AuthenticationPage />} /> */}
+          <Route path="/login" element={<Navigate to="/signin" replace />} />
 
           {/* ✅ Add new routes */}
           <Route path="rides" element={<RideGroupsPage />} />

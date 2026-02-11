@@ -85,7 +85,7 @@ export const googleLogin = createAsyncThunk(
 );
 
 export const login = createAsyncThunk<any, any, { rejectValue: string }>(
-  "auth/login",
+  "auth/signin",
   async (credentials, thunkAPI) => {
     try {
       return await signin(credentials);
