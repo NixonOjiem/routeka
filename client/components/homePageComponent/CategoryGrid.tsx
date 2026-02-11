@@ -64,7 +64,7 @@ export const CategoryGrid = ({ onRequestRoute }: CategoryGridProps) => {
               <h3 className="text-xl font-bold text-stone-800">{cat.title}</h3>
             </div>
 
-            <p className="text-stone-600 text-sm md:text-base leading-relaxed mb-6 flex-grow">
+            <p className="text-stone-600 text-sm md:text-base leading-relaxed mb-6 grow">
               {cat.desc}
             </p>
 
