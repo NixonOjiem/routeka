@@ -78,6 +78,9 @@ class AuthController extends Controller
     // Get Authenticated User
     public function me()
     {
+        if (!auth('api')->check()) {
+            return response()->json(['message' => 'Please login to continue'], 401);
+        }
         return response()->json(auth('api')->user());
     }
 
