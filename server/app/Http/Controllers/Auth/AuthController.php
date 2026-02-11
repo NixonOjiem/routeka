@@ -189,15 +189,44 @@ class AuthController extends Controller
     }
     public function updateProfileDetails(Request $request)
     {
-        if (!auth('api')->check()) {
-            return response()->json(['message' => 'Please login to continue']);
-        }
+        // 1. Get the authenticated user
+
         $user = auth('api')->user();
+
+        // 2. Define Validation Rules
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
             'user_name' => 'sometimes|required|string|max:100|unique:users,user_name,' . $user->id,
+            'password' => 'sometimes|required|string|min:6',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // 3. Prepare data for update
+        // We filter the request to only include the validated fields
+        $data = $validator->validated();
+
+        // 4. Handle Password Hashing specifically
+        // We check if password exists in the validated data array
+        if (isset($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        }
+
+        // 5. Update the user
+        // fill() updates the model instance with the array data but doesn't save yet.
+        // This handles the "partial" update logic automatically.
+        $user->fill($data);
+
+        // 6. Save changes
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'user' => $user
+        ], 200);
     }
+
 }
