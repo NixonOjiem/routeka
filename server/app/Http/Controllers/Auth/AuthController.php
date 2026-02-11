@@ -192,6 +192,7 @@ class AuthController extends Controller
         // 1. Get the authenticated user
 
         $user = auth('api')->user();
+        Log::info("Authenticated user in update profile: " . $user->id);
 
         // 2. Define Validation Rules
         $validator = Validator::make($request->all(), [
@@ -204,6 +205,7 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
+        log::info("Validation passed for update profile: " . json_encode($validator->validated()));
 
         // 3. Prepare data for update
         // We filter the request to only include the validated fields
@@ -222,6 +224,7 @@ class AuthController extends Controller
 
         // 6. Save changes
         $user->save();
+        log::info("User profile updated successfully for user ID: " . $user->id);
 
         return response()->json([
             'message' => 'Profile updated successfully',
