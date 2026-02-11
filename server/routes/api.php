@@ -22,7 +22,7 @@ Route::group(['prefix' => 'auth'], function () {
     // Profile routes (requires authentication)
     Route::get('me', [AuthController::class, 'me'])->middleware('auth:api');
     Route::get('profile', [AuthController::class, 'profile'])->middleware('auth:api');
-
+    Route::put('profile-update', [AuthController::class, 'updateProfileDetails'])->middleware('auth:api');
 });
 
 // Email Verification Routes
