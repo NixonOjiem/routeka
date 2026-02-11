@@ -184,6 +184,7 @@ export const confirmPasswordReset = async (data: any) => {
 
 export const updateUserProfile = async (data: UpdateProfilePayload) => {
   const response = await api.patch(`${API_URL}/auth/profile-update`, data);
+  console.log("Profile update response:", response.data);
   return response.data; // Expected: { message: "Success", user: { ... } }
 };
 

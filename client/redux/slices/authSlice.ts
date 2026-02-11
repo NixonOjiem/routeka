@@ -7,7 +7,6 @@ import {
   requestPasswordReset,
   confirmPasswordReset,
 } from "@/services/api";
-
 // Types
 interface User {
   id?: number;
@@ -153,6 +152,11 @@ const authSlice = createSlice({
       state.isError = false;
       state.message = "";
     },
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+      // Ensure localStorage is synced immediately
+      localStorage.setItem("user", JSON.stringify(action.payload));
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -267,5 +271,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { reset, setGuestId, clearError } = authSlice.actions;
+export const { reset, setGuestId, clearError, setUser } = authSlice.actions;
 export default authSlice.reducer;
