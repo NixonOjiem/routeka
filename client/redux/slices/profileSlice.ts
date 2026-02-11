@@ -1,6 +1,10 @@
 // profileSlice.ts
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { apiService } from "@/services/api";
+import {
+  apiService,
+  UpdateProfilePayload,
+  updateUserProfile,
+} from "@/services/api";
 
 interface ProfileData {
   id?: number;
@@ -15,7 +19,7 @@ interface ProfileData {
 interface ProfileState {
   data: ProfileData | null;
   loading: boolean;
-  error: string | null;
+  error: string | Record<string, any> | null;
 }
 
 const initialState: ProfileState = {
@@ -36,6 +40,25 @@ export const fetchUserProfile = createAsyncThunk<
     return rejectWithValue(
       err.response?.data?.message || "Error fetching profile",
     );
+  }
+});
+
+export const updateProfile = createAsyncThunk<
+  ProfileData, // Return type (The User object)
+  UpdateProfilePayload, // Argument type (The form data)
+  { rejectValue: any } // Reject type (Validation errors or message)
+>("profile/updateProfile", async (formData, { rejectWithValue }) => {
+  try {
+    const response = await updateUserProfile(formData);
+    // The Laravel controller returns: { message: '...', user: {...} }
+    // We return ONLY the user object so Redux can save it
+    return response.user;
+  } catch (err: any) {
+    // Handle 422 Validation Errors specifically
+    if (err.response && err.response.status === 422) {
+      return rejectWithValue(err.response.data.errors);
+    }
+    return rejectWithValue(err.response?.data?.message || "Update failed");
   }
 });
 
@@ -64,6 +87,25 @@ const profileSlice = createSlice({
       .addCase(fetchUserProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      // --- ✅ Update Handlers ---
+      .addCase(updateProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        updateProfile.fulfilled,
+        (state, action: PayloadAction<ProfileData>) => {
+          state.loading = false;
+          // ✅ IMMEDIATE UPDATE:
+          // We replace the current local data with the fresh data from the server.
+          // Since the server returned the full user object, this ensures UI sync.
+          state.data = action.payload;
+        },
+      )
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload; // This might contain validation errors
       });
   },
 });
