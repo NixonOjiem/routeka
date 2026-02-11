@@ -42,6 +42,14 @@ api.interceptors.response.use(
 );
 
 // Types
+
+export interface UpdateProfilePayload {
+  name?: string;
+  email?: string;
+  user_name?: string;
+  password?: string;
+}
+
 export interface User {
   id?: number;
   name: string;
@@ -172,6 +180,11 @@ export const requestPasswordReset = async (email: string) => {
 export const confirmPasswordReset = async (data: any) => {
   const response = await axios.post(`${API_URL}/auth/reset-password`, data);
   return response.data;
+};
+
+export const updateUserProfile = async (data: UpdateProfilePayload) => {
+  const response = await api.patch(`${API_URL}/auth/profile-update`, data);
+  return response.data; // Expected: { message: "Success", user: { ... } }
 };
 
 // Ride and Chat API calls
