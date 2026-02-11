@@ -38,8 +38,8 @@ type TabType =
 
 const RouteVisualizer = ({ from, to }: { from: string; to: string }) => (
   <div className="flex flex-col space-y-1 relative pl-4 border-l-2 border-gray-200 ml-2 py-1">
-    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-4 border-indigo-500" />
-    <div className="absolute -left-[9px] bottom-0 w-4 h-4 rounded-full bg-indigo-500" />
+    <div className="absolute -left-2.25 top-0 w-4 h-4 rounded-full bg-white border-4 border-indigo-500" />
+    <div className="absolute -left-2.25 bottom-0 w-4 h-4 rounded-full bg-indigo-500" />
     <div className="text-sm text-gray-500 font-medium leading-none mb-4 -mt-1">
       {from}
     </div>
@@ -52,14 +52,14 @@ const MemberStack = ({ members }: { members: any[] }) => (
     {members.slice(0, 4).map((m, i) => (
       <div
         key={i}
-        className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 uppercase"
+        className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-200 items-center justify-center text-xs font-bold text-gray-500 uppercase"
         title={m.user_name}
       >
         {m.user_name?.charAt(0) || "?"}
       </div>
     ))}
     {members.length > 4 && (
-      <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 flex items-center justify-center text-xs text-gray-500">
+      <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 items-center justify-center text-xs text-gray-500">
         +{members.length - 4}
       </div>
     )}
@@ -230,7 +230,7 @@ const RideGroupsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-center md:items-end space-y-3 min-w-[200px]">
+                  <div className="flex flex-col items-center md:items-end space-y-3 min-w-50">
                     {isMatched ? (
                       <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-green-100 shadow-sm w-full text-center md:text-right">
                         <div className="flex items-center justify-center md:justify-end text-sm font-medium text-green-800 mb-1">
@@ -258,7 +258,7 @@ const RideGroupsPage: React.FC = () => {
                 </div>
 
                 {!isMatched && hasSuggestedMatch && (
-                  <div className="mt-5 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-100 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="mt-5 bg-linear-to-r from-purple-50 to-indigo-50 border border-purple-100 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-start sm:items-center">
                       <div className="p-2 bg-white rounded-lg shadow-sm mr-3">
                         <SparklesIcon className="h-5 w-5 text-purple-600" />
@@ -322,7 +322,7 @@ const RideGroupsPage: React.FC = () => {
             <div className="p-5 flex-1 flex flex-col justify-between">
               <div>
                 <div className="flex items-start space-x-3 mb-4">
-                  <LocationMarkerIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <LocationMarkerIcon className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
                   <div className="text-sm text-gray-700">
                     <span className="block font-medium text-gray-900">{formatGrid(group.pickup_grid)}</span>
                     <span className="block text-gray-400 text-xs my-0.5 ml-0.5 border-l-2 border-gray-200 h-3"></span>
@@ -369,7 +369,7 @@ const RideGroupsPage: React.FC = () => {
 
   if (isLoading)
     return (
-      <div className="min-h-[400px] flex items-center justify-center">
+      <div className="min-h-100 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
       </div>
     );
@@ -379,7 +379,7 @@ const RideGroupsPage: React.FC = () => {
       {/* --- Category Selection Popup --- */}
       <AnimatePresence>
         {isCategoryModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -391,7 +391,7 @@ const RideGroupsPage: React.FC = () => {
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-6xl bg-stone-50 rounded-[2rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+              className="relative w-full max-w-6xl bg-stone-50 rounded-4xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
             >
               <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-white">
                 <div>
@@ -444,7 +444,7 @@ const RideGroupsPage: React.FC = () => {
                 onClick={() => setActiveTab(tab.id as TabType)}
                 className={`group relative flex items-center justify-center md:justify-start px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 w-full md:w-auto ${isActive ? "bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-200" : "bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"}`}
               >
-                <tab.icon className={`-ml-0.5 mr-2 h-5 w-5 flex-shrink-0 transition-colors ${isActive ? tab.color : "text-gray-400 group-hover:text-gray-500"}`} aria-hidden="true" />
+                <tab.icon className={`-ml-0.5 mr-2 h-5 w-5 shrink-0 transition-colors ${isActive ? tab.color : "text-gray-400 group-hover:text-gray-500"}`} aria-hidden="true" />
                 <span className="truncate">{tab.label}</span>
                 {count > 0 && (
                   <span className={`ml-2 py-0.5 px-2 rounded-full text-xs font-bold transition-colors ${isActive ? "bg-white text-indigo-600 ring-1 ring-indigo-100" : "bg-gray-200 text-gray-600 group-hover:bg-gray-300"}`}>
