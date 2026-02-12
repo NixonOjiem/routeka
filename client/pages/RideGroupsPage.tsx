@@ -17,12 +17,11 @@ import {
   CalendarIcon,
   SparklesIcon,
   StarIcon,
-  ExclamationCircleIcon,
   LockClosedIcon,
   LocationMarkerIcon,
   ChevronRightIcon,
   RefreshIcon,
-  XIcon, // Added for closing modal
+  XIcon,
 } from "@heroicons/react/outline";
 import { CheckCircleIcon } from "@heroicons/react/solid";
 
@@ -35,6 +34,7 @@ type TabType =
   | "events";
 
 // --- Helper Components ---
+interface RideGroupsPageProps { onRequestRoute: (id: string) => void; }
 
 const RouteVisualizer = ({ from, to }: { from: string; to: string }) => (
   <div className="flex flex-col space-y-1 relative pl-4 border-l-2 border-gray-200 ml-2 py-1">
@@ -68,7 +68,7 @@ const MemberStack = ({ members }: { members: any[] }) => (
 
 // --- Main Component ---
 
-const RideGroupsPage: React.FC = () => {
+export const RideGroupsPage: React.FC<RideGroupsPageProps> = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const [groups, setGroups] = useState<RideGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -119,11 +119,6 @@ const RideGroupsPage: React.FC = () => {
         (guestId && String(m.id) === String(guestId)),
     );
     return member ? member.id : null;
-  };
-
-  const handleCategorySelect = (id: string) => {
-    setIsCategoryModalOpen(false);
-    navigate(`/request-ride?category=${id}`);
   };
 
   const tabs = [
@@ -406,7 +401,10 @@ const RideGroupsPage: React.FC = () => {
                 </button>
               </div>
               <div className="overflow-y-auto p-6 md:p-10">
-                <CategoryGrid onRequestRoute={handleCategorySelect} />
+                <CategoryGrid onRequestRoute={(id) => {
+                  setIsCategoryModalOpen(false);
+                  navigate("/request", { state: { categoryId: id } });
+                }} />
               </div>
             </motion.div>
           </div>
@@ -432,10 +430,10 @@ const RideGroupsPage: React.FC = () => {
             const isActive = activeTab === tab.id;
             const count = tab.id === "my_rides"
               ? Object.keys(groups.filter(isGroupRelevant).reduce((acc, g) => {
-                  const id = getUserRideId(g);
-                  if (id) acc[id] = true;
-                  return acc;
-                }, {} as Record<string, boolean>)).length
+                const id = getUserRideId(g);
+                if (id) acc[id] = true;
+                return acc;
+              }, {} as Record<string, boolean>)).length
               : groups.filter((g) => g.group_type === tab.id).length;
 
             return (
