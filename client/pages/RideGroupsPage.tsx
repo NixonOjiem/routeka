@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiService, RideGroup, User } from "../services/api";
 import { toast } from "react-toastify";
@@ -21,7 +21,7 @@ import {
   ChevronRightIcon,
   RefreshIcon,
 } from "@heroicons/react/outline";
-import { CheckCircleIcon } from "@heroicons/react/solid"; // Solid icons for status
+import { CheckCircleIcon } from "@heroicons/react/solid";
 
 type TabType =
   | "my_rides"
@@ -129,6 +129,15 @@ const RideGroupsPage: React.FC = () => {
     return member ? member.id : null;
   };
 
+  // --- Logic for Filtering Relevant Suggestions ---
+
+  const userActiveRouteKeys = useMemo(() => {
+    const routes = new Set<string>();
+    groups.filter(isGroupRelevant).forEach((g) => {
+      routes.add(`${formatGrid(g.pickup_grid)}|${formatGrid(g.dropoff_grid)}`);
+    });
+    return routes;
+  }, [groups, currentUser, guestId]);
   const tabs = [
     {
       id: "my_rides",
@@ -369,10 +378,19 @@ const RideGroupsPage: React.FC = () => {
 
     // ----------------------------------------------------------------
     // 2. OTHER TABS (Corporate, Uni, etc.)
-    // ----------------------------------------------------------------
-    let filteredGroups = groups.filter((g) => g.group_type === activeTab);
-    const isChatEnabled = activeTab === "suggested";
+    // --- CATEGORY TABS (Corporate, University, Suggested, etc.) ---
+    const filteredGroups = groups.filter((g) => {
+      if (activeTab === "suggested") {
+        const routeKey = `${formatGrid(g.pickup_grid)}|${formatGrid(g.dropoff_grid)}`;
+        // Only show suggested groups that match routes the user has requested
+        return (
+          g.group_type === "suggested" && userActiveRouteKeys.has(routeKey)
+        );
+      }
+      return g.group_type === activeTab;
+    });
 
+    const isChatEnabled = activeTab === "suggested";
     const activeTabConfig = tabs.find((t) => t.id === activeTab);
     const ActiveIcon = activeTabConfig?.icon || UserGroupIcon;
     const activeColor = activeTabConfig?.color || "text-gray-400";
@@ -385,11 +403,9 @@ const RideGroupsPage: React.FC = () => {
           </div>
           <h3 className="text-lg font-medium text-gray-900">No Groups Found</h3>
           <p className="text-gray-500 max-w-sm mx-auto mt-2 text-sm">
-            There are currently no active ride groups for{" "}
-            <span className="font-semibold capitalize">
-              {activeTab.replace("_", " ")}
-            </span>
-            . Check back later!
+            {activeTab === "suggested"
+              ? "No suggested matches found for your current routes yet."
+              : `There are currently no active ride groups for ${activeTab.replace("_", " ")}.`}
           </p>
         </div>
       );
@@ -402,13 +418,9 @@ const RideGroupsPage: React.FC = () => {
             key={group.group_id}
             className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-indigo-100 transition-all duration-300 flex flex-col"
           >
-            {/* Header with Type & Count */}
             <div className="p-5 flex justify-between items-start border-b border-gray-50 bg-gray-50/30">
               <div className="flex items-center space-x-2">
-                <span
-                  className={`p-1.5 rounded-lg bg-white shadow-sm ring-1 ring-gray-100`}
-                >
-                  {/* FIXED: Render as a Component, not a function call */}
+                <span className="p-1.5 rounded-lg bg-white shadow-sm ring-1 ring-gray-100">
                   <ActiveIcon className={`w-5 h-5 ${activeColor}`} />
                 </span>
                 <div>
@@ -421,30 +433,16 @@ const RideGroupsPage: React.FC = () => {
                 </div>
               </div>
               <span
-                className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                  group.member_count > 1
-                    ? "bg-green-100 text-green-700"
-                    : "bg-gray-100 text-gray-600"
-                }`}
+                className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${group.member_count > 1 ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}
               >
                 {group.member_count} Riders
               </span>
             </div>
 
-            {/* Content Body */}
             <div className="p-5 flex-1 flex flex-col justify-between">
               <div>
                 <div className="flex items-start space-x-3 mb-4">
                   <LocationMarkerIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                  {/* <div className="text-sm text-gray-700">
-                    <span className="block font-medium text-gray-900">
-                      {group.pickup_grid}
-                    </span>
-                    <span className="block text-gray-400 text-xs my-0.5 ml-0.5 border-l-2 border-gray-200 h-3"></span>
-                    <span className="block font-medium text-gray-900">
-                      {group.dropoff_grid}
-                    </span>
-                  </div> */}
                   <div className="text-sm text-gray-700">
                     <span className="block font-medium text-gray-900">
                       {formatGrid(group.pickup_grid)}
@@ -455,8 +453,6 @@ const RideGroupsPage: React.FC = () => {
                     </span>
                   </div>
                 </div>
-
-                {/* Avatar Stack */}
                 <div className="mb-4">
                   <p className="text-xs text-gray-400 font-medium mb-2 uppercase tracking-wide">
                     Members
@@ -465,12 +461,10 @@ const RideGroupsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Footer Actions */}
               <div className="pt-4 mt-auto border-t border-gray-100 flex justify-between items-center">
                 <span className="text-xs text-gray-500 flex items-center bg-gray-50 px-2 py-1 rounded">
                   <ClockIcon className="h-3 w-3 mr-1" /> ±1hr Match
                 </span>
-
                 {group.chat_room_id && (
                   <>
                     {user ? (
@@ -486,17 +480,16 @@ const RideGroupsPage: React.FC = () => {
                           className="flex items-center text-gray-400 text-xs"
                           title="Join via 'My Requests' to chat"
                         >
-                          <LockClosedIcon className="w-3 h-3 mr-1" />
+                          <LockClosedIcon className="w-3 h-3 mr-1" />{" "}
                           <span className="font-medium">View Only</span>
                         </div>
                       )
                     ) : (
                       <Link
-                        to={"/signin"}
+                        to="/signin"
                         className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors flex items-center"
                       >
-                        <LockClosedIcon className="w-3 h-3 mr-1" />
-                        Sign in to Chat
+                        <LockClosedIcon className="w-3 h-3 mr-1" /> Sign in
                       </Link>
                     )}
                   </>
@@ -512,13 +505,12 @@ const RideGroupsPage: React.FC = () => {
   if (isLoading)
     return (
       <div className="min-h-[400px] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
@@ -530,27 +522,15 @@ const RideGroupsPage: React.FC = () => {
         </div>
         <button
           onClick={fetchGroups}
-          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl text-white bg-brand hover:bg-brand-700 shadow-lg shadow-brand-200 transition-all"
+          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg transition-all"
         >
-          <RefreshIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+          <RefreshIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />{" "}
           Refresh
         </button>
-        {/* <Link
-          to="/ride"
-          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all"
-        >
-          <MapIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
-          New Request
-        </Link> */}
       </div>
 
-      {/* Modern Tabs */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2">
         <nav
-          // CHANGED:
-          // 1. Removed 'flex space-x-2 overflow-x-auto' base classes
-          // 2. Added 'grid grid-cols-2 gap-2' for mobile (2 columns, no scroll)
-          // 3. Added 'md:flex md:space-x-2 md:overflow-x-auto' to restore original look on desktop
           className="grid grid-cols-2 gap-2 md:flex md:space-x-2 md:overflow-x-auto pb-0"
           aria-label="Tabs"
         >
@@ -568,40 +548,34 @@ const RideGroupsPage: React.FC = () => {
                       {} as Record<string, boolean>,
                     ),
                   ).length
-                : groups.filter((g) => g.group_type === tab.id).length;
+                : tab.id === "suggested"
+                  ? groups.filter(
+                      (g) =>
+                        g.group_type === "suggested" &&
+                        userActiveRouteKeys.has(
+                          `${formatGrid(g.pickup_grid)}|${formatGrid(g.dropoff_grid)}`,
+                        ),
+                    ).length
+                  : groups.filter((g) => g.group_type === tab.id).length;
 
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabType)}
-                className={`
-                  group relative flex items-center justify-center md:justify-start px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 w-full md:w-auto
-                  ${
-                    isActive
-                      ? "bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-200"
-                      : "bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                    // Added bg-gray-50 for mobile visibility on inactive states
-                  }
-                `}
+                className={`group relative flex items-center justify-center md:justify-start px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 w-full md:w-auto ${
+                  isActive
+                    ? "bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-200"
+                    : "bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
               >
                 <tab.icon
-                  className={`
-                    -ml-0.5 mr-2 h-5 w-5 flex-shrink-0 transition-colors
-                    ${isActive ? tab.color : "text-gray-400 group-hover:text-gray-500"}
-                  `}
+                  className={`-ml-0.5 mr-2 h-5 w-5 flex-shrink-0 transition-colors ${isActive ? tab.color : "text-gray-400 group-hover:text-gray-500"}`}
                   aria-hidden="true"
                 />
                 <span className="truncate">{tab.label}</span>
                 {count > 0 && (
                   <span
-                    className={`
-                      ml-2 py-0.5 px-2 rounded-full text-xs font-bold transition-colors
-                      ${
-                        isActive
-                          ? "bg-white text-indigo-600 ring-1 ring-indigo-100"
-                          : "bg-gray-200 text-gray-600 group-hover:bg-gray-300"
-                      }
-                    `}
+                    className={`ml-2 py-0.5 px-2 rounded-full text-xs font-bold transition-colors ${isActive ? "bg-white text-indigo-600 ring-1 ring-indigo-100" : "bg-gray-200 text-gray-600 group-hover:bg-gray-300"}`}
                   >
                     {count}
                   </span>
@@ -612,7 +586,6 @@ const RideGroupsPage: React.FC = () => {
         </nav>
       </div>
 
-      {/* Content Area */}
       <div className="transition-opacity duration-300 ease-in-out">
         {renderTabContent()}
       </div>
