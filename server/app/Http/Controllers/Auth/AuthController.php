@@ -78,6 +78,9 @@ class AuthController extends Controller
     // Get Authenticated User
     public function me()
     {
+        if (!auth('api')->check()) {
+            return response()->json(['message' => 'Please login to continue'], 401);
+        }
         return response()->json(auth('api')->user());
     }
 
@@ -183,6 +186,51 @@ class AuthController extends Controller
                 'error' => $e->getMessage()
             ], 401);
         }
+    }
+    public function updateProfileDetails(Request $request)
+    {
+        // 1. Get the authenticated user
+
+        $user = auth('api')->user();
+        Log::info("Authenticated user in update profile: " . $user->id);
+
+        // 2. Define Validation Rules
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
+            'user_name' => 'sometimes|required|string|max:100|unique:users,user_name,' . $user->id,
+            'password' => 'sometimes|required|string|min:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        log::info("Validation passed for update profile: " . json_encode($validator->validated()));
+
+        // 3. Prepare data for update
+        // We filter the request to only include the validated fields
+        $data = $validator->validated();
+
+        // 4. Handle Password Hashing specifically
+        // We check if password exists in the validated data array
+        Log::info("Data before password hashing: " . json_encode($data));
+        if (isset($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        }
+
+        // 5. Update the user
+        // fill() updates the model instance with the array data but doesn't save yet.
+        // This handles the "partial" update logic automatically.
+        $user->fill($data);
+
+        // 6. Save changes
+        $user->save();
+        log::info("User profile updated successfully for user ID: " . $user->id);
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'user' => $user
+        ], 200);
     }
 
 }

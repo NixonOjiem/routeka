@@ -7,7 +7,6 @@ import {
   requestPasswordReset,
   confirmPasswordReset,
 } from "@/services/api";
-
 // Types
 interface User {
   id?: number;
@@ -85,7 +84,7 @@ export const googleLogin = createAsyncThunk(
 );
 
 export const login = createAsyncThunk<any, any, { rejectValue: string }>(
-  "auth/login",
+  "auth/signin",
   async (credentials, thunkAPI) => {
     try {
       return await signin(credentials);
@@ -152,6 +151,11 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.isError = false;
       state.message = "";
+    },
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+      // Ensure localStorage is synced immediately
+      localStorage.setItem("user", JSON.stringify(action.payload));
     },
   },
   extraReducers: (builder) => {
@@ -267,5 +271,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { reset, setGuestId, clearError } = authSlice.actions;
+export const { reset, setGuestId, clearError, setUser } = authSlice.actions;
 export default authSlice.reducer;
