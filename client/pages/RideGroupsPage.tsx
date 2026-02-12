@@ -17,12 +17,11 @@ import {
   CalendarIcon,
   SparklesIcon,
   StarIcon,
-  ExclamationCircleIcon,
   LockClosedIcon,
   LocationMarkerIcon,
   ChevronRightIcon,
   RefreshIcon,
-  XIcon, // Added for closing modal
+  XIcon,
 } from "@heroicons/react/outline";
 import { CheckCircleIcon } from "@heroicons/react/solid";
 
@@ -35,6 +34,9 @@ type TabType =
   | "events";
 
 // --- Helper Components ---
+interface RideGroupsPageProps {
+  onRequestRoute: (id: string) => void;
+}
 
 const RouteVisualizer = ({ from, to }: { from: string; to: string }) => (
   <div className="flex flex-col space-y-1 relative pl-4 border-l-2 border-gray-200 ml-2 py-1">
@@ -68,7 +70,7 @@ const MemberStack = ({ members }: { members: any[] }) => (
 
 // --- Main Component ---
 
-const RideGroupsPage: React.FC = () => {
+export const RideGroupsPage: React.FC<RideGroupsPageProps> = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const [groups, setGroups] = useState<RideGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -494,6 +496,52 @@ const RideGroupsPage: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* --- Category Selection Popup --- */}
+      <AnimatePresence>
+        {isCategoryModalOpen && (
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsCategoryModalOpen(false)}
+              className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-6xl bg-stone-50 rounded-4xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+            >
+              <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-white">
+                <div>
+                  <h2 className="text-2xl font-bold text-stone-800">
+                    Choose Ride Type
+                  </h2>
+                  <p className="text-stone-500 text-sm">
+                    Select a category to start your journey
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsCategoryModalOpen(false)}
+                  className="p-2 hover:bg-stone-100 rounded-full transition-colors"
+                >
+                  <XIcon className="w-6 h-6 text-stone-500" />
+                </button>
+              </div>
+              <div className="overflow-y-auto p-6 md:p-10">
+                <CategoryGrid
+                  onRequestRoute={(id) => {
+                    setIsCategoryModalOpen(false);
+                    navigate("/request", { state: { categoryId: id } });
+                  }}
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
