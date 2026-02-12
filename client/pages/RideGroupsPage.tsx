@@ -4,6 +4,8 @@ import { apiService, RideGroup, User } from "../services/api";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { CategoryGrid } from "@/components/homePageComponent/CategoryGrid";
+import { motion, AnimatePresence } from "framer-motion"; // Added for Modal
 import {
   MapIcon,
   UserGroupIcon,
@@ -20,6 +22,7 @@ import {
   LocationMarkerIcon,
   ChevronRightIcon,
   RefreshIcon,
+  XIcon, // Added for closing modal
 } from "@heroicons/react/outline";
 import { CheckCircleIcon } from "@heroicons/react/solid";
 
@@ -33,11 +36,10 @@ type TabType =
 
 // --- Helper Components ---
 
-// Visualizes the A -> B route nicely
 const RouteVisualizer = ({ from, to }: { from: string; to: string }) => (
   <div className="flex flex-col space-y-1 relative pl-4 border-l-2 border-gray-200 ml-2 py-1">
-    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-4 border-indigo-500" />
-    <div className="absolute -left-[9px] bottom-0 w-4 h-4 rounded-full bg-indigo-500" />
+    <div className="absolute -left-2.25 top-0 w-4 h-4 rounded-full bg-white border-4 border-indigo-500" />
+    <div className="absolute -left-2.25 bottom-0 w-4 h-4 rounded-full bg-indigo-500" />
     <div className="text-sm text-gray-500 font-medium leading-none mb-4 -mt-1">
       {from}
     </div>
@@ -45,20 +47,19 @@ const RouteVisualizer = ({ from, to }: { from: string; to: string }) => (
   </div>
 );
 
-// Renders a stack of user avatars (or initials)
 const MemberStack = ({ members }: { members: any[] }) => (
   <div className="flex -space-x-2 overflow-hidden">
     {members.slice(0, 4).map((m, i) => (
       <div
         key={i}
-        className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 uppercase"
+        className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-200 items-center justify-center text-xs font-bold text-gray-500 uppercase"
         title={m.user_name}
       >
         {m.user_name?.charAt(0) || "?"}
       </div>
     ))}
     {members.length > 4 && (
-      <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 flex items-center justify-center text-xs text-gray-500">
+      <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 items-center justify-center text-xs text-gray-500">
         +{members.length - 4}
       </div>
     )}
@@ -73,6 +74,7 @@ const RideGroupsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("my_rides");
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const navigate = useNavigate();
   const guestId = localStorage.getItem("chat_guest_id");
 
@@ -93,21 +95,12 @@ const RideGroupsPage: React.FC = () => {
     }
   };
 
-  // Helper to format the grid object into a string
   const formatGrid = (grid: any) => {
-    // 1. If we have a human-readable name, use it
-    if (grid?.name && grid.name !== "Unknown Area") {
-      return grid.name;
-    }
-
-    // 2. Handle legacy string format
+    if (grid?.name && grid.name !== "Unknown Area") return grid.name;
     if (typeof grid === "string") return grid;
-
-    // 3. Fallback to coordinates if lat/lng exist
     if (grid?.lat && grid?.lng) {
       return `${Number(grid.lat).toFixed(4)}, ${Number(grid.lng).toFixed(4)}`;
     }
-
     return "Unknown Location";
   };
 
@@ -119,7 +112,6 @@ const RideGroupsPage: React.FC = () => {
     });
   };
 
-  // Helper to find currentUser's ride ID
   const getUserRideId = (group: RideGroup) => {
     const member = group.members.find(
       (m) =>
@@ -178,9 +170,6 @@ const RideGroupsPage: React.FC = () => {
   ];
 
   const renderTabContent = () => {
-    // ----------------------------------------------------------------
-    // 1. MY RIDES TAB
-    // ----------------------------------------------------------------
     if (activeTab === "my_rides") {
       const myRawGroups = groups.filter(isGroupRelevant);
 
@@ -197,17 +186,17 @@ const RideGroupsPage: React.FC = () => {
               Start your journey by creating a ride request. We'll match you
               with others nearby.
             </p>
-            <Link
-              to="/request-ride"
+            {/* CHANGED: Link to button to trigger modal */}
+            <button
+              onClick={() => setIsCategoryModalOpen(true)}
               className="mt-6 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition-colors"
             >
               Request a Ride
-            </Link>
+            </button>
           </div>
         );
       }
 
-      // Deduplication Logic
       const uniqueRides: Record<
         string,
         { primaryGroup: RideGroup; hasSuggestedMatch: boolean }
@@ -234,7 +223,6 @@ const RideGroupsPage: React.FC = () => {
             entry.primaryGroup = group;
           }
         } else {
-          // Corporate/Uni etc. takes priority over the generic 'suggested' view
           if (entry.primaryGroup.group_type === "suggested") {
             entry.primaryGroup = group;
           }
@@ -256,7 +244,6 @@ const RideGroupsPage: React.FC = () => {
                 key={group.group_id}
                 className={`relative rounded-2xl p-6 shadow-sm border transition-all hover:shadow-md ${statusColor}`}
               >
-                {/* Status Badge */}
                 <div className="absolute top-4 right-4 flex items-center space-x-2">
                   {group.members[0]?.commute_time && (
                     <span className="flex items-center text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
@@ -283,13 +270,11 @@ const RideGroupsPage: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  {/* Left: Route Info */}
                   <div className="flex-1 pr-4">
                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
                       <UserGroupIcon className="w-5 h-5 mr-2 text-indigo-500" />
                       My Request ({group.group_type})
                     </h3>
-
                     <div className="pl-2">
                       <RouteVisualizer
                         from={formatGrid(group.pickup_grid)}
@@ -298,8 +283,7 @@ const RideGroupsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Right: Actions */}
-                  <div className="flex flex-col items-center md:items-end space-y-3 min-w-[200px]">
+                  <div className="flex flex-col items-center md:items-end space-y-3 min-w-50">
                     {isMatched ? (
                       <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-green-100 shadow-sm w-full text-center md:text-right">
                         <div className="flex items-center justify-center md:justify-end text-sm font-medium text-green-800 mb-1">
@@ -314,16 +298,16 @@ const RideGroupsPage: React.FC = () => {
                             to={`/chat/${group.chat_room_id}`}
                             className="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors"
                           >
-                            <ChatAlt2Icon className="w-4 h-4 mr-2" />
-                            Chat with Group
+                            <ChatAlt2Icon className="w-4 h-4 mr-2" /> Chat with
+                            Group
                           </Link>
                         ) : (
                           <Link
                             to={"/signin"}
                             className="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors"
                           >
-                            <ChatAlt2Icon className="w-4 h-4 mr-2" />
-                            Sign in to Chat
+                            <ChatAlt2Icon className="w-4 h-4 mr-2" /> Sign in to
+                            Chat
                           </Link>
                         )}
                       </div>
@@ -340,9 +324,8 @@ const RideGroupsPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Suggested Match Banner */}
                 {!isMatched && hasSuggestedMatch && (
-                  <div className="mt-5 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-100 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="mt-5 bg-linear-to-r from-purple-50 to-indigo-50 border border-purple-100 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-start sm:items-center">
                       <div className="p-2 bg-white rounded-lg shadow-sm mr-3">
                         <SparklesIcon className="h-5 w-5 text-purple-600" />
@@ -364,7 +347,7 @@ const RideGroupsPage: React.FC = () => {
                       onClick={() => setActiveTab("suggested")}
                       className="w-full sm:w-auto text-xs font-semibold bg-white border border-purple-200 text-purple-700 px-4 py-2 rounded-lg shadow-sm hover:bg-purple-50 hover:border-purple-300 transition-all flex items-center justify-center"
                     >
-                      View Suggested Match
+                      View Suggested Match{" "}
                       <ChevronRightIcon className="w-3 h-3 ml-1" />
                     </button>
                   </div>

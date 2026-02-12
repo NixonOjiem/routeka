@@ -13,7 +13,8 @@ use Illuminate\Validation\ValidationException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 
-class RideRequestController extends Controller
+class
+RideRequestController extends Controller
 {
     protected $rideService;
 
