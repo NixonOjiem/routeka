@@ -68,7 +68,7 @@ const MemberStack = ({ members }: { members: any[] }) => (
 
 // --- Main Component ---
 
-export const RideGroupsPage: React.FC<RideGroupsPageProps> = ({ onRequestRoute }) => {
+export const RideGroupsPage: React.FC<RideGroupsPageProps> = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const [groups, setGroups] = useState<RideGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
