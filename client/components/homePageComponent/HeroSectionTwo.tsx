@@ -1,191 +1,160 @@
-import React from "react";
-import { motion } from "framer-motion";
-import {
-  MapPin,
-  Navigation,
-  ArrowRight,
-  Star,
-  ShieldCheck,
-  Clock,
-  TrendingUp,
-} from "lucide-react";
+import React, { useRef } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 
 export const HeroSectionTwo = () => {
-  // Animation variants for staggered text
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2, delayChildren: 0.3 },
-    },
-  };
+  const containerRef = useRef(null);
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
-    },
-  };
+  // Parallax effect for the background elements
+  const { scrollY } = useScroll();
+  const y1 = useTransform(scrollY, [0, 500], [0, 200]);
+  const y2 = useTransform(scrollY, [0, 500], [0, -150]);
 
   return (
-    <section className="relative min-h-[90vh] flex items-center pt-20 overflow-hidden">
-      {/* Dynamic Background Elements */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-1/4 -right-20 w-[500px] h-[500px] bg-brand/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute -bottom-20 -left-20 w-[400px] h-[400px] bg-blue-400/10 rounded-full blur-[100px]" />
-        {/* Subtle Grid Pattern */}
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]" />
+    <section
+      ref={containerRef}
+      className="relative rounded-3xl overflow-hidden pt-20 pb-16 md:pt-32 md:pb-24 flex flex-col items-center justify-center bg-stone-50"
+    >
+      {/* --- BACKGROUND LAYER --- */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        {/* Fading Grid */}
+        <div
+          className="absolute inset-0 opacity-[0.15]"
+          style={{
+            backgroundImage: `radial-gradient(#4F46E5 0.5px, transparent 0.5px), radial-gradient(#4F46E5 0.5px, #f5f5f4 0.5px)`,
+            backgroundSize: "40px 40px",
+            maskImage:
+              "radial-gradient(circle at center, black, transparent 80%)",
+          }}
+        />
+
+        {/* Animated Orbs with Parallax */}
+        <motion.div
+          style={{ y: y1 }}
+          className="absolute top-[10%] -left-20 w-[500px] h-[500px] bg-brand-200/40 rounded-full blur-[120px]"
+        />
+        <motion.div
+          style={{ y: y2 }}
+          className="absolute bottom-[10%] -right-20 w-[600px] h-[600px] bg-cyan-100/50 rounded-full blur-[120px]"
+        />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Left Side: Copy & Social Proof */}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <motion.div
-              variants={itemVariants}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-sm border border-gray-100 mb-8"
-            >
-              <TrendingUp size={16} className="text-brand" />
-              <span className="text-sm font-semibold bg-gradient-to-r from-brand to-blue-600 bg-clip-text text-transparent">
-                #1 Smart Ride-Sharing in KA
-              </span>
-            </motion.div>
+      {/* --- CONTENT LAYER --- */}
+      <div className="relative z-10 text-center px-4 max-w-6xl mx-auto">
+        {/* 1. Top Badge: Launching Soon */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-stone-200 shadow-sm mb-8"
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-500 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-600"></span>
+          </span>
+          <span className="text-xs font-bold tracking-widest text-stone-500 uppercase">
+            We are launching soon
+          </span>
+        </motion.div>
 
-            <motion.h1
-              variants={itemVariants}
-              className="text-6xl lg:text-7xl font-display font-extrabold text-gray-900 leading-[1.05] tracking-tight mb-6"
+        {/* 2. Main Headline: Modernized Spacing */}
+        <motion.h1
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8 }}
+          className="text-5xl md:text-8xl font-display font-extrabold tracking-tight text-brand leading-[0.95] mb-8"
+        >
+          The <span className="text-brand-600">Affordable</span> <br />
+          <span className="relative italic font-serif font-light text-brand-600">
+            Express Commute
+            <svg
+              className="absolute -bottom-2 left-0 w-full h-3 text-brand-200 -z-10"
+              viewBox="0 0 100 10"
+              preserveAspectRatio="none"
             >
-              Move faster, <br />
-              <span className="relative inline-block">
-                pay smarter.
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: "100%" }}
-                  transition={{ delay: 1, duration: 0.8 }}
-                  className="absolute bottom-2 left-0 h-3 bg-brand/20 -z-10"
-                />
-              </span>
-            </motion.h1>
+              <path
+                d="M0 5 Q 50 10 100 5"
+                stroke="currentColor"
+                strokeWidth="8"
+                fill="none"
+              />
+            </svg>
+          </span>{" "}
+          is Here.
+        </motion.h1>
 
-            <motion.p
-              variants={itemVariants}
-              className="text-xl text-gray-600 mb-10 max-w-lg leading-relaxed"
-            >
-              Route KA uses AI-driven route optimization to find you the
-              quickest rides at the most competitive local prices.
-            </motion.p>
-
-            <motion.div
-              variants={itemVariants}
-              className="flex flex-wrap gap-8"
-            >
-              <div className="flex flex-col gap-1">
-                <span className="text-2xl font-bold text-gray-900">10k+</span>
-                <span className="text-sm text-gray-500 font-medium uppercase tracking-wider">
-                  Active Users
-                </span>
+        {/* 3. Value Prop Cards (The "Why") */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex flex-wrap justify-center gap-4 mb-10"
+        >
+          {["60% Cheaper", "Professional Network", "Premium Rides"].map(
+            (text, i) => (
+              <div
+                key={i}
+                className="px-4 py-2 rounded-xl bg-white/50 backdrop-blur-md border border-white/20 shadow-sm text-sm font-semibold text-stone-600"
+              >
+                {text}
               </div>
-              <div className="w-px h-12 bg-gray-200 hidden sm:block" />
-              <div className="flex flex-col gap-1">
-                <span className="text-2xl font-bold text-gray-900">4.9/5</span>
-                <div className="flex text-yellow-400">
-                  <Star size={14} fill="currentColor" />
-                  <Star size={14} fill="currentColor" />
-                  <Star size={14} fill="currentColor" />
-                  <Star size={14} fill="currentColor" />
-                  <Star size={14} fill="currentColor" />
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
+            ),
+          )}
+        </motion.div>
 
-          {/* Right Side: Responsive Search Card */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="text-lg md:text-xl text-stone-500 max-w-2xl mx-auto mb-12 leading-relaxed"
+        >
+          Join a community of professionals who share rides to work. Get the
+          comfort of an express commute for the price of a bus ticket.
+        </motion.p>
+
+        {/* 4. CTA & Social Proof */}
+        {/* <div className="flex flex-col items-center gap-8">
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             className="relative"
           >
-            <div className="bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/50 relative z-10">
-              <div className="flex gap-4 mb-8 p-1 bg-gray-100 rounded-2xl">
-                <button className="flex-1 py-3 px-4 bg-white rounded-xl shadow-sm text-sm font-bold text-brand transition-all">
-                  Ride Now
-                </button>
-                <button className="flex-1 py-3 px-4 text-sm font-bold text-gray-500 hover:text-gray-700 transition-all">
-                  Schedule
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                <div className="group relative">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-2 block">
-                    Pickup Location
-                  </label>
-                  <div className="relative">
-                    <MapPin
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-brand group-focus-within:scale-110 transition-transform"
-                      size={20}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Enter pickup point..."
-                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent focus:border-brand/20 focus:bg-white rounded-2xl transition-all outline-none text-gray-900 font-medium"
-                    />
-                  </div>
-                </div>
-
-                <div className="group relative">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-2 block">
-                    Destination
-                  </label>
-                  <div className="relative">
-                    <Navigation
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500 group-focus-within:rotate-12 transition-transform"
-                      size={20}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Where are you going?"
-                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent focus:border-brand/20 focus:bg-white rounded-2xl transition-all outline-none text-gray-900 font-medium"
-                    />
-                  </div>
-                </div>
-
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full bg-brand text-white font-bold py-5 rounded-2xl shadow-xl shadow-brand/20 hover:shadow-brand/40 transition-all flex items-center justify-center gap-3 mt-4"
+            <button className="px-10 py-5 bg-stone-900 text-white font-bold rounded-2xl shadow-2xl hover:bg-stone-800 transition-colors flex items-center gap-3">
+              Get Early Access
+              <div className="bg-white/20 p-1 rounded-md">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
                 >
-                  Calculate Fare
-                  <ArrowRight size={20} />
-                </motion.button>
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </div>
+            </button>
+            
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-white/20 to-transparent pointer-events-none" />
+          </motion.div>
+
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex -space-x-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="w-10 h-10 rounded-full border-4 border-stone-50 bg-stone-200 overflow-hidden"
+                >
+                  <img src={`https://i.pravatar.cc/150?u=${i}`} alt="user" />
+                </div>
+              ))}
+              <div className="w-10 h-10 rounded-full border-4 border-stone-50 bg-brand-600 flex items-center justify-center text-[10px] text-white font-bold">
+                +500
               </div>
             </div>
-
-            {/* Floating "Safety" Badge */}
-            <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-              className="absolute -top-6 -right-6 bg-white py-3 px-5 rounded-2xl shadow-lg border border-gray-100 flex items-center gap-3 z-20"
-            >
-              <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
-                <ShieldCheck size={24} />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-gray-900">
-                  Verified Safety
-                </p>
-                <p className="text-[10px] text-gray-500">24/7 Monitoring</p>
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
+            <p className="text-sm text-stone-400 font-medium">
+              Professionals already on the waitlist
+            </p>
+          </div>
+        </div> */}
       </div>
     </section>
   );
