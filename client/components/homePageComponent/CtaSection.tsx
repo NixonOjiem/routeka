@@ -2,58 +2,46 @@ import React from 'react';
 
 export default function CTASection() {
   return (
-    <section className="bg-white py-12">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative bg-sky-400 rounded-lg shadow-xl overflow-visible max-w-5xl mx-auto">
-          {/* Mobile: image as subtle background */}
-          <div className="absolute inset-0 z-0 flex justify-center items-center lg:hidden">
+    <section className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 md:py-24">
+      <div className="max-w-6xl mx-auto">
+        <div className="relative bg-brand rounded-3xl shadow-2xl overflow-visible">
+          {/* Mobile: car as faint background */}
+          <div className="absolute inset-0 z-0 flex items-center justify-center lg:hidden">
             <img
-              src="/images/subaru_PNG119245.png"
+              src="/Subaru-Taxi.png"
               alt="Car"
-              className="object-contain opacity-20 w-65 h-48.75 sm:w-90 sm:h-67.5"
+              className="object-contain opacity-20 w-120 h-90 sm:w-80 sm:h-60"
             />
           </div>
 
-          {/* Desktop: image poking outside the card */}
+          {/* Desktop: car – now 42rem wide */}
           <div
-            className="pointer-events-none absolute top-1/2 right-0 -translate-y-1/2 z-10 hidden lg:block lg:translate-x-1/2"
+            className="absolute top-1/2 -right-32 transform -translate-y-1/2 z-10 hidden lg:block"
             aria-hidden="true"
           >
             <img
-              src="/images/subaru_PNG119245.png"
+              src="/Subaru-Taxi.png"
               alt="Car"
-              className="object-contain drop-shadow-xl lg:w-160 lg:h-120"
+              className="object-contain drop-shadow-2xl w-180 h-auto"
             />
           </div>
 
-          {/* Text content */}
-          <div className="relative z-10 p-8 sm:p-12 lg:p-16">
+          {/* Text content – right padding increased to avoid overlap */}
+          <div className="relative z-20 p-8 sm:p-12 lg:p-16 lg:pr-140">
             <div className="space-y-6 text-center lg:text-left">
-              <h3 className="text-3xl font-extrabold text-white sm:text-4xl">
-                Ready to get started?
+              <h3 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+                Ready to hit the road?
               </h3>
-              <p className="text-lg text-white">
-                We stand as your trusted partner, guiding you through every turn of the road ahead.
+              <p className="text-lg text-white/90 max-w-2xl mx-auto lg:mx-0">
+                We stand as your trusted partner, guiding you through every turn of the road ahead. 
+                Book your ride now and enjoy a seamless journey.
               </p>
-              <div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <a
                   href="#"
-                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-sky-600 bg-white hover:bg-gray-100"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-white text-brand font-semibold rounded-full shadow-lg hover:bg-gray-100 transition-colors"
                 >
-                  Contact Us
-                  <svg
-                    className="ml-2 -mr-1 w-5 h-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  Book a Ride
                 </a>
               </div>
             </div>

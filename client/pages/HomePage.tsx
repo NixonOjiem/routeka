@@ -1,9 +1,10 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { HeroSection } from "../components/homePageComponent/HeroSection";
+// import { HeroSection } from "../components/homePageComponent/HeroSection";
 import { CategoryGrid } from "../components/homePageComponent/CategoryGrid";
 import { ValueProposition } from "../components/homePageComponent/ValueProposition";
 import { HeroSectionTwo } from "../components/homePageComponent/HeroSectionTwo";
+import CTASection from "@/components/homePageComponent/CtaSection";
 interface HomePageProps {
   onRequestRoute: (id: string) => void;
 }
@@ -20,6 +21,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onRequestRoute }) => {
       <HeroSectionTwo />
       <CategoryGrid onRequestRoute={onRequestRoute} />
       <ValueProposition />
+      <CTASection />
     </motion.div>
   );
 };
