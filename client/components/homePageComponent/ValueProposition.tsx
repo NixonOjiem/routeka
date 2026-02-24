@@ -16,7 +16,7 @@ export const ValueProposition = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 relative pb-12 md:pb-24 overflow-hidden md:overflow-visible">
+    <div className="max-w-6xl mx-auto px-4 md:px-6 relative overflow-hidden md:overflow-visible">
       <h2 className="text-3xl md:text-5xl font-display font-medium text-center text-stone-900 mb-12 animate-fade-in-up">
         Why is Route KA here?
       </h2>

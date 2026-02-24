@@ -427,7 +427,7 @@ export const RideGroupsPage: React.FC<RideGroupsPageProps> = () => {
             <div className="p-5 flex-1 flex flex-col justify-between">
               <div>
                 <div className="flex items-start space-x-3 mb-4">
-                  <LocationMarkerIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <LocationMarkerIcon className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
                   <div className="text-sm text-gray-700">
                     <span className="block font-medium text-gray-900">
                       {formatGrid(group.pickup_grid)}
@@ -489,7 +489,7 @@ export const RideGroupsPage: React.FC<RideGroupsPageProps> = () => {
 
   if (isLoading)
     return (
-      <div className="min-h-[400px] flex items-center justify-center">
+      <div className="min-h-100 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
@@ -600,7 +600,7 @@ export const RideGroupsPage: React.FC<RideGroupsPageProps> = () => {
                 }`}
               >
                 <tab.icon
-                  className={`-ml-0.5 mr-2 h-5 w-5 flex-shrink-0 transition-colors ${isActive ? tab.color : "text-gray-400 group-hover:text-gray-500"}`}
+                  className={`-ml-0.5 mr-2 h-5 w-5 shrink-0 transition-colors ${isActive ? tab.color : "text-gray-400 group-hover:text-gray-500"}`}
                   aria-hidden="true"
                 />
                 <span className="truncate">{tab.label}</span>
