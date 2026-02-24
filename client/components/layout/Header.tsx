@@ -170,11 +170,13 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
         initial="initial"
         animate="animate"
         variants={headerVariants}
-        className={`fixed top-0 left-0 right-0 bg-white border-b border-gray-100 z-50 transition-shadow duration-200 ${
-          scrolled ? "shadow-sm" : ""
-        }`}
+        className={`fixed top-4 left-1/2 transform -translate-x-1/2 w-[95%] md:w-[90%] lg:max-w-7xl z-50 transition-all duration-200 ${
+          scrolled
+            ? "bg-white/95 backdrop-blur-md shadow-lg"
+            : "bg-white/80 backdrop-blur-md shadow-md"
+        } border border-white/20 rounded-2xl`}
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <motion.div
@@ -282,17 +284,18 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                         exit="exit"
                         className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50"
                       >
-                        <div className="p-4 border-b border-gray-100">
-                          <p className="font-semibold text-gray-900">
+                        <div className="p-4 border-b border-gray-100 bg-brand">
+                          <p className="font-semibold text-white">
                             {user.name}
                           </p>
-                          <p className="text-sm text-gray-500 mt-0.5">
+                          <p className="text-sm text-white mt-0.5">
                             {user.email}
                           </p>
                         </div>
                         <div className="p-2">
                           <motion.button
-                            whileHover={{ backgroundColor: "#f9fafb" }}
+                            // whileHover={{ backgroundColor: "#f9fafb" }}
+                            whileHover={{ backgroundColor: "#9FB6C0" }}
                             onClick={() => handleNavigate("/profile")}
                             className="w-full flex items-center gap-3 px-3 py-2.5 text-gray-700 rounded-md transition-colors"
                           >
@@ -310,7 +313,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                           </motion.button>
 
                           <motion.button
-                            whileHover={{ backgroundColor: "#f9fafb" }}
+                            whileHover={{ backgroundColor: "#9FB6C0" }}
                             onClick={() => handleNavigate("/settings")}
                             className="w-full flex items-center gap-3 px-3 py-2.5 text-gray-700 rounded-md transition-colors"
                           >
@@ -483,7 +486,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                         whileTap={{ scale: 0.98 }}
                         onClick={onLogout}
                         disabled={isLoading}
-                        className="w-full mt-4 py-3 text-center font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center justify-center gap-2"
+                        className="w-full mt-4 py-3 text-center font-medium text-white bg-red-400 hover:bg-red-800 rounded-lg transition-colors flex items-center justify-center gap-2"
                       >
                         {isLoading ? (
                           <>
@@ -506,8 +509,8 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
         </div>
       </motion.header>
 
-      {/* Spacer */}
-      <div className="h-16" />
+      {/* Spacer – adjusted for new header height + top offset */}
+      <div className="h-20" />
     </>
   );
 };
