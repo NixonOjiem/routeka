@@ -21,8 +21,18 @@ export const HeroSectionTwo = () => {
           <div className="absolute inset-0 opacity-10">
             <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1" />
+                <pattern
+                  id="grid"
+                  width="40"
+                  height="40"
+                  patternUnits="userSpaceOnUse"
+                >
+                  <path
+                    d="M 40 0 L 0 0 0 40"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="1"
+                  />
                 </pattern>
               </defs>
               <rect width="100%" height="100%" fill="url(#grid)" />
@@ -33,17 +43,6 @@ export const HeroSectionTwo = () => {
           <div className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full filter blur-3xl -translate-x-1/2 -translate-y-1/2" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand-light/20 rounded-full filter blur-3xl translate-x-1/2 translate-y-1/2" />
 
-<<<<<<< HEAD
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="text-lg md:text-xl text-stone-500 max-w-2xl mx-auto mb-12 leading-relaxed"
-        >
-          Join a community of professionals who share rides to work. Get the
-          comfort of an express commute for the price of a bus ticket.
-        </motion.p>
-=======
           {/* Mobile: car as faint background – slightly increased opacity for better visibility */}
           <div className="absolute inset-0 z-0 flex items-center justify-center lg:hidden">
             <motion.img
@@ -58,7 +57,7 @@ export const HeroSectionTwo = () => {
           <motion.div
             className="absolute top-1/2 -right-16 transform -translate-y-1/2 z-10 hidden lg:block"
             aria-hidden="true"
-            style={{ 
+            style={{
               y: carY,
               rotate: carRotate,
             }}
@@ -66,7 +65,7 @@ export const HeroSectionTwo = () => {
             <div className="relative">
               {/* Car shadow */}
               <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-[90%] h-8 bg-black/20 blur-xl rounded-full" />
-              
+
               {/* Car image with reflection effect – large for desktop */}
               <div className="relative">
                 <img
@@ -77,7 +76,7 @@ export const HeroSectionTwo = () => {
                 {/* Reflection overlay */}
                 <div className="absolute inset-0 bg-linear-to-t from-white/20 to-transparent mix-blend-overlay pointer-events-none rounded-full" />
               </div>
-              
+
               {/* Motion blur effect on scroll */}
               <div className="absolute inset-0 bg-linear-to-l from-transparent via-brand/10 to-transparent blur-2xl" />
             </div>
@@ -109,7 +108,7 @@ export const HeroSectionTwo = () => {
 
               {/* Headline with staggered animation */}
               <div className="space-y-2">
-                <motion.h1 
+                <motion.h1
                   className="text-4xl sm:text-5xl md:text-7xl font-serif font-light tracking-tight text-white leading-[1.1]"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -117,7 +116,7 @@ export const HeroSectionTwo = () => {
                 >
                   The commute that
                 </motion.h1>
-                <motion.h1 
+                <motion.h1
                   className="text-4xl sm:text-5xl md:text-7xl font-serif font-bold text-white leading-[1.1]"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -128,18 +127,18 @@ export const HeroSectionTwo = () => {
               </div>
 
               {/* Description */}
-              <motion.p 
+              <motion.p
                 className="text-base sm:text-lg md:text-xl text-white/90 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light px-4 sm:px-0"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.8 }}
               >
-                Book a premium ride, choose your professional network, and arrive
-                refreshed. Express commuting, elevated.
+                Book a premium ride, choose your professional network, and
+                arrive refreshed. Express commuting, elevated.
               </motion.p>
 
               {/* CTA + Social proof */}
-              <motion.div 
+              <motion.div
                 className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -191,28 +190,29 @@ export const HeroSectionTwo = () => {
               </motion.div>
 
               {/* Value props */}
-              <motion.div 
+              {/* <motion.div
                 className="flex flex-wrap gap-2 justify-center lg:justify-start"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.7, duration: 0.8 }}
               >
-                {["Zero surge pricing", "Verified professionals", "Luxury fleet"].map(
-                  (text, i) => (
-                    <motion.div
-                      key={i}
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs sm:text-sm font-medium text-white shadow-lg hover:bg-white/20 transition-all duration-300 cursor-default"
-                    >
-                      {text}
-                    </motion.div>
-                  )
-                )}
-              </motion.div>
+                {[
+                  "Zero surge pricing",
+                  "Verified professionals",
+                  "Luxury fleet",
+                ].map((text, i) => (
+                  <motion.div
+                    key={i}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs sm:text-sm font-medium text-white shadow-lg hover:bg-white/20 transition-all duration-300 cursor-default"
+                  >
+                    {text}
+                  </motion.div>
+                ))}
+              </motion.div> */}
             </motion.div>
           </div>
         </div>
->>>>>>> 85df3eef1b041b062ccc65b0c6a77a555a603062
       </div>
     </section>
   );

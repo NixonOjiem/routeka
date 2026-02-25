@@ -25,7 +25,7 @@ export const Footer = () => {
   const navigate = useNavigate();
 
   return (
-    <footer className="bg-brand/80 backdrop-blur border-t border-stone-200 py-12 mt-auto rounded-t-2xl">
+    <footer className="bg-brand-dark backdrop-blur border-t border-stone-200 py-12 mt-auto rounded-t-2xl">
       <div className="container mx-auto px-6">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
