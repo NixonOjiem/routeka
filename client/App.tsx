@@ -36,6 +36,8 @@ function AppContent() {
       location.pathname,
     );
 
+  const isHomePage = location.pathname === "/"; // ← new condition for full‑width hero
+
   const getCurrentView = (): ViewState => {
     return location.pathname === "/request" ? "request" : "home";
   };
@@ -65,9 +67,9 @@ function AppContent() {
       )}
 
       <main
-        className={`grow ${
-          !isAuthPage ? "container mx-auto px-4 md:px-6 py-6 max-w-7xl" : ""
-        }`}
+        className={`grow${
+          !isAuthPage && !isHomePage ? "container mx-auto px-4 md:px-6 py-6 max-w-7xl" : ""
+        } ${isHomePage ? "w-full" : ""}`}
       >
         {notification && (
           <NotificationToast

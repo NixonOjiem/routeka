@@ -1,105 +1,39 @@
 import React, { useRef } from "react";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 export const HeroSectionTwo = () => {
   const containerRef = useRef(null);
-
-  // Parallax effect for the background elements
   const { scrollY } = useScroll();
-  const y1 = useTransform(scrollY, [0, 500], [0, 200]);
-  const y2 = useTransform(scrollY, [0, 500], [0, -150]);
+
+  const carY = useTransform(scrollY, [0, 500], [0, -100]);
+  const carRotate = useTransform(scrollY, [0, 500], [0, -3]);
 
   return (
     <section
       ref={containerRef}
-      className="relative rounded-3xl overflow-hidden pt-20 pb-16 md:pt-32 md:pb-24 flex flex-col items-center justify-center bg-stone-50"
+      className="relative overflow-hidden flex items-center justify-center"
     >
-      {/* --- BACKGROUND LAYER --- */}
-      <div className="absolute inset-0 -z-10 pointer-events-none">
-        {/* Fading Grid */}
-        <div
-          className="absolute inset-0 opacity-[0.15]"
-          style={{
-            backgroundImage: `radial-gradient(#4F46E5 0.5px, transparent 0.5px), radial-gradient(#4F46E5 0.5px, #f5f5f4 0.5px)`,
-            backgroundSize: "40px 40px",
-            maskImage:
-              "radial-gradient(circle at center, black, transparent 80%)",
-          }}
-        />
-
-        {/* Animated Orbs with Parallax */}
-        <motion.div
-          style={{ y: y1 }}
-          className="absolute top-[10%] -left-20 w-[500px] h-[500px] bg-brand-200/40 rounded-full blur-[120px]"
-        />
-        <motion.div
-          style={{ y: y2 }}
-          className="absolute bottom-[10%] -right-20 w-[600px] h-[600px] bg-cyan-100/50 rounded-full blur-[120px]"
-        />
-      </div>
-
-      {/* --- CONTENT LAYER --- */}
-      <div className="relative z-10 text-center px-4 max-w-6xl mx-auto">
-        {/* 1. Top Badge: Launching Soon */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-stone-200 shadow-sm mb-8"
-        >
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-500 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-600"></span>
-          </span>
-          <span className="text-xs font-bold tracking-widest text-stone-500 uppercase">
-            We are launching soon
-          </span>
-        </motion.div>
-
-        {/* 2. Main Headline: Modernized Spacing */}
-        <motion.h1
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
-          className="text-5xl md:text-8xl font-display font-extrabold tracking-tight text-brand leading-[0.95] mb-8"
-        >
-          The <span className="text-brand-600">Affordable</span> <br />
-          <span className="relative italic font-serif font-light text-brand-600">
-            Express Commute
-            <svg
-              className="absolute -bottom-2 left-0 w-full h-3 text-brand-200 -z-10"
-              viewBox="0 0 100 10"
-              preserveAspectRatio="none"
-            >
-              <path
-                d="M0 5 Q 50 10 100 5"
-                stroke="currentColor"
-                strokeWidth="8"
-                fill="none"
-              />
+      {/* Outer container – full width */}
+      <div className="w-full">
+        {/* Main card – responsive padding added */}
+        <div className="relative bg-linear-to-br from-brand to-brand-dark rounded-b-[3rem] shadow-3xl overflow-hidden p-6 sm:p-10 md:p-16 lg:p-24">
+          {/* Abstract pattern overlay for texture */}
+          <div className="absolute inset-0 opacity-10">
+            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
             </svg>
-          </span>{" "}
-          is Here.
-        </motion.h1>
+          </div>
 
-        {/* 3. Value Prop Cards (The "Why") */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="flex flex-wrap justify-center gap-4 mb-10"
-        >
-          {["60% Cheaper", "Professional Network", "Premium Rides"].map(
-            (text, i) => (
-              <div
-                key={i}
-                className="px-4 py-2 rounded-xl bg-white/50 backdrop-blur-md border border-white/20 shadow-sm text-sm font-semibold text-stone-600"
-              >
-                {text}
-              </div>
-            ),
-          )}
-        </motion.div>
+          {/* Gradient orbs for visual interest */}
+          <div className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full filter blur-3xl -translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand-light/20 rounded-full filter blur-3xl translate-x-1/2 translate-y-1/2" />
 
+<<<<<<< HEAD
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -109,6 +43,176 @@ export const HeroSectionTwo = () => {
           Join a community of professionals who share rides to work. Get the
           comfort of an express commute for the price of a bus ticket.
         </motion.p>
+=======
+          {/* Mobile: car as faint background – slightly increased opacity for better visibility */}
+          <div className="absolute inset-0 z-0 flex items-center justify-center lg:hidden">
+            <motion.img
+              src="/images/ford-mini.png"
+              alt="Car"
+              className="object-contain opacity-30 w-120 h-90 sm:w-120 sm:h-120"
+              style={{ y: carY }}
+            />
+          </div>
+
+          {/* Desktop: car – positioned absolutely, hanging off the right with parallax */}
+          <motion.div
+            className="absolute top-1/2 -right-16 transform -translate-y-1/2 z-10 hidden lg:block"
+            aria-hidden="true"
+            style={{ 
+              y: carY,
+              rotate: carRotate,
+            }}
+          >
+            <div className="relative">
+              {/* Car shadow */}
+              <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-[90%] h-8 bg-black/20 blur-xl rounded-full" />
+              
+              {/* Car image with reflection effect – large for desktop */}
+              <div className="relative">
+                <img
+                  src="/images/ford-mini.png"
+                  alt="Car"
+                  className="object-contain drop-shadow-3xl w-240 h-auto relative z-10"
+                />
+                {/* Reflection overlay */}
+                <div className="absolute inset-0 bg-linear-to-t from-white/20 to-transparent mix-blend-overlay pointer-events-none rounded-full" />
+              </div>
+              
+              {/* Motion blur effect on scroll */}
+              <div className="absolute inset-0 bg-linear-to-l from-transparent via-brand/10 to-transparent blur-2xl" />
+            </div>
+          </motion.div>
+
+          {/* Text content – responsive padding, right padding only on large screens */}
+          <div className="relative z-20 p-6 sm:p-10 lg:p-16 lg:pr-112">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-6 text-center lg:text-left"
+            >
+              {/* Premium badge */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-lg"
+              >
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-60" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white" />
+                </span>
+                <span className="text-xs font-mono font-semibold tracking-widest text-white uppercase">
+                  Introducing Concierge Rides
+                </span>
+              </motion.div>
+
+              {/* Headline with staggered animation */}
+              <div className="space-y-2">
+                <motion.h1 
+                  className="text-4xl sm:text-5xl md:text-7xl font-serif font-light tracking-tight text-white leading-[1.1]"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.8 }}
+                >
+                  The commute that
+                </motion.h1>
+                <motion.h1 
+                  className="text-4xl sm:text-5xl md:text-7xl font-serif font-bold text-white leading-[1.1]"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.8 }}
+                >
+                  feels like a getaway.
+                </motion.h1>
+              </div>
+
+              {/* Description */}
+              <motion.p 
+                className="text-base sm:text-lg md:text-xl text-white/90 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light px-4 sm:px-0"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+              >
+                Book a premium ride, choose your professional network, and arrive
+                refreshed. Express commuting, elevated.
+              </motion.p>
+
+              {/* CTA + Social proof */}
+              <motion.div 
+                className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.8 }}
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="group relative px-8 sm:px-10 py-3 sm:py-4 bg-white text-brand-dark font-semibold rounded-full shadow-2xl hover:bg-gray-50 transition-all duration-300 flex items-center gap-3 whitespace-nowrap text-base sm:text-lg"
+                >
+                  <span>Book a ride</span>
+                  <div className="bg-brand/10 p-1.5 rounded-full group-hover:bg-brand/20 group-hover:translate-x-1 transition-all duration-300">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </motion.button>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex -space-x-3">
+                    {[1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        whileHover={{ scale: 1.1, y: -3 }}
+                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-white bg-linear-to-br from-white/30 to-white/10 overflow-hidden shadow-lg backdrop-blur-sm"
+                      >
+                        <img
+                          src={`https://i.pravatar.cc/150?u=${i}`}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      </motion.div>
+                    ))}
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-white bg-white/20 backdrop-blur-sm flex items-center justify-center text-xs sm:text-sm text-white font-bold shadow-lg">
+                      +500
+                    </div>
+                  </div>
+                  <p className="text-xs sm:text-sm text-white/90 font-medium">
+                    professionals on the waitlist
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Value props */}
+              <motion.div 
+                className="flex flex-wrap gap-2 justify-center lg:justify-start"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7, duration: 0.8 }}
+              >
+                {["Zero surge pricing", "Verified professionals", "Luxury fleet"].map(
+                  (text, i) => (
+                    <motion.div
+                      key={i}
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs sm:text-sm font-medium text-white shadow-lg hover:bg-white/20 transition-all duration-300 cursor-default"
+                    >
+                      {text}
+                    </motion.div>
+                  )
+                )}
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
+>>>>>>> 85df3eef1b041b062ccc65b0c6a77a555a603062
       </div>
     </section>
   );
