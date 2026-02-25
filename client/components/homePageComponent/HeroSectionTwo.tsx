@@ -13,10 +13,10 @@ export const HeroSectionTwo = () => {
       ref={containerRef}
       className="relative overflow-hidden flex items-center justify-center"
     >
-      {/* Outer container with max width – mimics CTASection wrapper */}
+      {/* Outer container – full width */}
       <div className="w-full">
-        {/* Main card with brand background, rounded corners, and shadow */}
-        <div className="relative bg-gradient-to-br p-24 from-brand to-brand-dark rounded-b-[3rem] shadow-3xl overflow-hidden">
+        {/* Main card – responsive padding added */}
+        <div className="relative bg-gradient-to-br from-brand to-brand-dark rounded-b-[3rem] shadow-3xl overflow-hidden p-6 sm:p-10 md:p-16 lg:p-24">
           {/* Abstract pattern overlay for texture */}
           <div className="absolute inset-0 opacity-10">
             <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -29,16 +29,16 @@ export const HeroSectionTwo = () => {
             </svg>
           </div>
 
-          {/* Gradient orb for visual interest */}
+          {/* Gradient orbs for visual interest */}
           <div className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full filter blur-3xl -translate-x-1/2 -translate-y-1/2" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand-light/20 rounded-full filter blur-3xl translate-x-1/2 translate-y-1/2" />
 
-          {/* Mobile: car as faint background */}
+          {/* Mobile: car as faint background – slightly increased opacity for better visibility */}
           <div className="absolute inset-0 z-0 flex items-center justify-center lg:hidden">
             <motion.img
               src="/images/ford-mini.png"
               alt="Car"
-              className="object-contain opacity-20 w-120 h-90 sm:w-[30rem] sm:h-120"
+              className="object-contain opacity-30 w-120 h-90 sm:w-[30rem] sm:h-120"
               style={{ y: carY }}
             />
           </div>
@@ -56,7 +56,7 @@ export const HeroSectionTwo = () => {
               {/* Car shadow */}
               <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-[90%] h-8 bg-black/20 blur-xl rounded-full" />
               
-              {/* Car image with reflection effect - made significantly larger */}
+              {/* Car image with reflection effect – large for desktop */}
               <div className="relative">
                 <img
                   src="/images/ford-mini.png"
@@ -72,15 +72,15 @@ export const HeroSectionTwo = () => {
             </div>
           </motion.div>
 
-          {/* Text content – reduced right padding to bring content closer */}
-          <div className="relative z-20 p-10 sm:p-14 lg:p-16 lg:pr-[28rem]">
+          {/* Text content – responsive padding, right padding only on large screens */}
+          <div className="relative z-20 p-6 sm:p-10 lg:p-16 lg:pr-[28rem]">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
               className="space-y-6 text-center lg:text-left"
             >
-              {/* Premium badge – styled with white background and animation */}
+              {/* Premium badge */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -96,10 +96,10 @@ export const HeroSectionTwo = () => {
                 </span>
               </motion.div>
 
-              {/* Headline with staggered animation - reduced spacing */}
+              {/* Headline with staggered animation */}
               <div className="space-y-2">
                 <motion.h1 
-                  className="text-5xl md:text-7xl font-serif font-light tracking-tight text-white leading-[1.1]"
+                  className="text-4xl sm:text-5xl md:text-7xl font-serif font-light tracking-tight text-white leading-[1.1]"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.8 }}
@@ -107,7 +107,7 @@ export const HeroSectionTwo = () => {
                   The commute that
                 </motion.h1>
                 <motion.h1 
-                  className="text-5xl md:text-7xl font-serif font-bold text-white leading-[1.1]"
+                  className="text-4xl sm:text-5xl md:text-7xl font-serif font-bold text-white leading-[1.1]"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.8 }}
@@ -116,9 +116,9 @@ export const HeroSectionTwo = () => {
                 </motion.h1>
               </div>
 
-              {/* Description with fade-in */}
+              {/* Description */}
               <motion.p 
-                className="text-lg md:text-xl text-white/90 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light"
+                className="text-base sm:text-lg md:text-xl text-white/90 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light px-4 sm:px-0"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.8 }}
@@ -127,7 +127,7 @@ export const HeroSectionTwo = () => {
                 refreshed. Express commuting, elevated.
               </motion.p>
 
-              {/* CTA + Social proof integrated - reduced gap */}
+              {/* CTA + Social proof */}
               <motion.div 
                 className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6"
                 initial={{ opacity: 0, y: 20 }}
@@ -137,7 +137,7 @@ export const HeroSectionTwo = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.98 }}
-                  className="group relative px-10 py-4 bg-white text-brand-dark font-semibold rounded-full shadow-2xl hover:bg-gray-50 transition-all duration-300 flex items-center gap-3 whitespace-nowrap text-lg"
+                  className="group relative px-8 sm:px-10 py-3 sm:py-4 bg-white text-brand-dark font-semibold rounded-full shadow-2xl hover:bg-gray-50 transition-all duration-300 flex items-center gap-3 whitespace-nowrap text-base sm:text-lg"
                 >
                   <span>Book a ride</span>
                   <div className="bg-brand/10 p-1.5 rounded-full group-hover:bg-brand/20 group-hover:translate-x-1 transition-all duration-300">
@@ -160,7 +160,7 @@ export const HeroSectionTwo = () => {
                       <motion.div
                         key={i}
                         whileHover={{ scale: 1.1, y: -3 }}
-                        className="w-11 h-11 rounded-full border-2 border-white bg-gradient-to-br from-white/30 to-white/10 overflow-hidden shadow-lg backdrop-blur-sm"
+                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-white bg-gradient-to-br from-white/30 to-white/10 overflow-hidden shadow-lg backdrop-blur-sm"
                       >
                         <img
                           src={`https://i.pravatar.cc/150?u=${i}`}
@@ -169,17 +169,17 @@ export const HeroSectionTwo = () => {
                         />
                       </motion.div>
                     ))}
-                    <div className="w-11 h-11 rounded-full border-2 border-white bg-white/20 backdrop-blur-sm flex items-center justify-center text-sm text-white font-bold shadow-lg">
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-white bg-white/20 backdrop-blur-sm flex items-center justify-center text-xs sm:text-sm text-white font-bold shadow-lg">
                       +500
                     </div>
                   </div>
-                  <p className="text-sm text-white/90 font-medium">
+                  <p className="text-xs sm:text-sm text-white/90 font-medium">
                     professionals on the waitlist
                   </p>
                 </div>
               </motion.div>
 
-              {/* Value props – as light pills on brand background */}
+              {/* Value props */}
               <motion.div 
                 className="flex flex-wrap gap-2 justify-center lg:justify-start"
                 initial={{ opacity: 0 }}
@@ -191,7 +191,7 @@ export const HeroSectionTwo = () => {
                     <motion.div
                       key={i}
                       whileHover={{ scale: 1.05, y: -2 }}
-                      className="px-6 py-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-sm font-medium text-white shadow-lg hover:bg-white/20 transition-all duration-300 cursor-default"
+                      className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs sm:text-sm font-medium text-white shadow-lg hover:bg-white/20 transition-all duration-300 cursor-default"
                     >
                       {text}
                     </motion.div>
