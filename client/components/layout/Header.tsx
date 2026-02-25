@@ -30,7 +30,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
   const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
   const { user, isLoading } = useSelector((state: RootState) => state.auth);
-
+  const isHomePage = location.pathname === "/"; // condition for h-20 removal
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -170,11 +170,10 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
         initial="initial"
         animate="animate"
         variants={headerVariants}
-        className={`fixed top-4 left-1/2 transform -translate-x-1/2 w-[95%] md:w-[90%] lg:max-w-7xl z-50 transition-all duration-200 ${
-          scrolled
+        className={`fixed top-4 left-1/2 transform -translate-x-1/2 w-[95%] md:w-[90%] lg:max-w-7xl z-50 transition-all duration-200 ${scrolled
             ? "bg-white/95 backdrop-blur-md shadow-lg"
             : "bg-white/80 backdrop-blur-md shadow-md"
-        } border border-white/20 rounded-2xl`}
+          } border border-white/20 rounded-2xl`}
       >
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -205,11 +204,10 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                   whileHover={{ y: -1 }}
                   whileTap={{ y: 0 }}
                   onClick={() => handleNavClick("home")}
-                  className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-colors relative ${
-                    isHomeActive
+                  className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-colors relative ${isHomeActive
                       ? "text-brand-600"
                       : "text-gray-600 hover:text-gray-900"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <MapPin size={16} />
@@ -227,11 +225,10 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                   whileHover={{ y: -1 }}
                   whileTap={{ y: 0 }}
                   onClick={() => handleNavigate("/rides")}
-                  className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-colors relative ${
-                    isRidesActive
+                  className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-colors relative ${isRidesActive
                       ? "text-brand-600"
                       : "text-gray-600 hover:text-gray-900"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <History size={16} />
@@ -269,9 +266,8 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                     </div>
                     <ChevronDown
                       size={16}
-                      className={`text-gray-400 transition-transform duration-200 ${
-                        isProfileDropdownOpen ? "rotate-180" : ""
-                      }`}
+                      className={`text-gray-400 transition-transform duration-200 ${isProfileDropdownOpen ? "rotate-180" : ""
+                        }`}
                     />
                   </motion.button>
 
@@ -416,11 +412,10 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                       <motion.button
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleNavClick("home")}
-                        className={`px-4 py-3 text-left rounded-lg flex items-center gap-3 ${
-                          isHomeActive
+                        className={`px-4 py-3 text-left rounded-lg flex items-center gap-3 ${isHomeActive
                             ? "bg-white text-brand shadow-sm"
                             : "hover:bg-gray-100"
-                        }`}
+                          }`}
                       >
                         <MapPin size={20} />
                         <span className="font-medium">Home</span>
@@ -429,11 +424,10 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
                       <motion.button
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleNavigate("/rides")}
-                        className={`px-4 py-3 text-left rounded-lg flex items-center gap-3 ${
-                          isRidesActive
+                        className={`px-4 py-3 text-left rounded-lg flex items-center gap-3 ${isRidesActive
                             ? "bg-white text-brand shadow-sm"
                             : "hover:bg-gray-100"
-                        }`}
+                          }`}
                       >
                         <History size={20} />
                         <span className="font-medium">My Rides</span>
@@ -510,7 +504,7 @@ export const Header = ({ onViewChange, currentView }: HeaderProps) => {
       </motion.header>
 
       {/* Spacer – adjusted for new header height + top offset */}
-      <div className="h-20" />
+      {!isHomePage && <div className="h-20"></div>}
     </>
   );
 };
