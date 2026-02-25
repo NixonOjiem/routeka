@@ -16,7 +16,7 @@ export const HeroSectionTwo = () => {
       {/* Outer container with max width – mimics CTASection wrapper */}
       <div className="w-full">
         {/* Main card with brand background, rounded corners, and shadow */}
-        <div className="relative bg-gradient-to-br from-brand to-brand-dark rounded-b-[3rem] shadow-3xl overflow-hidden">
+        <div className="relative bg-gradient-to-br p-24 from-brand to-brand-dark rounded-b-[3rem] shadow-3xl overflow-hidden">
           {/* Abstract pattern overlay for texture */}
           <div className="absolute inset-0 opacity-10">
             <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -61,7 +61,7 @@ export const HeroSectionTwo = () => {
                 <img
                   src="/images/ford-mini.png"
                   alt="Car"
-                  className="object-contain drop-shadow-3xl w-[42rem] h-auto relative z-10"
+                  className="object-contain drop-shadow-3xl w-[60rem] h-auto relative z-10"
                 />
                 {/* Reflection overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent mix-blend-overlay pointer-events-none rounded-full" />
