@@ -16,7 +16,7 @@ export const HeroSectionTwo = () => {
       {/* Outer container – full width */}
       <div className="w-full">
         {/* Main card – responsive padding added */}
-        <div className="relative bg-gradient-to-br from-brand to-brand-dark rounded-b-[3rem] shadow-3xl overflow-hidden p-6 sm:p-10 md:p-16 lg:p-24">
+        <div className="relative bg-linear-to-br from-brand to-brand-dark rounded-b-[3rem] shadow-3xl overflow-hidden p-6 sm:p-10 md:p-16 lg:p-24">
           {/* Abstract pattern overlay for texture */}
           <div className="absolute inset-0 opacity-10">
             <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -38,7 +38,7 @@ export const HeroSectionTwo = () => {
             <motion.img
               src="/images/ford-mini.png"
               alt="Car"
-              className="object-contain opacity-30 w-120 h-90 sm:w-[30rem] sm:h-120"
+              className="object-contain opacity-30 w-120 h-90 sm:w-120 sm:h-120"
               style={{ y: carY }}
             />
           </div>
@@ -61,19 +61,19 @@ export const HeroSectionTwo = () => {
                 <img
                   src="/images/ford-mini.png"
                   alt="Car"
-                  className="object-contain drop-shadow-3xl w-[60rem] h-auto relative z-10"
+                  className="object-contain drop-shadow-3xl w-240 h-auto relative z-10"
                 />
                 {/* Reflection overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent mix-blend-overlay pointer-events-none rounded-full" />
+                <div className="absolute inset-0 bg-linear-to-t from-white/20 to-transparent mix-blend-overlay pointer-events-none rounded-full" />
               </div>
               
               {/* Motion blur effect on scroll */}
-              <div className="absolute inset-0 bg-gradient-to-l from-transparent via-brand/10 to-transparent blur-2xl" />
+              <div className="absolute inset-0 bg-linear-to-l from-transparent via-brand/10 to-transparent blur-2xl" />
             </div>
           </motion.div>
 
           {/* Text content – responsive padding, right padding only on large screens */}
-          <div className="relative z-20 p-6 sm:p-10 lg:p-16 lg:pr-[28rem]">
+          <div className="relative z-20 p-6 sm:p-10 lg:p-16 lg:pr-112">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -160,7 +160,7 @@ export const HeroSectionTwo = () => {
                       <motion.div
                         key={i}
                         whileHover={{ scale: 1.1, y: -3 }}
-                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-white bg-gradient-to-br from-white/30 to-white/10 overflow-hidden shadow-lg backdrop-blur-sm"
+                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-white bg-linear-to-br from-white/30 to-white/10 overflow-hidden shadow-lg backdrop-blur-sm"
                       >
                         <img
                           src={`https://i.pravatar.cc/150?u=${i}`}
