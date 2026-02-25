@@ -7,7 +7,7 @@ export default function CTASection() {
                 <div className="relative bg-brand rounded-3xl shadow-2xl overflow-visible">
                     {/* Mobile: car as faint background */}
                     <div className="absolute inset-0 z-0 flex items-center justify-center lg:hidden">
-                        <img src="/Subaru-Taxi.png" alt="Car" className="object-contain opacity-20 w-120 h-90 sm:w-[30rem] sm:h-120"/>
+                        <img src="/images/Subaru-Taxi.png" alt="Car" className="object-contain opacity-20 w-120 h-90 sm:w-[30rem] sm:h-120"/>
                     </div>
 
                     {/* Desktop: car – now 42rem wide */}
@@ -16,7 +16,7 @@ export default function CTASection() {
                         aria-hidden="true"
                     >
                         <img
-                            src="/Subaru-Taxi.png"
+                            src="/images/Subaru-Taxi.png"
                             alt="Car"
                             className="object-contain drop-shadow-2xl w-180 h-auto"
                         />
