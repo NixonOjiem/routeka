@@ -109,52 +109,6 @@ export const HeroSectionTwo = () => {
           Join a community of professionals who share rides to work. Get the
           comfort of an express commute for the price of a bus ticket.
         </motion.p>
-
-        {/* 4. CTA & Social Proof */}
-        {/* <div className="flex flex-col items-center gap-8">
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="relative"
-          >
-            <button className="px-10 py-5 bg-stone-900 text-white font-bold rounded-2xl shadow-2xl hover:bg-stone-800 transition-colors flex items-center gap-3">
-              Get Early Access
-              <div className="bg-white/20 p-1 rounded-md">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                >
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </div>
-            </button>
-            
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-white/20 to-transparent pointer-events-none" />
-          </motion.div>
-
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex -space-x-3">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="w-10 h-10 rounded-full border-4 border-stone-50 bg-stone-200 overflow-hidden"
-                >
-                  <img src={`https://i.pravatar.cc/150?u=${i}`} alt="user" />
-                </div>
-              ))}
-              <div className="w-10 h-10 rounded-full border-4 border-stone-50 bg-brand-600 flex items-center justify-center text-[10px] text-white font-bold">
-                +500
-              </div>
-            </div>
-            <p className="text-sm text-stone-400 font-medium">
-              Professionals already on the waitlist
-            </p>
-          </div>
-        </div> */}
       </div>
     </section>
   );
