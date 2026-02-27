@@ -1,8 +1,9 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { useNavigate } from "react-router-dom"; // Assuming you use react-router for the navigate function
-import { X as XIcon } from "lucide-react"; // Or your preferred icon library
+import { useNavigate } from "react-router-dom";
+import { X as XIcon } from "lucide-react";
 import { CategoryGrid } from "@/components/homePageComponent/CategoryGrid";
+
 // 1. Defined variants outside to prevent duplication and re-renders
 const buttonVariants = {
   hover: {
@@ -12,7 +13,7 @@ const buttonVariants = {
   },
   tap: { scale: 0.95 },
   disabled: { opacity: 0.5, cursor: "not-allowed" },
-};
+} as const;
 
 export const HeroSectionTwo = () => {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -99,7 +100,7 @@ export const HeroSectionTwo = () => {
       {/* MODAL INTEGRATION */}
       <AnimatePresence>
         {isCategoryModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
