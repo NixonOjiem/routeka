@@ -51,7 +51,7 @@ export const HeroSectionTwo = () => {
             <div className="relative">
               <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-[90%] h-8 bg-black/20 blur-xl rounded-full" />
               <img
-                src="/images/ford-mini.png"
+                src="/images/Man-Looking-at-phone.png"
                 alt="Car"
                 className="object-contain drop-shadow-3xl w-240 h-auto relative z-10"
               />
