@@ -11,7 +11,7 @@ const buttonVariants = {
         transition: { type: "spring", stiffness: 400, damping: 10 },
     },
     tap: { scale: 0.95 },
-};
+} as const;
 
 export default function CTASection() {
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -50,7 +50,7 @@ export default function CTASection() {
                                 Book your ride now and enjoy a seamless journey.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                                {/* REPLACED <a> WITH TRIGGER BUTTON */}
+                                {/* Button for popup for requesting a ride */}
                                 <motion.button
                                     variants={buttonVariants}
                                     whileHover="hover"
@@ -69,7 +69,7 @@ export default function CTASection() {
             {/* MODAL INTEGRATION */}
             <AnimatePresence>
                 {isCategoryModalOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
                         {/* Backdrop */}
                         <motion.div
                             initial={{ opacity: 0 }}
@@ -86,7 +86,6 @@ export default function CTASection() {
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
                             className="relative w-full max-w-6xl bg-stone-50 rounded-4xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
                         >
-                            {/* Modal Header */}
                             <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-white">
                                 <div>
                                     <h2 className="text-2xl font-bold text-stone-800">Choose Ride Type</h2>
@@ -99,10 +98,7 @@ export default function CTASection() {
                                     <XIcon className="w-6 h-6 text-stone-500" />
                                 </button>
                             </div>
-
-                            {/* Modal Body with CategoryGrid */}
                             <div className="overflow-y-auto p-6 md:p-10">
-                                {/* Ensure CategoryGrid is defined or imported */}
                                 <CategoryGrid
                                     onRequestRoute={(id) => {
                                         setIsCategoryModalOpen(false);
