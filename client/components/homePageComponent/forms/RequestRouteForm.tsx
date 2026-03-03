@@ -38,7 +38,7 @@ const containerVariants = {
     y: -20,
     transition: { duration: 0.3 },
   },
-};
+} as const;
 
 const stepVariants = {
   hidden: { opacity: 0, x: 50 },
@@ -58,12 +58,12 @@ const stepVariants = {
       ease: "easeIn",
     },
   },
-};
+} as const;
 
 const progressBarVariants = {
   initial: { scaleX: 0 },
   animate: { scaleX: 1, transition: { duration: 0.8, ease: "easeInOut" } },
-};
+} as const;
 
 const buttonVariants = {
   hover: {
@@ -74,7 +74,7 @@ const buttonVariants = {
   },
   tap: { scale: 0.98 },
   disabled: { opacity: 0.5, cursor: "not-allowed" },
-};
+} as const;
 
 const inputFocusVariants = {
   focus: {
@@ -95,7 +95,7 @@ const successBadgeVariants = {
       stiffness: 200,
     },
   },
-};
+} as const;
 
 const progressDotVariants = {
   inactive: {
@@ -117,7 +117,7 @@ const progressDotVariants = {
     opacity: 1,
     transition: { duration: 0.3 },
   },
-};
+} as const;
 
 export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
   onSubmit,
@@ -300,7 +300,7 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
       </div>
 
       <div className="p-8 md:p-12">
-        <div className="h-[480px] flex flex-col pr-2">
+        <div className="h-120 flex flex-col pr-2">
           <AnimatePresence mode="wait">
             {/* STEP 1: Details */}
             {step === 1 && (
