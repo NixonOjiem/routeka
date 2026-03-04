@@ -59,7 +59,7 @@ export const HeroSectionTwo = () => {
           </motion.div>
 
           {/* Hero Text Content */}
-          <div className="relative z-20 p-6 sm:p-10 lg:p-16 lg:pr-112">
+          <div className="relative mt-16 sm:mt-0 z-20 p-6 sm:p-12 lg:p-16 lg:pr-112">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
