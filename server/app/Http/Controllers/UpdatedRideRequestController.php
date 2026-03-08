@@ -27,6 +27,7 @@ class UpdatedRideRequestController extends Controller
     // store data in database
     public function store(Request $request)
     {
+        Log::info("Received ride request submission:", ['request_data' => $request->all()]);
         try {
             // 1. Authenticate the user via JWT
             $user = JWTAuth::parseToken()->authenticate();
@@ -47,6 +48,8 @@ class UpdatedRideRequestController extends Controller
             return response()->json(['message' => 'Authorization error'], 401);
         }
 
+        Log::info("Authenticated user for ride request:", ['user_id' => $user->id, 'email' => $user->email]);
+
         // 3. Validation (category is now optional)
         $validated = $request->validate([
             'pickup.lat' => 'required|numeric',
@@ -57,6 +60,7 @@ class UpdatedRideRequestController extends Controller
             'frequency' => 'required|string',
             'category' => 'nullable|string',
         ]);
+        Log::info("Received ride request data:", $validated);
 
         // 4. Prepare data for saving
         $data = [
@@ -70,8 +74,10 @@ class UpdatedRideRequestController extends Controller
             'category' => $validated['category'] ?? null, // optional now
             'status' => 'pending',
         ];
+        Log::info("Prepared ride request data for saving:", $data);
 
         $ride = RideRequest::create($data);
+        log::info("Stored ride request in database:", $ride->toArray());
 
         return response()->json([
             'message' => 'Ride request submitted successfully',
