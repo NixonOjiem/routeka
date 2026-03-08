@@ -26,7 +26,7 @@ import RideGroupsPage from "@/pages/RideGroupsPage";
 import ChatPage from "@/pages/ChatPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPPasswordPage from "@/pages/ResetPPasswordPage";
-
+import { UpdatedRideGroupsPage } from "./pages/UpdatedRideGroupsPage";
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -68,7 +68,9 @@ function AppContent() {
 
       <main
         className={`grow${
-          !isAuthPage && !isHomePage ? "container mx-auto px-4 md:px-6 py-6 max-w-7xl" : ""
+          !isAuthPage && !isHomePage
+            ? "container mx-auto px-4 md:px-6 py-6 max-w-7xl"
+            : ""
         } ${isHomePage ? "w-full" : ""}`}
       >
         {notification && (
@@ -100,7 +102,8 @@ function AppContent() {
           <Route path="/login" element={<Navigate to="/signin" replace />} />
 
           {/* ✅ Add new routes */}
-          <Route path="rides" element={<RideGroupsPage />} />
+          {/* <Route path="rides" element={<RideGroupsPage />} /> */}
+          <Route path="rides" element={<UpdatedRideGroupsPage />} />
           <Route path="chat/:roomId" element={<ChatPage />} />
 
           {/* protected routes */}
