@@ -156,20 +156,21 @@ class RideRequestController extends Controller
             'frequency' => 'required|string',
             'category' => 'required|string',
         ]);
-
+        // dd($validated);
         // 4. Prepare data for saving
 
         $data = [
             'user_id' => $user->id,
-            'pickup_lat' => $validated['pickup.lat'],
-            'pickup_lng' => $validated['pickup.lng'],
-            'dropoff_lat' => $validated['dropoff.lat'],
-            'dropoff_lng' => $validated['dropoff.lng'],
+            'pickup_lat' => $validated['pickup']['lat'],
+            'pickup_lng' => $validated['pickup']['lng'],
+            'dropoff_lat' => $validated['dropoff']['lat'],
+            'dropoff_lng' => $validated['dropoff']['lng'],
             'commute_time' => $validated['commute_time'],
             'frequency' => $validated['frequency'],
             'category' => $validated['category'],
             'status' => 'pending',
         ];
+
 
 
         $ride = RideRequest::create($data);
