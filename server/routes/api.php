@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\UpdatedRideRequestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatController;
@@ -41,7 +42,9 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 Route::group(['prefix' => 'rides'], function () {
     Route::post('request', [RideRequestController::class, 'store']);
+    Route::post('v1/request', [UpdatedRideRequestController::class, 'store']);
     Route::get('groups', [RideRequestController::class, 'index']);
+    Route::get('v1/groups', [UpdatedRideRequestController::class, 'index']);
 });
 
 // Chat routes (accessible to both guests and users)

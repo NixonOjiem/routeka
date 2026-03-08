@@ -35,6 +35,10 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
      * @var list<string>
      */
     protected $hidden = [
+        'google_id',
+        'id',
+        'email_verified_at',
+        'created_at',
         'password',
         'remember_token',
     ];
