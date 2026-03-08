@@ -13,8 +13,7 @@ use Illuminate\Validation\ValidationException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 
-class
-RideRequestController extends Controller
+class RideRequestController extends Controller
 {
     protected $rideService;
 
@@ -25,42 +24,42 @@ RideRequestController extends Controller
 
     // 2. Fetch Grouped Data (For Admin or "My Matches" view)
 
-public function index(Request $request)
-{
-    try {
-        $groupedRides = $this->rideService->getGroupedRides();
+    public function index(Request $request)
+    {
+        try {
+            $groupedRides = $this->rideService->getGroupedRides();
 
-        // Check if user is logged in via JWT
-        $user = Auth::guard('api')->user();
+            // Check if user is logged in via JWT
+            $user = Auth::guard('api')->user();
 
-        // Get Guest ID from Header (sent by interceptor)
-        $guestId = $request->header('X-Guest-ID');
-        Log::info('Detected guest ID from index function: ' . $guestId);
+            // Get Guest ID from Header (sent by interceptor)
+            $guestId = $request->header('X-Guest-ID');
+            Log::info('Detected guest ID from index function: ' . $guestId);
 
-        $chatRooms = $this->rideService->getAvailableChatRooms(
-            $user ? $user->id : null
-        );
+            $chatRooms = $this->rideService->getAvailableChatRooms(
+                $user ? $user->id : null
+            );
 
-        return response()->json([
-            'success' => true,
-            'groups' => $groupedRides,
-            'chat_rooms' => $chatRooms,
-            'user' => $user ? [
-                'id' => $user->id,
-                'name' => $user->name
-            ] : null,
-            // Return the detected guest ID to help frontend matching
-            'detected_guest_id' => $guestId
-        ]);
+            return response()->json([
+                'success' => true,
+                'groups' => $groupedRides,
+                'chat_rooms' => $chatRooms,
+                'user' => $user ? [
+                    'id' => $user->id,
+                    'name' => $user->name
+                ] : null,
+                // Return the detected guest ID to help frontend matching
+                'detected_guest_id' => $guestId
+            ]);
 
-    } catch (\Exception $e) {
-        Log::error('Error in RideRequestController index: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to load ride groups'
-        ], 500);
+        } catch (\Exception $e) {
+            Log::error('Error in RideRequestController index: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load ride groups'
+            ], 500);
+        }
     }
-}
 
     /**
      * Get rides grouped by grid
@@ -72,7 +71,7 @@ public function index(Request $request)
         $rides = RideRequest::where('status', 'pending')
             ->with('user')
             ->get()
-            ->groupBy(function($ride) use ($gridSize) {
+            ->groupBy(function ($ride) use ($gridSize) {
                 $pickupGrid = $this->calculateGrid(
                     $ride->pickup_lat,
                     $ride->pickup_lng,
@@ -87,12 +86,12 @@ public function index(Request $request)
             });
 
         return response()->json([
-            'grids' => $rides->map(function($groupRides, $gridKey) {
+            'grids' => $rides->map(function ($groupRides, $gridKey) {
                 list($pickupGrid, $dropoffGrid) = explode('|', $gridKey);
                 return [
                     'pickup_grid' => $pickupGrid,
                     'dropoff_grid' => $dropoffGrid,
-                    'rides' => $groupRides->map(function($ride) {
+                    'rides' => $groupRides->map(function ($ride) {
                         return [
                             'id' => $ride->id,
                             'user_id' => $ride->user_id,
@@ -125,60 +124,61 @@ public function index(Request $request)
 
     // 1. Store the Ride Request
     public function store(Request $request)
-{
+    {
 
-    try {
-        // 1. Authenticate the user via JWT
-        $user = JWTAuth::parseToken()->authenticate();
+        try {
+            // 1. Authenticate the user via JWT
+            $user = JWTAuth::parseToken()->authenticate();
 
-        // 2. Check if the user is verified
-        if (!$user->hasVerifiedEmail()) {
-            return response()->json([
-                'message' => 'Your email address is not verified.',
-                'error' => 'email_unverified'
-            ], 403);
+            // 2. Check if the user is verified
+            if (!$user->hasVerifiedEmail()) {
+                return response()->json([
+                    'message' => 'Your email address is not verified.',
+                    'error' => 'email_unverified'
+                ], 403);
+            }
+
+        } catch (TokenExpiredException $e) {
+            return response()->json(['message' => 'Token expired', 'error' => 'token_expired'], 401);
+        } catch (TokenInvalidException $e) {
+            return response()->json(['message' => 'Token invalid', 'error' => 'token_invalid'], 401);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Authorization error'], 401);
         }
 
-    } catch (TokenExpiredException $e) {
-        return response()->json(['message' => 'Token expired', 'error' => 'token_expired'], 401);
-    } catch (TokenInvalidException $e) {
-        return response()->json(['message' => 'Token invalid', 'error' => 'token_invalid'], 401);
-    } catch (\Exception $e) {
-        return response()->json(['message' => 'Authorization error'], 401);
+        // 3. Validation (Removed guest fields as they are no longer allowed)
+        $validated = $request->validate([
+            'pickup.lat' => 'required|numeric',
+            'pickup.lng' => 'required|numeric',
+            'dropoff.lat' => 'required|numeric',
+            'dropoff.lng' => 'required|numeric',
+            'commute_time' => 'required|date',
+            'frequency' => 'required|string',
+            'category' => 'required|string',
+        ]);
+
+        // 4. Prepare data for saving
+
+        $data = [
+            'user_id' => $user->id,
+            'pickup_lat' => $validated['pickup.lat'],
+            'pickup_lng' => $validated['pickup.lng'],
+            'dropoff_lat' => $validated['dropoff.lat'],
+            'dropoff_lng' => $validated['dropoff.lng'],
+            'commute_time' => $validated['commute_time'],
+            'frequency' => $validated['frequency'],
+            'category' => $validated['category'],
+            'status' => 'pending',
+        ];
+
+
+        $ride = RideRequest::create($data);
+        #Log::info("stored ride details for user:", $user);
+        return response()->json([
+            'message' => 'Ride request submitted successfully',
+            'data' => $ride
+        ], 201);
     }
-
-    // 3. Validation (Removed guest fields as they are no longer allowed)
-    $validated = $request->validate([
-        'pickup.lat' => 'required|numeric',
-        'pickup.lng' => 'required|numeric',
-        'dropoff.lat' => 'required|numeric',
-        'dropoff.lng' => 'required|numeric',
-        'commute_time' => 'required|date',
-        'frequency' => 'required|string',
-        'category' => 'required|string',
-    ]);
-
-    // 4. Prepare data for saving
-    $data = [
-        'user_id' => $user->id,
-        'pickup_lat' => $request->input('pickup.lat'),
-        'pickup_lng' => $request->input('pickup.lng'),
-        'dropoff_lat' => $request->input('dropoff.lat'),
-        'dropoff_lng' => $request->input('dropoff.lng'),
-        'commute_time' => $request->input('commute_time'),
-        'frequency' => $request->input('frequency'),
-        'category' => $request->input('category'),
-        'status' => 'pending',
-
-    ];
-
-    $ride = RideRequest::create($data);
-    #Log::info("stored ride details for user:", $user);
-    return response()->json([
-        'message' => 'Ride request submitted successfully',
-        'data' => $ride
-    ], 201);
-}
 
 
 }

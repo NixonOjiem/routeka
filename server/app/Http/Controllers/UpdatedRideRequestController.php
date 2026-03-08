@@ -17,4 +17,13 @@ use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 class UpdatedRideRequestController extends Controller
 {
     //
+    protected $rideService;
+
+    public function __construct(RideMatchingService $rideService)
+    {
+        $this->rideService = $rideService;
+    }
+
+
+
 }
