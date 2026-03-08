@@ -24,6 +24,61 @@ class UpdatedRideRequestController extends Controller
         $this->rideService = $rideService;
     }
 
+    // store data in database
+    public function store(Request $request)
+    {
+        try {
+            // 1. Authenticate the user via JWT
+            $user = JWTAuth::parseToken()->authenticate();
+
+            // 2. Check if the user is verified
+            if (!$user->hasVerifiedEmail()) {
+                return response()->json([
+                    'message' => 'Your email address is not verified.',
+                    'error' => 'email_unverified'
+                ], 403);
+            }
+
+        } catch (TokenExpiredException $e) {
+            return response()->json(['message' => 'Token expired', 'error' => 'token_expired'], 401);
+        } catch (TokenInvalidException $e) {
+            return response()->json(['message' => 'Token invalid', 'error' => 'token_invalid'], 401);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Authorization error'], 401);
+        }
+
+        // 3. Validation (category is now optional)
+        $validated = $request->validate([
+            'pickup.lat' => 'required|numeric',
+            'pickup.lng' => 'required|numeric',
+            'dropoff.lat' => 'required|numeric',
+            'dropoff.lng' => 'required|numeric',
+            'commute_time' => 'required|date',
+            'frequency' => 'required|string',
+            'category' => 'nullable|string',
+        ]);
+
+        // 4. Prepare data for saving
+        $data = [
+            'user_id' => $user->id,
+            'pickup_lat' => $validated['pickup']['lat'],
+            'pickup_lng' => $validated['pickup']['lng'],
+            'dropoff_lat' => $validated['dropoff']['lat'],
+            'dropoff_lng' => $validated['dropoff']['lng'],
+            'commute_time' => $validated['commute_time'],
+            'frequency' => $validated['frequency'],
+            'category' => $validated['category'] ?? null, // optional now
+            'status' => 'pending',
+        ];
+
+        $ride = RideRequest::create($data);
+
+        return response()->json([
+            'message' => 'Ride request submitted successfully',
+            'data' => $ride
+        ], 201);
+    }
+
 
 
 }
