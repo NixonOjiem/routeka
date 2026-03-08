@@ -183,7 +183,7 @@ class UpdatedRideRequestController extends Controller
 
         return response()->json([
             'message' => 'Ride request submitted successfully',
-            'data' => $ride
+            //'data' => $ride
         ], 201);
     }
 
