@@ -41,9 +41,9 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 
 Route::group(['prefix' => 'rides'], function () {
-    Route::post('request', [RideRequestController::class, 'store']);
+    // Route::post('request', [RideRequestController::class, 'store']);
+    // Route::get('groups', [RideRequestController::class, 'index']);
     Route::post('v1/request', [UpdatedRideRequestController::class, 'store']);
-    Route::get('groups', [RideRequestController::class, 'index']);
     Route::get('v1/groups', [UpdatedRideRequestController::class, 'index']);
 });
 
