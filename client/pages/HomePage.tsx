@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 // import { HeroSection } from "../components/homePageComponent/HeroSection";
-import { CategoryGrid } from "../components/homePageComponent/CategoryGrid";
+// import { CategoryGrid } from "../components/homePageComponent/CategoryGrid";
 import { ValueProposition } from "../components/homePageComponent/ValueProposition";
 import { HeroSectionTwo } from "../components/homePageComponent/HeroSectionTwo";
 import CTASection from "@/components/homePageComponent/CtaSection";
@@ -19,7 +19,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onRequestRoute }) => {
     >
       {/* <HeroSection /> */}
       <HeroSectionTwo />
-      <CategoryGrid onRequestRoute={onRequestRoute} />
+      {/* <CategoryGrid onRequestRoute={onRequestRoute} /> */}
       <ValueProposition />
       <CTASection />
     </motion.div>
