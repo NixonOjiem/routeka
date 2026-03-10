@@ -35,7 +35,7 @@ export const OrderSection = () => {
         />
         <motion.div
           style={{ y: fadeY }}
-          className="absolute bottom-[10%] -right-20 w-[700px] h-[700px] rounded-full bg-brand-300/10 blur-3xl"
+          className="absolute bottom-[10%] -right-20 w-150 h-150 rounded-full bg-brand-300/10 blur-3xl"
         />
 
         <div
@@ -147,12 +147,12 @@ export const OrderSection = () => {
         >
           <div className="relative w-full max-w-md">
             {/* Background glow */}
-            <div className="absolute -inset-4 bg-gradient-to-r from-brand-200/40 to-brand-300/40 rounded-[3rem] blur-2xl" />
+            <div className="absolute -inset-4 bg-linear-to-r from-brand-200/40 to-brand-300/40 rounded-[3rem] blur-2xl" />
 
             {/* Card */}
             <div className="relative bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white/30 p-6 space-y-6">
               {/* Image */}
-              <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl">
+              <div className="aspect-video w-full overflow-hidden rounded-2xl">
                 <img
                   src="https://images.unsplash.com/photo-1555215695-3004980ad54e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80"
                   alt="Premium car"
@@ -201,7 +201,7 @@ export const OrderSection = () => {
       </div>
 
       {/* Decorative bottom edge */}
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-300 to-transparent" />
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-brand-300 to-transparent" />
     </section>
   );
 };
