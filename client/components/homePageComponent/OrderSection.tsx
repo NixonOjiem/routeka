@@ -1,34 +1,22 @@
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import {Link} from "react-router-dom"; // Remove if not using Next.js, or replace with <a>
 
 export const OrderSection = () => {
   const containerRef = useRef(null);
   const { scrollY } = useScroll();
 
-  // Parallax effects for background shapes
+  // Parallax effects for the background shapes
   const carY = useTransform(scrollY, [0, 500], [0, -100]);
   const fadeY = useTransform(scrollY, [0, 500], [0, 150]);
-
-  // Form state
-  const [pickup, setPickup] = useState("");
-  const [dropoff, setDropoff] = useState("");
-  const [when, setWhen] = useState("now");
-  const [scheduleTime, setScheduleTime] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log({ pickup, dropoff, when, scheduleTime });
-    alert("Ride requested! (check console)");
-  };
 
   return (
     <section
       ref={containerRef}
-      className="relative min-h-screen overflow-hidden flex items-center justify-center"
+      className="relative min-h-screen overflow-hidden pt-20 pb-16 md:pt-32 md:pb-24 flex items-center justify-center"
     >
-      {/* --- BACKGROUND ELEMENTS (same as hero) --- */}
+      {/* --- BACKGROUND ELEMENTS (unchanged) --- */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
-        {/* Animated wave lines */}
         <svg
           className="absolute bottom-0 left-0 w-full h-64 text-stone-200/40"
           viewBox="0 0 1440 320"
@@ -41,17 +29,15 @@ export const OrderSection = () => {
           />
         </svg>
 
-        {/* Floating orbs */}
         <motion.div
           style={{ y: carY }}
-          className="absolute top-[15%] -left-20 w-[600px] h-[600px] rounded-full bg-brand-200/20 blur-3xl"
+          className="absolute top-[15%] -left-20 w-150 h-150 rounded-full bg-brand-200/20 blur-3xl"
         />
         <motion.div
           style={{ y: fadeY }}
           className="absolute bottom-[10%] -right-20 w-[700px] h-[700px] rounded-full bg-brand-300/10 blur-3xl"
         />
 
-        {/* Subtle grid */}
         <div
           className="absolute inset-0 opacity-[0.02]"
           style={{
@@ -63,7 +49,7 @@ export const OrderSection = () => {
 
       {/* --- MAIN CONTENT (two‑column) --- */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-        {/* LEFT COLUMN – Text & CTA (adjusted for ride request) */}
+        {/* LEFT COLUMN – unchanged */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
@@ -77,26 +63,69 @@ export const OrderSection = () => {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-600" />
             </span>
             <span className="text-xs font-mono font-semibold tracking-widest text-stone-700 uppercase">
-              New: Concierge Rides
+              Introducing Concierge Rides
             </span>
           </div>
 
-          {/* Headline */}
           <h1 className="text-5xl md:text-7xl font-serif font-light tracking-tight text-stone-900 leading-[1.1] mb-6">
-            Request a ride,
+            The commute that
             <span className="block font-bold text-brand-600 mt-2">
-              no categories needed.
+              feels like a getaway.
             </span>
           </h1>
 
           <p className="text-lg md:text-xl text-stone-500 max-w-xl mb-8 leading-relaxed">
-            Just tell us where and when – we’ll match you with the perfect vehicle. 
-            Simple, fast, and premium.
+            Book a premium ride, choose your professional network, and arrive
+            refreshed. Express commuting, elevated.
           </p>
 
-          {/* Value props */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-12">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="group relative px-8 py-4 bg-stone-900 text-white font-medium rounded-full shadow-2xl hover:bg-stone-800 transition-all flex items-center gap-3"
+            >
+              <span>Get Early Access</span>
+              <div className="bg-white/20 p-1.5 rounded-full group-hover:bg-white/30 transition-colors">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </div>
+            </motion.button>
+
+            <div className="flex items-center gap-4">
+              <div className="flex -space-x-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="w-10 h-10 rounded-full border-2 border-white bg-stone-200 overflow-hidden shadow-md"
+                  >
+                    <img
+                      src={`https://i.pravatar.cc/150?u=${i}`}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+                <div className="w-10 h-10 rounded-full border-2 border-white bg-brand-600 flex items-center justify-center text-xs text-white font-bold shadow-md">
+                  +500
+                </div>
+              </div>
+              <p className="text-sm text-stone-400 font-medium">
+                professionals on the waitlist
+              </p>
+            </div>
+          </div>
+
           <div className="flex flex-wrap gap-3">
-            {["Zero surge pricing", "Verified professionals", "Premium fleet"].map(
+            {["Zero surge pricing", "Verified professionals", "Luxury fleet"].map(
               (text, i) => (
                 <div
                   key={i}
@@ -109,7 +138,7 @@ export const OrderSection = () => {
           </div>
         </motion.div>
 
-        {/* RIGHT COLUMN – Ride request form */}
+        {/* RIGHT COLUMN – Simplified card (image + button) */}
         <motion.div
           initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
@@ -120,107 +149,24 @@ export const OrderSection = () => {
             {/* Background glow */}
             <div className="absolute -inset-4 bg-gradient-to-r from-brand-200/40 to-brand-300/40 rounded-[3rem] blur-2xl" />
 
-            {/* Form card */}
+            {/* Card */}
             <div className="relative bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white/30 p-6 space-y-6">
-              {/* Form header */}
-              <div className="flex items-center gap-3 pb-2 border-b border-stone-200">
-                <span className="text-2xl">🚗</span>
-                <h3 className="text-xl font-medium text-stone-800">Where to?</h3>
+              {/* Image */}
+              <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl">
+                <img
+                  src="https://images.unsplash.com/photo-1555215695-3004980ad54e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80"
+                  alt="Premium car"
+                  className="w-full h-full object-cover"
+                />
               </div>
 
-              {/* Form fields */}
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Pickup */}
-                <div>
-                  <label htmlFor="pickup" className="block text-sm font-medium text-stone-600 mb-1">
-                    Pickup location
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-3 flex items-center text-stone-400">
-                      📍
-                    </span>
-                    <input
-                      type="text"
-                      id="pickup"
-                      value={pickup}
-                      onChange={(e) => setPickup(e.target.value)}
-                      placeholder="Enter pickup address"
-                      className="w-full pl-10 pr-4 py-3 bg-white/60 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Dropoff */}
-                <div>
-                  <label htmlFor="dropoff" className="block text-sm font-medium text-stone-600 mb-1">
-                    Drop-off location
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-3 flex items-center text-stone-400">
-                      🏁
-                    </span>
-                    <input
-                      type="text"
-                      id="dropoff"
-                      value={dropoff}
-                      onChange={(e) => setDropoff(e.target.value)}
-                      placeholder="Enter destination"
-                      className="w-full pl-10 pr-4 py-3 bg-white/60 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* When toggle */}
-                <div>
-                  <label className="block text-sm font-medium text-stone-600 mb-1">
-                    When?
-                  </label>
-                  <div className="flex space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setWhen("now")}
-                      className={`flex-1 py-3 rounded-xl font-medium transition ${
-                        when === "now"
-                          ? "bg-brand-600 text-white shadow-md"
-                          : "bg-stone-100 text-stone-800 hover:bg-stone-200"
-                      }`}
-                    >
-                      Now
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setWhen("later")}
-                      className={`flex-1 py-3 rounded-xl font-medium transition ${
-                        when === "later"
-                          ? "bg-brand-600 text-white shadow-md"
-                          : "bg-stone-100 text-stone-800 hover:bg-stone-200"
-                      }`}
-                    >
-                      Schedule
-                    </button>
-                  </div>
-                  {when === "later" && (
-                    <input
-                      type="datetime-local"
-                      value={scheduleTime}
-                      onChange={(e) => setScheduleTime(e.target.value)}
-                      className="mt-3 w-full px-4 py-3 bg-white/60 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
-                      required
-                    />
-                  )}
-                </div>
-
-                {/* Submit button */}
-                <button
-                  type="submit"
-                  className="w-full py-4 bg-stone-900 text-white font-semibold rounded-xl hover:bg-stone-800 transition-colors flex items-center justify-center gap-2"
-                >
+              {/* Request Ride Button (links to /rides) */}
+              <Link to="/rides">
+                <button className="w-full py-4 bg-stone-900 text-white font-semibold rounded-xl hover:bg-stone-800 transition-colors flex items-center justify-center gap-2 text-lg">
                   <span>Request ride</span>
                   <svg
-                    width="18"
-                    height="18"
+                    width="20"
+                    height="20"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -229,9 +175,9 @@ export const OrderSection = () => {
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
                 </button>
-              </form>
+              </Link>
 
-              {/* Animated dots (movement) */}
+              {/* Animated dots (optional) */}
               <div className="flex justify-center gap-1.5 pt-2">
                 <motion.div
                   animate={{ y: [0, -5, 0] }}
