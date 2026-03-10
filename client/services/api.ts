@@ -193,7 +193,7 @@ export const apiService = {
   // Ride endpoints
   getGroupedRides: (config?: any) =>
     api.get<{ groups: RideGroup[]; chat_rooms: ChatRoom[]; user: User | null }>(
-      "/rides/groups",
+      "/rides/v1/groups",
       config,
     ),
 

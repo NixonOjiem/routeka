@@ -60,7 +60,8 @@ export const rideRequestService = {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        `${API_BASE_URL}/rides/request`,
+        `${API_BASE_URL}/rides/v1/request`,
+        // `${API_BASE_URL}/rides/request`,
         payload,
         {
           headers: {
