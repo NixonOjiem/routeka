@@ -1,11 +1,11 @@
 import React, { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Link } from "react-router-dom"; // Remove if not using Next.js, or replace with <a>
+import { Link, useNavigate } from "react-router-dom"; // Remove if not using Next.js, or replace with <a>
 
 export const OrderSection = () => {
   const containerRef = useRef(null);
   const { scrollY } = useScroll();
-
+  const navigate = useNavigate();
   // Parallax effects for the background shapes
   const carY = useTransform(scrollY, [0, 500], [0, -100]);
   const fadeY = useTransform(scrollY, [0, 500], [0, 150]);
@@ -108,7 +108,7 @@ export const OrderSection = () => {
               </div>
 
               {/* Request Ride Button (links to /rides) */}
-              <Link to="/rides">
+              <Link to={'/request'}>
                 <button className="w-full py-4 bg-stone-900 text-white font-semibold rounded-xl hover:bg-stone-800 transition-colors flex items-center justify-center gap-2 text-lg">
                   <span>Request ride</span>
                   <svg

@@ -16,6 +16,7 @@ const initialState: RideRequestState = {
 };
 
 export const submitRideRequest = createAsyncThunk(
+  // "/rides/vl/request",
   "/rides/request",
   async (requestData: any, { rejectWithValue }) => {
     try {
