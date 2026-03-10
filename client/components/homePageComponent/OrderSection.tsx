@@ -101,7 +101,7 @@ export const OrderSection = () => {
               {/* Image */}
               <div className="aspect-video w-full overflow-hidden rounded-2xl">
                 <img
-                  src="https://images.unsplash.com/photo-1555215695-3004980ad54e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80"
+                  src="/images/bmw-white.jpg"
                   alt="Premium car"
                   className="w-full h-full object-cover"
                 />
