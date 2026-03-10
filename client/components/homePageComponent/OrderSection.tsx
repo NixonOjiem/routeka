@@ -13,7 +13,7 @@ export const OrderSection = () => {
   return (
     <section
       ref={containerRef}
-      className="relative min-h-screen overflow-hidden pt-20 pb-16 md:pt-32 md:pb-24 flex items-center justify-center"
+      className="relative overflow-hidden pb-16 md:pb-24 flex items-center justify-center"
     >
       {/* --- BACKGROUND ELEMENTS (unchanged) --- */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
