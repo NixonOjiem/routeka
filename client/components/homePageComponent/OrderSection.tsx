@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import {Link} from "react-router-dom"; // Remove if not using Next.js, or replace with <a>
+import { Link } from "react-router-dom"; // Remove if not using Next.js, or replace with <a>
 
 export const OrderSection = () => {
   const containerRef = useRef(null);
@@ -56,76 +56,23 @@ export const OrderSection = () => {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="text-left"
         >
-          {/* Premium badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-stone-200/80 shadow-sm mb-8">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-500 opacity-60" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-600" />
-            </span>
-            <span className="text-xs font-mono font-semibold tracking-widest text-stone-700 uppercase">
-              Introducing Concierge Rides
-            </span>
-          </div>
 
+          {/* Headline */}
           <h1 className="text-5xl md:text-7xl font-serif font-light tracking-tight text-stone-900 leading-[1.1] mb-6">
-            The commute that
+            Request a ride,
             <span className="block font-bold text-brand-600 mt-2">
-              feels like a getaway.
+              no categories needed.
             </span>
           </h1>
 
           <p className="text-lg md:text-xl text-stone-500 max-w-xl mb-8 leading-relaxed">
-            Book a premium ride, choose your professional network, and arrive
-            refreshed. Express commuting, elevated.
+            Just tell us where and when we'll match you with the perfect vehicle.
+            Simple, fast, and premium.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-12">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="group relative px-8 py-4 bg-stone-900 text-white font-medium rounded-full shadow-2xl hover:bg-stone-800 transition-all flex items-center gap-3"
-            >
-              <span>Get Early Access</span>
-              <div className="bg-white/20 p-1.5 rounded-full group-hover:bg-white/30 transition-colors">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </div>
-            </motion.button>
-
-            <div className="flex items-center gap-4">
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="w-10 h-10 rounded-full border-2 border-white bg-stone-200 overflow-hidden shadow-md"
-                  >
-                    <img
-                      src={`https://i.pravatar.cc/150?u=${i}`}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-                <div className="w-10 h-10 rounded-full border-2 border-white bg-brand-600 flex items-center justify-center text-xs text-white font-bold shadow-md">
-                  +500
-                </div>
-              </div>
-              <p className="text-sm text-stone-400 font-medium">
-                professionals on the waitlist
-              </p>
-            </div>
-          </div>
-
+          {/* Value props */}
           <div className="flex flex-wrap gap-3">
-            {["Zero surge pricing", "Verified professionals", "Luxury fleet"].map(
+            {["Zero surge pricing", "Verified professionals", "Premium fleet"].map(
               (text, i) => (
                 <div
                   key={i}
