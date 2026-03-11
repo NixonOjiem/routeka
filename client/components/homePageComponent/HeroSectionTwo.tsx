@@ -81,7 +81,8 @@ export const HeroSectionTwo = () => {
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
-                  onClick={() => setIsCategoryModalOpen(true)}
+                   onClick={() => navigate('/request')}
+                  // onClick={() => setIsCategoryModalOpen(true)}
                   className="group relative px-8 py-4 bg-white text-brand-dark font-bold rounded-full shadow-2xl flex items-center gap-3 uppercase tracking-wider text-sm transition-colors hover:bg-stone-50"
                 >
                   <span>Book a ride</span>
