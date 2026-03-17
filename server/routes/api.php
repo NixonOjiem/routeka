@@ -1,13 +1,14 @@
 <?php
 
-use App\Http\Controllers\UpdatedRideRequestController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\RideRequestController;
-use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Auth\VerificationController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\PersonaWebHookController;
+use App\Http\Controllers\UpdatedRideRequestController;
+// use App\Http\Controllers\RideRequestController;
+// use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 //Auth routes
 Route::group(['prefix' => 'auth'], function () {
@@ -57,3 +58,5 @@ Route::prefix('chat')->group(function () {
 
 // Optional: WebSocket/Pusher event broadcasting
 Route::post('/chat/broadcast', [ChatController::class, 'broadcastMessage']);
+
+Route::post('/webhooks/persona', [PersonaWebHookController::class, 'handle']);
