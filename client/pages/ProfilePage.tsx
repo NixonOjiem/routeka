@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiService, updateUserProfile } from "@/services/api"; // Make sure updatePassword is imported
+import { apiService, updateUserProfile } from "@/services/api";
 import { useDispatch } from "react-redux";
 import { logout, reset } from "@/redux/slices/authSlice";
 import { AppDispatch } from "@/redux/store";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
+import PersonaVerification from "@/components/homePageComponent/PersonaVerification";
 import {
   User,
   Mail,
@@ -25,6 +26,7 @@ import {
   Eye,
   EyeOff,
   Key,
+  Fingerprint,
 } from "lucide-react";
 
 // --- Skeleton Loader ---
@@ -278,7 +280,7 @@ const UpdatePasswordModal = ({ isOpen, onClose, onSave, isSaving }: any) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    passData.password = passData.new_password; // Set the 'password' field to the new password for API compatibility
+    passData.password = passData.new_password; 
     if (passData.new_password !== passData.new_password_confirmation) {
       toast.error("New passwords do not match!");
       return;
@@ -290,7 +292,6 @@ const UpdatePasswordModal = ({ isOpen, onClose, onSave, isSaving }: any) => {
     onSave(passData);
   };
 
-  // Reset form when modal closes/opens
   useEffect(() => {
     if (isOpen) {
       setPassData({
@@ -478,7 +479,6 @@ export default function ProfilePage() {
     fetchProfile();
   }, []);
 
-  // Handle Profile Update
   const handleUpdateProfile = async (updatedData: any) => {
     setIsSaving(true);
     try {
@@ -495,7 +495,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Handle Password Update
   const handleUpdatePassword = async (passData: any) => {
     setIsSavingPassword(true);
     try {
@@ -548,7 +547,7 @@ export default function ProfilePage() {
               {/* Left Column: Profile Card */}
               <div className="lg:w-2/5">
                 <div className="bg-white rounded-3xl shadow-2xl shadow-brand/10 border border-brand/20 backdrop-blur-sm p-8 sticky top-8">
-                  <div className="relative mb-8">
+                  <div className="relative mb-8 text-center">
                     <div className="absolute -inset-4 bg-gradient-to-r from-brand/30 to-brand/10 rounded-3xl blur-xl opacity-70"></div>
                     <div className="relative w-40 h-40 mx-auto bg-gradient-to-br from-brand to-brand/70 rounded-3xl flex items-center justify-center text-5xl font-bold text-white border-8 border-white shadow-2xl overflow-hidden">
                       {profile?.avatar ? (
@@ -563,8 +562,12 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-stone-900 mb-2">
+                    <h2 className="text-3xl font-bold text-stone-900 mb-2 flex items-center justify-center gap-2">
                       {profile?.name}
+                      {/* --- INTEGRATED: Verified Badge --- */}
+                      {profile?.verification_status === "completed" && (
+                        <CheckCircle size={22} className="text-blue-500 fill-blue-50" />
+                      )}
                     </h2>
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-brand font-semibold">
@@ -589,16 +592,8 @@ export default function ProfilePage() {
               <div className="lg:w-3/5">
                 <div className="flex gap-2 mb-8 p-2 bg-white rounded-2xl shadow-lg border border-stone-100 backdrop-blur-sm w-fit">
                   {[
-                    {
-                      id: "overview",
-                      label: "Overview",
-                      icon: <User size={18} />,
-                    },
-                    {
-                      id: "security",
-                      label: "Security",
-                      icon: <ShieldCheck size={18} />,
-                    },
+                    { id: "overview", label: "Overview", icon: <User size={18} /> },
+                    { id: "security", label: "Security", icon: <ShieldCheck size={18} /> },
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -658,15 +653,15 @@ export default function ProfilePage() {
                       className="space-y-6"
                     >
                       <div className="grid md:grid-cols-2 gap-4">
+                        {/* Existing Password Card */}
                         <AnimatedCard delay={0}>
-                          {/* UPDATED: Added onClick handler to open Password Modal */}
                           <div
                             onClick={() => setIsPasswordOpen(true)}
                             className="p-6 bg-white rounded-2xl border border-stone-100 hover:border-brand/30 transition-colors cursor-pointer"
                           >
                             <div className="flex items-center justify-between mb-4">
                               <div className="p-3 rounded-xl bg-brand/10">
-                                <Shield className="text-brand" size={24} />
+                                <Key className="text-brand" size={24} />
                               </div>
                               <span className="text-sm font-medium text-brand bg-brand/10 px-3 py-1 rounded-full">
                                 Update
@@ -678,6 +673,67 @@ export default function ProfilePage() {
                             <p className="text-sm text-stone-500">
                               Manage your account security settings
                             </p>
+                          </div>
+                        </AnimatedCard>
+
+                        {/* --- INTEGRATED: Persona Verification Card --- */}
+                        <AnimatedCard delay={0.1}>
+                          <div
+                            className={`p-6 bg-white rounded-2xl border transition-all ${
+                              profile?.verification_status === "completed"
+                                ? "border-green-200 bg-green-50/30"
+                                : "border-stone-100 hover:border-brand/30"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-4">
+                              <div
+                                className={`p-3 rounded-xl ${
+                                  profile?.verification_status === "completed"
+                                    ? "bg-green-100"
+                                    : "bg-brand/10"
+                                }`}
+                              >
+                                <Fingerprint
+                                  className={
+                                    profile?.verification_status === "completed"
+                                      ? "text-green-600"
+                                      : "text-brand"
+                                  }
+                                  size={24}
+                                />
+                              </div>
+                              {profile?.verification_status === "completed" && (
+                                <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full flex items-center gap-1">
+                                  <CheckCircle size={12} /> Verified
+                                </span>
+                              )}
+                            </div>
+
+                            <h4 className="font-bold text-stone-900 mb-1">
+                              Identity Verification
+                            </h4>
+                            <p className="text-sm text-stone-500 mb-6">
+                              {profile?.verification_status === "completed"
+                                ? "Your identity is fully verified via Persona."
+                                : "Verify your ID to unlock all platform features."}
+                            </p>
+
+                            {/* Using your PersonaVerification Component */}
+                            {profile?.verification_status !== "completed" ? (
+                              <PersonaVerification
+                                userId={profile?.id}
+                                onComplete={() => {
+                                  toast.success("Verification Submitted! ✨");
+                                  fetchProfile(); // Refresh profile to see new status
+                                }}
+                                label="Start Verification →"
+                                className="text-sm font-bold text-brand hover:underline p-0 bg-transparent border-none cursor-pointer flex items-center gap-1"
+                              />
+                            ) : (
+                              <span className="text-sm text-stone-400 italic font-medium">
+                                Status: Active
+                              </span>
+                            )}
                           </div>
                         </AnimatedCard>
                       </div>
@@ -707,7 +763,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* --- MODALS --- */}
       <EditProfileModal
         isOpen={isEditing}
         onClose={() => setIsEditing(false)}
