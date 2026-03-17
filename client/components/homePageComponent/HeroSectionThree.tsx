@@ -30,11 +30,11 @@ export const HeroSectionTwo = () => {
         {/* Animated Orbs with Parallax */}
         <motion.div
           style={{ y: y1 }}
-          className="absolute top-[10%] -left-20 w-[500px] h-[500px] bg-brand-200/40 rounded-full blur-[120px]"
+          className="absolute top-[10%] -left-20 w-125 h-125 bg-brand-200/40 rounded-full blur-[120px]"
         />
         <motion.div
           style={{ y: y2 }}
-          className="absolute bottom-[10%] -right-20 w-[600px] h-[600px] bg-cyan-100/50 rounded-full blur-[120px]"
+          className="absolute bottom-[10%] -right-20 w-150 h-150 bg-cyan-100/50 rounded-full blur-[120px]"
         />
       </div>
 
