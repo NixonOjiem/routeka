@@ -35,7 +35,7 @@ class UpdatedRideMatchingService
             // Optional: Filter out solo riders if you only want to return actual matched groups (>1)
             // Comment out the next 3 lines if you want to include solo unmatched riders in the view.
             $allGroups = array_filter($allGroups, function ($group) {
-                return $group['member_count'] > 1;
+                return $group['member_count'];
             });
 
             return array_values($allGroups);
