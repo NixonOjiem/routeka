@@ -42,14 +42,14 @@ const MemberStack = ({ members }: { members: any[] }) => (
     {members.slice(0, 4).map((m, i) => (
       <div
         key={i}
-        className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 uppercase"
+        className="h-8 w-8 rounded-full ring-2 ring-white bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 uppercase"
         title={m.user_name}
       >
         {m.user_name?.charAt(0) || "?"}
       </div>
     ))}
     {members.length > 4 && (
-      <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 flex items-center justify-center text-xs text-gray-500">
+      <div className="h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 flex items-center justify-center text-xs text-gray-500">
         +{members.length - 4}
       </div>
     )}
@@ -135,8 +135,9 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
             </p>
             {user && (
               <button
-                onClick={() => setIsCategoryModalOpen(true)}
-                className="mt-6 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition-colors"
+                onClick={() => navigate('/request')}
+                // onClick={() => setIsCategoryModalOpen(true)}
+                className="mt-6 px-6 py-2.5 bg-brand hover:bg-teal-600 text-white font-medium rounded-lg shadow-sm transition-colors"
               >
                 Request a Ride
               </button>
