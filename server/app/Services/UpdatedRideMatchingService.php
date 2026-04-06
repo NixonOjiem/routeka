@@ -60,7 +60,10 @@ class UpdatedRideMatchingService
         $dropoffGridSize = 0.0290; // ~2 miles
 
         // Sort by ID to ensure consistent grouping order
-        $sortedRequests = $requests->sortBy('id');
+        $sortedRequests = $requests->sortBy('id')->map(function ($req) {
+            $req->parsed_time = Carbon::parse($req->scheduled_time ?? $req->created_at);
+            return $req;
+        });
 
         foreach ($sortedRequests as $request) {
             if (in_array($request->id, $processedIds))
@@ -71,33 +74,43 @@ class UpdatedRideMatchingService
             $dropoffGridCenter = $this->calculateGridCenter($request->dropoff_lat, $request->dropoff_lng, $dropoffGridSize);
 
             Log::info('Request from ride matching service:', $request->toArray());
-            $reqTime = Carbon::parse($request->commute_time ?? $request->created_at);
+            $reqTime = $request->parsed_time;
 
             // Find matches within the passed collection
             $matches = $sortedRequests->filter(function ($item) use ($request, $processedIds, $pickupGridSize, $dropoffGridSize, $reqTime) {
 
-                // Parse item time
-                $itemTime = Carbon::parse($item->scheduled_time ?? $item->created_at);
+                // OPTIMIZATION: Fail fast. Check the cheapest conditions first.
+                if ($item->id === $request->id || in_array($item->id, $processedIds)) {
+                    return false;
+                }
 
-                // TIME CHECK: Absolute difference in hours
-                $hoursDiff = $reqTime->diffInHours($itemTime);
+                // Check if it's the exact same user
+                $isSameUser = !is_null($request->user_id) && $request->user_id === $item->user_id;
+                if ($isSameUser) {
+                    return false;
+                }
 
-                return $item->id !== $request->id
-                    && !in_array($item->id, $processedIds)
-                    // Location Checks (1 Mile Pickup, 2 Mile Dropoff)
-                    && abs($item->pickup_lat - $request->pickup_lat) <= $pickupGridSize
-                    && abs($item->pickup_lng - $request->pickup_lng) <= $pickupGridSize
-                    && abs($item->dropoff_lat - $request->dropoff_lat) <= $dropoffGridSize
-                    && abs($item->dropoff_lng - $request->dropoff_lng) <= $dropoffGridSize
-                    // Time Check (Within 1 hour)
-                    && $hoursDiff <= 1;
+                // Location Checks (Fast Math - skip heavy time checking if locations don't match)
+                if (
+                    abs($item->pickup_lat - $request->pickup_lat) > $pickupGridSize ||
+                    abs($item->pickup_lng - $request->pickup_lng) > $pickupGridSize ||
+                    abs($item->dropoff_lat - $request->dropoff_lat) > $dropoffGridSize ||
+                    abs($item->dropoff_lng - $request->dropoff_lng) > $dropoffGridSize
+                ) {
+                    return false;
+                }
+
+                // Time Check (Only calculated if everything else matches)
+                return $reqTime->diffInHours($item->parsed_time) <= 1;
             });
 
+            // Safely push the current request into the group
             $groupMembers = $matches->push($request);
 
             // Mark processed
-            foreach ($groupMembers as $member)
+            foreach ($groupMembers as $member) {
                 $processedIds[] = $member->id;
+            }
 
             $chatRoom = $this->getOrCreateChatRoom($groupMembers, $pickupGridCenter, $dropoffGridCenter);
 
@@ -105,7 +118,6 @@ class UpdatedRideMatchingService
             $pickupName = $this->getAreaName($pickupGridCenter['lat'], $pickupGridCenter['lng']);
             $dropoffName = $this->getAreaName($dropoffGridCenter['lat'], $dropoffGridCenter['lng']);
 
-            // Inject names into the grid arrays for the response
             $pickupGridCenter['name'] = $pickupName;
             $dropoffGridCenter['name'] = $dropoffName;
 
@@ -121,7 +133,6 @@ class UpdatedRideMatchingService
                         'id' => $member->id,
                         'user_id' => $member->user_id,
                         'user_name' => $member->user->name ?? 'Guest',
-                        // Removed category entirely from the response
                         'scheduled_time' => $member->scheduled_time ?? $member->commute_time,
                         'pickup' => [
                             'lat' => $member->pickup_lat,
@@ -135,8 +146,6 @@ class UpdatedRideMatchingService
                 })->values()
             ];
         }
-
-        Log::info('meet point', $groups);
 
         return $groups;
     }
