@@ -1,22 +1,3 @@
-// import React from "react";
-// import { Car } from "lucide-react";
-
-// export const Footer = () => {
-//   return (
-//     <footer className="bg-white/80 backdrop-blur border-t border-stone-200 py-8 mt-auto">
-//       <div className="container mx-auto px-6 text-center">
-//         <div className="flex items-center justify-center gap-2 mb-4 opacity-50">
-//           <Car className="w-5 h-5" />
-//           <span className="font-display font-bold text-lg">Route KA</span>
-//         </div>
-//         <p className="text-stone-400 text-sm">
-//           © {new Date().getFullYear()} Route KA. Strengthening communities, one
-//           ride at a time.
-//         </p>
-//       </div>
-//     </footer>
-//   );
-// };
 import React from "react";
 import { Car, Mail, Github, Twitter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -31,13 +12,13 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
           {/* Brand Section */}
           <div className="flex flex-col items-center md:items-start text-center md:text-left space-y-4">
-            <div className="flex items-center gap-2 text-white">
+            <div className="flex items-center gap-2 text-black">
               <Car className="w-6 h-6" />
               <span className="font-display font-bold text-xl tracking-tight">
                 Route KA
               </span>
             </div>
-            <p className="text-white-500 text-sm max-w-xs leading-relaxed">
+            <p className="text-white text-sm max-w-xs leading-relaxed">
               Strengthening communities by making shared travel safe, reliable,
               and accessible for everyone.
             </p>
@@ -45,10 +26,10 @@ export const Footer = () => {
 
           {/* Quick Links */}
           <div className="flex flex-col items-center md:items-start space-y-4">
-            <h4 className="font-semibold text-white text-sm uppercase tracking-wider">
+            <h4 className="font-semibold text-black text-sm uppercase tracking-wider">
               Navigation
             </h4>
-            <nav className="flex flex-col items-center md:items-start space-y-2 text-sm text-black">
+            <nav className="flex flex-col items-center md:items-start space-y-2 text-sm text-white">
               <button
                 onClick={() => navigate("/")}
                 className="hover:text-stone-600  transition-colors"
@@ -61,15 +42,12 @@ export const Footer = () => {
               >
                 Find Rides
               </button>
-              {/* <button className="hover:text-brand transition-colors">
-                Privacy Policy
-              </button> */}
             </nav>
           </div>
 
           {/* Contact/Social Section */}
           <div className="flex flex-col items-center md:items-start space-y-4">
-            <h4 className="font-semibold text-white text-sm uppercase tracking-wider">
+            <h4 className="font-semibold text-black text-sm uppercase tracking-wider">
               Connect
             </h4>
             <div className="flex gap-4">

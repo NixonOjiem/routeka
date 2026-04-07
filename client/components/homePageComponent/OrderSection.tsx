@@ -56,9 +56,8 @@ export const OrderSection = () => {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="text-left"
         >
-
           {/* Headline */}
-          <h1 className="text-5xl md:text-7xl font-serif font-light tracking-tight text-stone-900 leading-[1.1] mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-light tracking-tight text-stone-900 leading-[1.1] mb-6">
             Request a ride,
             <span className="block font-bold text-brand-600 mt-2">
               no categories needed.
@@ -66,22 +65,24 @@ export const OrderSection = () => {
           </h1>
 
           <p className="text-lg md:text-xl text-stone-500 max-w-xl mb-8 leading-relaxed">
-            Just tell us where and when we'll match you with the perfect vehicle.
-            Simple, fast, and premium.
+            Just tell us where and when we'll match you with the perfect
+            vehicle. Simple, fast, and premium.
           </p>
 
           {/* Value props */}
           <div className="flex flex-wrap gap-3">
-            {["Zero surge pricing", "Verified professionals", "Premium fleet"].map(
-              (text, i) => (
-                <div
-                  key={i}
-                  className="px-5 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-stone-200/70 text-sm font-medium text-stone-700 shadow-sm"
-                >
-                  {text}
-                </div>
-              )
-            )}
+            {[
+              "Zero surge pricing",
+              "Verified professionals",
+              "Premium fleet",
+            ].map((text, i) => (
+              <div
+                key={i}
+                className="px-5 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-stone-200/70 text-sm font-medium text-stone-700 shadow-sm"
+              >
+                {text}
+              </div>
+            ))}
           </div>
         </motion.div>
 
@@ -108,7 +109,7 @@ export const OrderSection = () => {
               </div>
 
               {/* Request Ride Button (links to /rides) */}
-              <Link to={'/request'}>
+              <Link to={"/request"}>
                 <button className="w-full py-4 bg-stone-900 text-white font-semibold rounded-xl hover:bg-stone-800 transition-colors flex items-center justify-center gap-2 text-lg">
                   <span>Request ride</span>
                   <svg

@@ -17,7 +17,7 @@ export const ValueProposition = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-6 relative overflow-hidden md:overflow-visible">
-      <h2 className="text-3xl md:text-5xl font-display font-medium text-center text-stone-900 mb-12 animate-fade-in-up">
+      <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-medium text-center text-stone-900 mb-12 animate-fade-in-up">
         Why is Route KA here?
       </h2>
 
@@ -63,7 +63,7 @@ export const ValueProposition = () => {
             <div className="w-20 h-20 lg:w-16 lg:h-16 rounded-full bg-rose-100/80 text-rose-600 mb-6 shadow-sm flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-all duration-300">
               <AlertCircle className="w-10 h-10 lg:w-8 lg:h-8" />
             </div>
-            <h3 className="text-3xl lg:text-2xl font-display lg:font-cormorant font-bold text-stone-950 mb-4 drop-shadow-sm group-hover:text-rose-700 transition-colors">
+            <h3 className="text-2xl sm:text-3xl md:text-3xl lg:text-4xl font-display lg:font-cormorant font-bold text-stone-950 mb-4 drop-shadow-sm group-hover:text-rose-700 transition-colors">
               The Problem
             </h3>
             <p className="text-stone-800 font-futura lg:font-eb-garamond font-normal text-xl md:text-2xl lg:text-xl leading-relaxed drop-shadow-sm">
@@ -78,7 +78,7 @@ export const ValueProposition = () => {
             <div className="w-20 h-20 lg:w-16 lg:h-16 rounded-full bg-brand-100/80 text-brand mb-6 shadow-sm flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-all duration-300">
               <Sparkles className="w-10 h-10 lg:w-8 lg:h-8" />
             </div>
-            <h3 className="text-3xl lg:text-2xl font-display lg:font-cormorant font-bold text-stone-950 mb-4 drop-shadow-sm group-hover:text-brand-dark transition-colors">
+            <h3 className="text-2xl sm:text-3xl md:text-3xl lg:text-4xl font-display lg:font-cormorant font-bold text-stone-950 mb-4 drop-shadow-sm group-hover:text-rose-700 transition-colors">
               The Solution
             </h3>
             <p className="text-stone-800 font-futura lg:font-eb-garamond font-normal text-xl md:text-2xl lg:text-xl leading-relaxed drop-shadow-sm">
@@ -93,7 +93,7 @@ export const ValueProposition = () => {
             <div className="w-20 h-20 lg:w-16 lg:h-16 rounded-full bg-emerald-100/80 text-emerald-600 mb-6 shadow-sm flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
               <TrendingUp className="w-10 h-10 lg:w-8 lg:h-8" />
             </div>
-            <h3 className="text-3xl lg:text-2xl font-display lg:font-cormorant font-bold text-stone-900 mb-4 drop-shadow-sm group-hover:text-emerald-700 transition-colors">
+            <h3 className="text-2xl sm:text-3xl md:text-3xl lg:text-4xl font-display lg:font-cormorant font-bold text-stone-950 mb-4 drop-shadow-sm group-hover:text-rose-700 transition-colors">
               Why Choose Us
             </h3>
             <p className="text-stone-800 font-futura lg:font-eb-garamond font-normal text-xl md:text-2xl lg:text-xl leading-relaxed drop-shadow-sm">
