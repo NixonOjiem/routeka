@@ -95,7 +95,8 @@ class AuthController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'user_name' => $user->user_name,
-            'email_verified_at' => $user->email_verified_at
+            'email_verified_at' => $user->email_verified_at,
+            'verification_status' => $user->verification_status,
         ];
         Log::info($userData);
         return response()->json(['message' => 'Profile retrieved successfully', 'data' => $userData]);
