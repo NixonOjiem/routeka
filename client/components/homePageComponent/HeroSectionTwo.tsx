@@ -26,7 +26,7 @@ export const HeroSectionTwo = () => {
   const carRotate = useTransform(scrollY, [0, 500], [0, -3]);
 
   return (
-    <section ref={containerRef} className="relative overflow-hidden flex items-center justify-center">
+<section ref={containerRef} className="relative overflow-hidden flex items-center justify-center">
       <div className="w-full">
         {/* Main Hero Card */}
         <div className="relative bg-linear-to-br from-brand to-brand-dark rounded-b-[3rem] shadow-3xl overflow-hidden p-6 sm:p-10 md:p-16 lg:p-24">
@@ -59,35 +59,39 @@ export const HeroSectionTwo = () => {
           </motion.div>
 
           {/* Hero Text Content */}
-          <div className="relative mt-16 sm:mt-0 z-20 p-6 sm:p-12 lg:p-16 lg:pr-112">
+          {/* ADDED pt-24 TO PUSH CONTENT DOWN ON MOBILE TO CLEAR FLOATING NAVBAR */}
+          <div className="relative pt-24 sm:pt-12 lg:pt-16 z-20 p-4 sm:p-12 lg:p-16 lg:pr-112">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="space-y-6 text-center lg:text-left"
+              className="space-y-4 sm:space-y-6 text-center lg:text-left"
             >
-              <div className="space-y-2">
-                <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif font-light text-white leading-tight">The commute that</h1>
-                <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif font-bold text-white leading-tight">feels like a getaway.</h1>
+              <div className="space-y-1 sm:space-y-2">
+                <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-light text-white leading-tight">
+                  The commute that
+                </h1>
+                <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-white leading-tight">
+                  feels like a getaway.
+                </h1>
               </div>
 
-              <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
+              <p className="text-sm sm:text-lg md:text-xl text-white/90 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
                 Book a premium ride, choose your professional network, and arrive refreshed.
               </p>
 
               {/* Trigger Button */}
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6 pt-2">
                 <motion.button
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
-                   onClick={() => navigate('/request')}
-                  // onClick={() => setIsCategoryModalOpen(true)}
-                  className="group relative px-8 py-4 bg-white text-brand-dark font-bold rounded-full shadow-2xl flex items-center gap-3 uppercase tracking-wider text-sm transition-colors hover:bg-stone-50"
+                  onClick={() => navigate('/request')}
+                  className="group relative px-7 py-3.5 sm:px-8 sm:py-4 bg-white text-brand-dark font-bold rounded-full shadow-2xl flex items-center gap-3 uppercase tracking-wider text-xs sm:text-sm transition-colors hover:bg-stone-50"
                 >
                   <span>Book a ride</span>
                   <div className="bg-brand/10 p-1.5 rounded-full group-hover:bg-brand/20 group-hover:translate-x-1 transition-all">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>
                   </div>
@@ -111,27 +115,27 @@ export const HeroSectionTwo = () => {
               className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
             />
 
-            {/* Your Modal Structure */}
+            {/* Modal Structure */}
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-6xl bg-stone-50 rounded-4xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+              className="relative w-full max-w-6xl bg-stone-50 rounded-3xl sm:rounded-4xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
             >
-              <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-white">
+              <div className="p-5 sm:p-6 border-b border-stone-100 flex justify-between items-center bg-white">
                 <div>
-                  <h2 className="text-2xl font-bold text-stone-800">Choose Ride Type</h2>
-                  <p className="text-stone-500 text-sm">Select a category to start your journey</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-stone-800">Choose Ride Type</h2>
+                  <p className="text-stone-500 text-xs sm:text-sm">Select a category to start your journey</p>
                 </div>
                 <button
                   onClick={() => setIsCategoryModalOpen(false)}
                   className="p-2 hover:bg-stone-100 rounded-full transition-colors"
                 >
-                  <XIcon className="w-6 h-6 text-stone-500" />
+                  <XIcon className="w-5 h-5 sm:w-6 sm:h-6 text-stone-500" />
                 </button>
               </div>
 
-              <div className="overflow-y-auto p-6 md:p-10">
+              <div className="overflow-y-auto p-4 sm:p-6 md:p-10">
                 <CategoryGrid
                   onRequestRoute={(id) => {
                     setIsCategoryModalOpen(false);
