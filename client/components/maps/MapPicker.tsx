@@ -8,6 +8,11 @@ import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
 const map_Tiler_key = import.meta.env.VITE_MAPTILLER_KEY;
+// Bounding box for Canada [SouthWest, NorthEast]
+const CANADA_BOUNDS: L.LatLngBoundsExpression = [
+  [41.67, -141.0], // Southwest coordinates
+  [83.11, -52.65], // Northeast coordinates
+];
 
 let DefaultIcon = L.icon({
   iconUrl: icon,
@@ -203,7 +208,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({
       const response = await fetch(
         `https://api.maptiler.com/geocoding/${encodeURIComponent(
           query,
-        )}.json?key=${map_Tiler_key}&limit=5`,
+        )}.json?key=${map_Tiler_key}&limit=5&country=ca`,
       );
       const data = await response.json();
       setSuggestions(data.features || []);
@@ -297,7 +302,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({
         const reverseGeocode = async () => {
           try {
             const response = await fetch(
-              `https://api.maptiler.com/geocoding/${longitude},${latitude}.json?key=${map_Tiler_key}`,
+              `https://api.maptiler.com/geocoding/${longitude},${latitude}.json?key=${map_Tiler_key}&country=ca`,
             );
             const data = await response.json();
             if (data.features && data.features.length > 0) {
@@ -400,17 +405,19 @@ export const MapPicker: React.FC<MapPickerProps> = ({
           center={defaultCenter}
           zoom={defaultZoom}
           style={{ height: "100%", width: "100%" }}
-          key={`${defaultCenter.lat}-${defaultCenter.lng}-${label}`} // Key changes when center updates
+          key={`${defaultCenter.lat}-${defaultCenter.lng}-${label}`}
           whenCreated={setMap}
           zoomControl={false}
+          maxBounds={CANADA_BOUNDS}
+          maxBoundsViscosity={1.0}
+          minZoom={3}
         >
           {/* Tile Layer with loading optimization */}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            //url={`https://api.maptiler.com/maps/winter-v2/{z}/{x}/{y}.png?key=${map_Tiler_key}`}
             url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${map_Tiler_key}`}
             maxZoom={19}
-            minZoom={1}
+            minZoom={3}
           />
 
           {/* Passing state down to the marker component */}
