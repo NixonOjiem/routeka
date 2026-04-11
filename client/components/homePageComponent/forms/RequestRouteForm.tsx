@@ -123,10 +123,8 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
   onSubmit,
   onCancel,
 }) => {
-  // 1. Get Auth State from Redux
   const { user } = useSelector((state: RootState) => state.auth);
 
-  // 2. Form State
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -140,7 +138,6 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
 
   const [errors, setErrors] = useState<any>({});
 
-  // --- AUTO-FILL LOGIC ---
   useEffect(() => {
     if (user) {
       setFormData((prev) => ({
@@ -152,7 +149,6 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
     }
   }, [user]);
 
-  // --- Helpers ---
   const updateField = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -222,7 +218,7 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
   };
 
   const inputClasses = (hasError: boolean) => `
-    w-full px-5 py-4 border rounded-xl outline-none transition-all duration-200
+    w-full px-4 py-3 border rounded-xl outline-none transition-all duration-200
     ${hasError ? "border-rose-500 bg-rose-50" : "border-stone-200 bg-stone-50 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:bg-white"}
     text-stone-800
   `;
@@ -238,7 +234,8 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
       className="max-w-3xl mx-auto bg-white rounded-2xl shadow-2xl border border-stone-100 overflow-hidden"
     >
       {/* Header */}
-      <div className="bg-brand px-8 py-8 text-center relative overflow-hidden">
+      {/* UPDATE: Reduced padding from py-8 to py-4, px-8 to px-6 */}
+      <div className="bg-brand px-6 py-4 text-center relative overflow-hidden">
         <motion.div
           className="absolute top-0 left-0 h-full bg-brand-dark"
           style={{ width: `${progress}%` }}
@@ -253,12 +250,14 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-3xl font-display font-medium text-white mb-2"
+            // UPDATE: Slightly smaller text (text-2xl) and margin (mb-1)
+            className="text-2xl font-display font-medium text-white mb-1"
           >
             Request Route
           </motion.h2>
 
-          <div className="flex justify-center gap-4 mt-8">
+          {/* UPDATE: Reduced margin-top from mt-8 to mt-4 */}
+          <div className="flex justify-center gap-4 mt-4">
             {[1, 2, 3].map((i) => (
               <motion.div
                 key={i}
@@ -287,7 +286,7 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
                   )}
                 </div>
                 <span
-                  className={`text-xs mt-2 font-medium ${
+                  className={`text-[10px] mt-1 font-medium uppercase tracking-wider ${
                     step >= i ? "text-white" : "text-white/60"
                   }`}
                 >
@@ -299,8 +298,10 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
         </div>
       </div>
 
-      <div className="p-8 md:p-12">
-        <div className="h-120 flex flex-col pr-2">
+      {/* UPDATE: Reduced outer padding from p-8 md:p-12 to p-5 md:p-8 */}
+      <div className="p-5 md:p-8">
+        {/* UPDATE: Replaced fixed h-120 with a larger dynamic height (e.g. h-[36rem] or 550px) to give space to the map */}
+        <div className="h-[36rem] min-h-[500px] flex flex-col pr-2">
           <AnimatePresence mode="wait">
             {/* STEP 1: Details */}
             {step === 1 && (
@@ -310,7 +311,7 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="space-y-6 overflow-y-auto pr-2"
+                className="space-y-5 overflow-y-auto pr-2 flex-1"
               >
                 {user ? (
                   <motion.div
@@ -338,9 +339,9 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ staggerChildren: 0.1 }}
-                    className="space-y-6"
+                    className="space-y-5"
                   >
-                    <div className="grid md:grid-cols-2 gap-6">
+                    <div className="grid md:grid-cols-2 gap-5">
                       <motion.div
                         variants={{
                           hidden: { opacity: 0, x: -20 },
@@ -434,7 +435,7 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="grid md:grid-cols-2 gap-6 pt-2"
+                  className="grid md:grid-cols-2 gap-5 pt-2"
                 >
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-widest text-stone-500 ml-1">
@@ -498,7 +499,7 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="flex-1 flex flex-col"
+                className="flex-1 flex flex-col h-full w-full"
               >
                 <MapPicker
                   label="Pickup Location"
@@ -526,7 +527,7 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="flex-1 flex flex-col"
+                className="flex-1 flex flex-col h-full w-full"
               >
                 <MapPicker
                   label="Dropoff Location"
@@ -548,11 +549,12 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
           </AnimatePresence>
 
           {/* Footer Controls */}
+          {/* UPDATE: Reduced padding-top from pt-8 to pt-4 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex justify-between items-center pt-8 mt-auto border-t border-stone-100"
+            className="flex justify-between items-center pt-4 mt-auto border-t border-stone-100"
           >
             {step === 1 ? (
               <motion.button
@@ -581,7 +583,8 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
                 whileHover="hover"
                 whileTap="tap"
                 onClick={handleNext}
-                className="bg-brand hover:bg-brand-dark text-white px-8 py-3 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg transition-all"
+                // UPDATE: Slight reduction in button padding from py-3 to py-2.5 to save extra vertical space
+                className="bg-brand hover:bg-brand-dark text-white px-8 py-2.5 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg transition-all"
               >
                 Next Step <ArrowRight size={16} />
               </motion.button>
@@ -591,16 +594,8 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
                 whileHover="hover"
                 whileTap="tap"
                 onClick={handleFinalSubmit}
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg transition-all"
-                whileHover={{
-                  scale: 1.05,
-                  transition: {
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 10,
-                  },
-                }}
-                whileTap={{ scale: 0.95 }}
+                // UPDATE: Slight reduction in button padding here as well
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-2.5 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg transition-all"
               >
                 <motion.span
                   animate={{
