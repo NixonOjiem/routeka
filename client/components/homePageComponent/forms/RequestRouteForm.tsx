@@ -592,15 +592,15 @@ export const RequestRouteForm: React.FC<RequestRouteFormProps> = ({
                 whileTap="tap"
                 onClick={handleFinalSubmit}
                 className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold uppercase flex items-center gap-2 shadow-lg transition-all"
-                whileHover={{
-                  scale: 1.05,
-                  transition: {
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 10,
-                  },
-                }}
-                whileTap={{ scale: 0.95 }}
+                // whileHover={{
+                //   scale: 1.05,
+                //   transition: {
+                //     type: "spring",
+                //     stiffness: 400,
+                //     damping: 10,
+                //   },
+                // }}
+                // whileTap={{ scale: 0.95 }}
               >
                 <motion.span
                   animate={{
