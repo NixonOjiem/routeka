@@ -9,6 +9,12 @@ import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
 const map_Tiler_key = import.meta.env.VITE_MAPTILLER_KEY;
 
+// Bounding box for Canada
+const CANADA_BOUNDS: L.LatLngBoundsExpression = [
+  [41.67, -141.0],
+  [83.11, -52.65],
+];
+
 let DefaultIcon = L.icon({
   iconUrl: icon,
   shadowUrl: iconShadow,
@@ -24,15 +30,13 @@ interface MapPickerProps {
   initialLng?: number;
 }
 
-// Geocoding result interface
 interface GeocodingResult {
   id: string;
   place_name: string;
-  center: [number, number]; // [lng, lat]
-  bbox?: [number, number, number, number]; // [west, south, east, north]
+  center: [number, number];
+  bbox?: [number, number, number, number];
 }
 
-// Updated Component: Now accepts position/setPosition from parent
 const LocationMarker = ({
   position,
   setPosition,
@@ -48,11 +52,9 @@ const LocationMarker = ({
       onSelect(e.latlng.lat, e.latlng.lng);
     },
   });
-
   return position === null ? null : <Marker position={position} />;
 };
 
-// Debounce utility function
 const debounce = <T extends (...args: any[]) => void>(
   func: T,
   wait: number,
@@ -67,115 +69,57 @@ const debounce = <T extends (...args: any[]) => void>(
 export const MapPicker: React.FC<MapPickerProps> = ({
   label,
   onLocationSelect,
+  initialLat,
+  initialLng,
 }) => {
-  // Faster default center - use user's approximate location if available, fallback to Toronto
-  const [defaultCenter, setDefaultCenter] = useState<{
-    lat: number;
-    lng: number;
-  }>({
-    lat: 43.6532,
-    lng: -79.3832,
-  });
-  const [defaultZoom, setDefaultZoom] = useState(13);
+  // Determine initial center based on props or fallback to Toronto
+  const initialCenter = {
+    lat: initialLat ?? 43.6532,
+    lng: initialLng ?? -79.3832,
+  };
+  const initialZoom = initialLat && initialLng ? 15 : 13;
 
-  // State for the map instance
+  const [center, setCenter] = useState(initialCenter);
+  const [zoom, setZoom] = useState(initialZoom);
+
   const [map, setMap] = useState<L.Map | null>(null);
-
-  // State for the marker position
-  const [markerPosition, setMarkerPosition] = useState<L.LatLng | null>(null);
-
-  // State for loading status
+  const [markerPosition, setMarkerPosition] = useState<L.LatLng | null>(
+    initialLat && initialLng ? new L.LatLng(initialLat, initialLng) : null,
+  );
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
-  // State for search
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<GeocodingResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Try to get approximate user location for faster initial load
+  // Prompt for user location on mount if no initial coordinates provided
   useEffect(() => {
-    const getApproximateLocation = () => {
-      // Check if we have a cached location
-      const cachedLocation = localStorage.getItem("userApproxLocation");
-      if (cachedLocation) {
-        try {
-          const { lat, lng, timestamp } = JSON.parse(cachedLocation);
-          // Use cached location if it's less than 1 day old
-          if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
-            setDefaultCenter({ lat, lng });
-            setDefaultZoom(10); // Zoom out a bit for approximate location
-            return;
-          }
-        } catch (e) {
-          // Invalid cache, continue
-        }
+    if (initialLat !== undefined && initialLng !== undefined) return;
+
+    const timer = setTimeout(() => {
+      if (
+        navigator.geolocation &&
+        window.confirm("Use your current location to start?")
+      ) {
+        handleMyLocation();
       }
+    }, 100); // slight delay to let map render
 
-      // Try to get location from IP or use browser's low-accuracy geolocation
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            const newCenter = { lat: latitude, lng: longitude };
-            setDefaultCenter(newCenter);
-            setDefaultZoom(10);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // runs once on mount
 
-            // Cache the approximate location
-            localStorage.setItem(
-              "userApproxLocation",
-              JSON.stringify({
-                lat: latitude,
-                lng: longitude,
-                timestamp: Date.now(),
-              }),
-            );
-          },
-          () => {
-            // If geolocation fails, use IP-based location
-            fetchIPLocation();
-          },
-          {
-            maximumAge: 600000, // Accept cached position up to 10 minutes old
-            timeout: 5000,
-            enableHighAccuracy: false, // Faster, less accurate
-          },
-        );
-      } else {
-        fetchIPLocation();
-      }
-    };
-
-    const fetchIPLocation = async () => {
-      try {
-        const response = await fetch("https://ipapi.co/json/");
-        const data = await response.json();
-        if (data.latitude && data.longitude) {
-          setDefaultCenter({ lat: data.latitude, lng: data.longitude });
-          setDefaultZoom(10);
-        }
-      } catch (error) {
-        console.log("Using default Toronto location");
-      }
-    };
-
-    getApproximateLocation();
-  }, []);
-
-  // --- RESIZE OBSERVER ---
+  // Resize observer
   useEffect(() => {
     if (!map) return;
-    const resizeObserver = new ResizeObserver(() => {
-      map.invalidateSize();
-    });
+    const resizeObserver = new ResizeObserver(() => map.invalidateSize());
     resizeObserver.observe(map.getContainer());
-    return () => {
-      resizeObserver.disconnect();
-    };
+    return () => resizeObserver.disconnect();
   }, [map]);
 
-  // --- CLICK OUTSIDE TO CLOSE SUGGESTIONS ---
+  // Click outside closes suggestions
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -186,24 +130,20 @@ export const MapPicker: React.FC<MapPickerProps> = ({
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // --- SEARCH/ GEOCODING FUNCTIONS ---
   const geocodeSearch = async (query: string) => {
     if (!query.trim() || query.length < 2) {
       setSuggestions([]);
       return;
     }
-
     setIsSearching(true);
     try {
       const response = await fetch(
         `https://api.maptiler.com/geocoding/${encodeURIComponent(
           query,
-        )}.json?key=${map_Tiler_key}&limit=5`,
+        )}.json?key=${map_Tiler_key}&limit=5&country=ca`,
       );
       const data = await response.json();
       setSuggestions(data.features || []);
@@ -215,7 +155,6 @@ export const MapPicker: React.FC<MapPickerProps> = ({
     }
   };
 
-  // Debounced geocode function
   const debouncedGeocode = useCallback(
     debounce((query: string) => geocodeSearch(query), 300),
     [],
@@ -232,26 +171,16 @@ export const MapPicker: React.FC<MapPickerProps> = ({
     const [lng, lat] = suggestion.center;
     const newLatLng = new L.LatLng(lat, lng);
 
-    // Update marker
     setMarkerPosition(newLatLng);
-
-    // Update search query
     setSearchQuery(suggestion.place_name);
-
-    // Close suggestions
     setShowSuggestions(false);
-
-    // Notify parent
     onLocationSelect(lat, lng);
 
-    // Move map to location
-    if (map) {
-      map.flyTo(newLatLng, 15, {
-        animate: true,
-        duration: 1.5,
-      });
+    // Update center/zoom state
+    setCenter({ lat, lng });
+    setZoom(15);
 
-      // If suggestion has a bounding box, fit the map to it
+    if (map) {
       if (suggestion.bbox) {
         const [west, south, east, north] = suggestion.bbox;
         map.fitBounds(
@@ -261,11 +190,14 @@ export const MapPicker: React.FC<MapPickerProps> = ({
           ],
           { padding: [50, 50] },
         );
+        // Sync zoom state after fitBounds
+        setTimeout(() => setZoom(map.getZoom()), 0);
+      } else {
+        map.flyTo(newLatLng, 15, { animate: true, duration: 1.5 });
       }
     }
   };
 
-  // --- HANDLE "USE MY LOCATION" ---
   const handleMyLocation = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser");
@@ -279,48 +211,36 @@ export const MapPicker: React.FC<MapPickerProps> = ({
         const { latitude, longitude } = position.coords;
         const newLatLng = new L.LatLng(latitude, longitude);
 
-        // 1. Update Marker State
         setMarkerPosition(newLatLng);
-
-        // 2. Notify Parent Form
         onLocationSelect(latitude, longitude);
 
-        // 3. Move Map to new location
+        // Update center/zoom state
+        setCenter({ lat: latitude, lng: longitude });
+        setZoom(15);
+
         if (map) {
-          map.flyTo(newLatLng, 15, {
-            animate: true,
-            duration: 1.5,
-          });
+          map.flyTo(newLatLng, 15, { animate: true, duration: 1.5 });
         }
 
-        // 4. Update search query with approximate address
-        const reverseGeocode = async () => {
-          try {
-            const response = await fetch(
-              `https://api.maptiler.com/geocoding/${longitude},${latitude}.json?key=${map_Tiler_key}`,
-            );
-            const data = await response.json();
-            if (data.features && data.features.length > 0) {
+        // Reverse geocode to update search field
+        fetch(
+          `https://api.maptiler.com/geocoding/${longitude},${latitude}.json?key=${map_Tiler_key}&country=ca`,
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.features?.length) {
               setSearchQuery(data.features[0].place_name);
             }
-          } catch (error) {
-            console.error("Reverse geocoding error:", error);
-          }
-        };
-        reverseGeocode();
-
-        setIsLoadingLocation(false);
+          })
+          .catch(console.error)
+          .finally(() => setIsLoadingLocation(false));
       },
       (error) => {
-        console.error("Error getting location:", error);
+        console.error("Geolocation error:", error);
         alert("Unable to retrieve your location. Please check permissions.");
         setIsLoadingLocation(false);
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     );
   };
 
@@ -328,7 +248,6 @@ export const MapPicker: React.FC<MapPickerProps> = ({
     <div className="flex flex-col h-full w-full min-h-0">
       <div className="flex justify-between items-end mb-4 px-1">
         <h3 className="text-xl font-bold text-stone-700">{label}</h3>
-
         <button
           onClick={handleMyLocation}
           disabled={isLoadingLocation}
@@ -344,7 +263,6 @@ export const MapPicker: React.FC<MapPickerProps> = ({
         </button>
       </div>
 
-      {/* Search Input with Autocomplete */}
       <div className="relative mb-4" ref={searchContainerRef}>
         <div className="relative">
           <Search
@@ -367,7 +285,6 @@ export const MapPicker: React.FC<MapPickerProps> = ({
           )}
         </div>
 
-        {/* Suggestions Dropdown */}
         {showSuggestions && suggestions.length > 0 && (
           <div className="absolute z-50 w-full mt-1 bg-white border border-stone-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
             {suggestions.map((suggestion) => (
@@ -384,7 +301,6 @@ export const MapPicker: React.FC<MapPickerProps> = ({
           </div>
         )}
 
-        {/* No results message */}
         {showSuggestions &&
           searchQuery.length >= 2 &&
           !isSearching &&
@@ -397,23 +313,22 @@ export const MapPicker: React.FC<MapPickerProps> = ({
 
       <div className="flex-1 min-h-[150px] max-h-[300px] rounded-xl overflow-hidden border border-stone-200 shadow-inner relative z-0">
         <MapContainer
-          center={defaultCenter}
-          zoom={defaultZoom}
+          center={[center.lat, center.lng]}
+          zoom={zoom}
           style={{ height: "100%", width: "100%" }}
-          key={`${defaultCenter.lat}-${defaultCenter.lng}-${label}`} // Key changes when center updates
-          whenCreated={setMap}
+          key={`${center.lat}-${center.lng}-${label}`}
+          ref={setMap}
           zoomControl={false}
+          maxBounds={CANADA_BOUNDS}
+          maxBoundsViscosity={1.0}
+          minZoom={3}
         >
-          {/* Tile Layer with loading optimization */}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            //url={`https://api.maptiler.com/maps/winter-v2/{z}/{x}/{y}.png?key=${map_Tiler_key}`}
             url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${map_Tiler_key}`}
             maxZoom={19}
-            minZoom={1}
+            minZoom={3}
           />
-
-          {/* Passing state down to the marker component */}
           <LocationMarker
             position={markerPosition}
             setPosition={setMarkerPosition}
@@ -421,7 +336,6 @@ export const MapPicker: React.FC<MapPickerProps> = ({
           />
         </MapContainer>
 
-        {/* Map Controls */}
         <div className="absolute top-2 right-2 z-[1000] flex flex-col gap-2">
           <button
             onClick={() => map?.zoomIn()}
