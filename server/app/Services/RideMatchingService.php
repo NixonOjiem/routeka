@@ -52,7 +52,7 @@ class RideMatchingService
             // We label these as 'suggested'.
             $mixedGroups = $this->runGridMatching($allRequests, 'suggested');
 
-            $mixedGroups = array_filter($mixedGroups, function($group) {
+            $mixedGroups = array_filter($mixedGroups, function ($group) {
                 return $group['member_count'] > 1;
             });
 
@@ -81,7 +81,8 @@ class RideMatchingService
         $sortedRequests = $requests->sortBy('id');
 
         foreach ($sortedRequests as $request) {
-            if (in_array($request->id, $processedIds)) continue;
+            if (in_array($request->id, $processedIds))
+                continue;
 
             // Calculate grid centers for pickup and dropoff
             $pickupGridCenter = $this->calculateGridCenter($request->pickup_lat, $request->pickup_lng, $gridSize);
@@ -112,7 +113,8 @@ class RideMatchingService
 
             $groupMembers = $matches->push($request);
             // Mark processed
-            foreach ($groupMembers as $member) $processedIds[] = $member->id;
+            foreach ($groupMembers as $member)
+                $processedIds[] = $member->id;
 
             // For specific category tabs, we include Solo riders (waiting for match)
             // For suggested, we usually only want actual matches (handled in parent function)
@@ -137,7 +139,7 @@ class RideMatchingService
                 'pickup_grid' => $pickupGridCenter,
                 'dropoff_grid' => $dropoffGridCenter,
                 'member_count' => $groupMembers->count(),
-                'members' => $groupMembers->map(function($member) {
+                'members' => $groupMembers->map(function ($member) {
                     return [
                         'id' => $member->id,
                         'user_id' => $member->user_id,
@@ -266,7 +268,7 @@ class RideMatchingService
         return [
             'lat' => $centroidLat,
             'lng' => $centroidLng,
-            'name' => $areaName.'Suggested Meetup'
+            'name' => $areaName . 'Suggested Meetup'
         ];
     }
 
@@ -279,12 +281,14 @@ class RideMatchingService
             $query = ChatRoom::where('is_active', true);
 
             if ($userId) {
-                $query->whereJsonContains('user_ids', (string)$userId);
+                $query->whereJsonContains('user_ids', (string) $userId);
             }
 
-            return $query->with(['messages' => function($q) {
-                $q->orderBy('created_at', 'desc')->limit(20);
-            }])->get()->map(function($room) {
+            return $query->with([
+                'messages' => function ($q) {
+                    $q->orderBy('created_at', 'desc')->limit(20);
+                }
+            ])->get()->map(function ($room) {
                 // Decode JSON grid data
                 $pickupGrid = json_decode($room->pickup_grid, true) ?? ['lat' => 0, 'lng' => 0];
                 $dropoffGrid = json_decode($room->dropoff_grid, true) ?? ['lat' => 0, 'lng' => 0];
@@ -309,62 +313,63 @@ class RideMatchingService
     /**
      * Get rough area name using MapTiler Reverse Geocoding
      */
-  private function getAreaName($lat, $lng)
-{
-    // Round coordinates slightly to improve cache hit rate (4 decimal places is ~11m)
-    $latKey = round($lat, 4);
-    $lngKey = round($lng, 4);
-    $cacheKey = "geo_name_{$latKey}_{$lngKey}";
+    private function getAreaName($lat, $lng)
+    {
+        // Round coordinates slightly to improve cache hit rate (4 decimal places is ~11m)
+        $latKey = round($lat, 4);
+        $lngKey = round($lng, 4);
+        $cacheKey = "geo_name_{$latKey}_{$lngKey}";
 
-    // 1. Check Cache First
-    if ($cachedName = Cache::get($cacheKey)) {
-        return $cachedName;
-    }
-
-    Log::info('starting to fetch reversed geocodes');
-
-    try {
-        // FIX: Use config() instead of env() for production safety
-        // Ensure you have 'maptiler' => ['key' => env('MAPTILLER_KEY')] in config/services.php
-        $apiKey = config('services.maptiler.key');
-
-        if (!$apiKey) {
-            Log::error('MapTiler API key is missing in config.');
-            return "Unknown Area";
+        // 1. Check Cache First
+        Log::info('checking cache for key:' . $cacheKey);
+        if ($cachedName = Cache::get($cacheKey)) {
+            return $cachedName;
         }
 
-        // MapTiler expects: longitude,latitude
-        $url = "https://api.maptiler.com/geocoding/{$lng},{$lat}.json?key={$apiKey}";
+        Log::info('starting to fetch reversed geocodes');
 
-        $response = Http::timeout(3)->get($url);
+        try {
+            // FIX: Use config() instead of env() for production safety
+            // Ensure you have 'maptiler' => ['key' => env('MAPTILLER_KEY')] in config/services.php
+            $apiKey = config('services.maptiler.key');
 
-        Log::warning('response from reversed geocodes', [
-            'status' => $response->status(),
-            'success' => $response->successful(),
-        ]);
+            if (!$apiKey) {
+                Log::error('MapTiler API key is missing in config.');
+                return "Unknown Area";
+            }
 
-        if ($response->successful()) {
-            $features = $response->json()['features'] ?? [];
+            // MapTiler expects: longitude,latitude
+            $url = "https://api.maptiler.com/geocoding/{$lng},{$lat}.json?key={$apiKey}";
 
-            if (!empty($features)) {
-                $locationName = $features[0]['text'] ?? $features[0]['place_name'] ?? null;
+            $response = Http::timeout(3)->get($url);
 
-                if ($locationName) {
-                    // 2. SUCCESS: Cache valid names for 2 weeks
-                    Cache::put($cacheKey, $locationName, now()->addWeeks(2));
-                    return $locationName;
+            Log::warning('response from reversed geocodes', [
+                'status' => $response->status(),
+                'success' => $response->successful(),
+            ]);
+
+            if ($response->successful()) {
+                $features = $response->json()['features'] ?? [];
+
+                if (!empty($features)) {
+                    $locationName = $features[0]['text'] ?? $features[0]['place_name'] ?? null;
+
+                    if ($locationName) {
+                        // 2. SUCCESS: Cache valid names for 2 weeks
+                        Cache::put($cacheKey, $locationName, now()->addWeeks(2));
+                        return $locationName;
+                    }
                 }
             }
+        } catch (\Exception $e) {
+            Log::error('MapTiler Error: ' . $e->getMessage());
         }
-    } catch (\Exception $e) {
-        Log::error('MapTiler Error: ' . $e->getMessage());
+
+        // 3. FAILURE: Cache "Unknown Area" briefly (e.g., 1 hour)
+        // This protects your API quota from being hammered by requests for the same empty location.
+        Cache::put($cacheKey, "Unknown Area", now()->addHour());
+
+        return "Unknown Area";
     }
-
-    // 3. FAILURE: Cache "Unknown Area" briefly (e.g., 1 hour)
-    // This protects your API quota from being hammered by requests for the same empty location.
-    Cache::put($cacheKey, "Unknown Area", now()->addHour());
-
-    return "Unknown Area";
-}
 
 }

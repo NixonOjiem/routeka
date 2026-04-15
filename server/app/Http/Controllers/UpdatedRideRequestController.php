@@ -12,6 +12,7 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Jobs\getAreaNamesForNewlySubmitedRequest;
 
 class UpdatedRideRequestController extends Controller
 {
@@ -64,67 +65,65 @@ class UpdatedRideRequestController extends Controller
     /**
      * Get rides grouped by grid
      */
-    public function getGriddedRides(Request $request)
-    {
-        // Split grid sizes to match service rules
-        $pickupGridSize = $request->input('pickup_grid_size', 0.0145);  // ~1 mile
-        $dropoffGridSize = $request->input('dropoff_grid_size', 0.0290); // ~2 miles
+    // public function getGriddedRides(Request $request)
+    // {
+    //     // Split grid sizes to match service rules
+    //     $pickupGridSize = $request->input('pickup_grid_size', 0.0145);  // ~1 mile
+    //     $dropoffGridSize = $request->input('dropoff_grid_size', 0.0290); // ~2 miles
 
-        $rides = RideRequest::where('status', 'pending')
-            ->with('user')
-            ->get()
-            ->groupBy(function ($ride) use ($pickupGridSize, $dropoffGridSize) {
-                $pickupGrid = $this->calculateGrid(
-                    $ride->pickup_lat,
-                    $ride->pickup_lng,
-                    $pickupGridSize
-                );
-                $dropoffGrid = $this->calculateGrid(
-                    $ride->dropoff_lat,
-                    $ride->dropoff_lng,
-                    $dropoffGridSize
-                );
-                return "{$pickupGrid}|{$dropoffGrid}";
-            });
+    //     $rides = RideRequest::where('status', 'pending')
+    //         ->with('user')
+    //         ->get()
+    //         ->groupBy(function ($ride) use ($pickupGridSize, $dropoffGridSize) {
+    //             $pickupGrid = $this->calculateGrid(
+    //                 $ride->pickup_lat,
+    //                 $ride->pickup_lng,
+    //                 $pickupGridSize
+    //             );
+    //             $dropoffGrid = $this->calculateGrid(
+    //                 $ride->dropoff_lat,
+    //                 $ride->dropoff_lng,
+    //                 $dropoffGridSize
+    //             );
+    //             return "{$pickupGrid}|{$dropoffGrid}";
+    //         });
 
-        return response()->json([
-            'grids' => $rides->map(function ($groupRides, $gridKey) {
-                list($pickupGrid, $dropoffGrid) = explode('|', $gridKey);
-                return [
-                    'pickup_grid' => $pickupGrid,
-                    'dropoff_grid' => $dropoffGrid,
-                    'rides' => $groupRides->map(function ($ride) {
-                        return [
-                            'id' => $ride->id,
-                            'user_id' => $ride->user_id,
-                            'user_name' => $ride->user->name ?? 'Guest',
-                            'pickup' => [
-                                'lat' => $ride->pickup_lat,
-                                'lng' => $ride->pickup_lng,
-                                'address' => $ride->pickup_address
-                            ],
-                            'dropoff' => [
-                                'lat' => $ride->dropoff_lat,
-                                'lng' => $ride->dropoff_lng,
-                                'address' => $ride->dropoff_address
-                            ],
-                            'time' => $ride->created_at
-                        ];
-                    }),
-                    'count' => $groupRides->count()
-                ];
-            })->values()
-        ]);
-    }
+    //     return response()->json([
+    //         'grids' => $rides->map(function ($groupRides, $gridKey) {
+    //             list($pickupGrid, $dropoffGrid) = explode('|', $gridKey);
+    //             return [
+    //                 'pickup_grid' => $pickupGrid,
+    //                 'dropoff_grid' => $dropoffGrid,
+    //                 'rides' => $groupRides->map(function ($ride) {
+    //                     return [
+    //                         'id' => $ride->id,
+    //                         'user_id' => $ride->user_id,
+    //                         'user_name' => $ride->user->name ?? 'Guest',
+    //                         'pickup' => [
+    //                             'lat' => $ride->pickup_lat,
+    //                             'lng' => $ride->pickup_lng,
+    //                             'address' => $ride->pickup_address
+    //                         ],
+    //                         'dropoff' => [
+    //                             'lat' => $ride->dropoff_lat,
+    //                             'lng' => $ride->dropoff_lng,
+    //                             'address' => $ride->dropoff_address
+    //                         ],
+    //                         'time' => $ride->created_at
+    //                     ];
+    //                 }),
+    //                 'count' => $groupRides->count()
+    //             ];
+    //         })->values()
+    //     ]);
+    // }
 
-    private function calculateGrid($lat, $lng, $gridSize)
-    {
-        $latGrid = floor($lat / $gridSize);
-        $lngGrid = floor($lng / $gridSize);
-        return "{$latGrid}_{$lngGrid}";
-    }
-
-
+    // private function calculateGrid($lat, $lng, $gridSize)
+    // {
+    //     $latGrid = floor($lat / $gridSize);
+    //     $lngGrid = floor($lng / $gridSize);
+    //     return "{$latGrid}_{$lngGrid}";
+    // }
 
     // store data in database
     public function store(Request $request)
@@ -181,12 +180,13 @@ class UpdatedRideRequestController extends Controller
         $ride = RideRequest::create($data);
         log::info("Stored ride request in database:", $ride->toArray());
 
+        // 5. Dispatch the job to fetch area names
+        getAreaNamesForNewlySubmitedRequest::dispatch($ride);
+
         return response()->json([
             'message' => 'Ride request submitted successfully',
             //'data' => $ride
         ], 201);
     }
-
-
 
 }

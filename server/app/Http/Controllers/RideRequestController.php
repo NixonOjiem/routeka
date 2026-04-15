@@ -125,7 +125,6 @@ class RideRequestController extends Controller
     // 1. Store the Ride Request
     public function store(Request $request)
     {
-
         try {
             // 1. Authenticate the user via JWT
             $user = JWTAuth::parseToken()->authenticate();
@@ -170,8 +169,6 @@ class RideRequestController extends Controller
             'category' => $validated['category'],
             'status' => 'pending',
         ];
-
-
 
         $ride = RideRequest::create($data);
         #Log::info("stored ride details for user:", $user);

@@ -135,7 +135,7 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
             </p>
             {user && (
               <button
-                onClick={() => navigate('/request')}
+                onClick={() => navigate("/request")}
                 // onClick={() => setIsCategoryModalOpen(true)}
                 className="mt-6 px-6 py-2.5 bg-brand hover:bg-teal-600 text-white font-medium rounded-lg shadow-sm transition-colors"
               >
