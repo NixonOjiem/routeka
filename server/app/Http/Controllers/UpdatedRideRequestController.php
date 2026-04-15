@@ -124,8 +124,6 @@ class UpdatedRideRequestController extends Controller
         return "{$latGrid}_{$lngGrid}";
     }
 
-
-
     // store data in database
     public function store(Request $request)
     {
