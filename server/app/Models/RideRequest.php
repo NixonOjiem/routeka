@@ -24,6 +24,8 @@ class RideRequest extends Model
         'guest_id',
         'category',
         'category_metadata',
+        'pickup_name',
+        'dropoff_name',
     ];
 
     public function user()
