@@ -43,4 +43,8 @@ return [
         'redirect' => rtrim(env('FRONTEND_URL'), '/') . '/auth/callback',
     ],
 
+    'geocodio' => [
+        'key' => env('GEOCODIO_KEY'),
+    ]
+
 ];
