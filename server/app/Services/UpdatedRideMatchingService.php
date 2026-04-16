@@ -115,11 +115,13 @@ class UpdatedRideMatchingService
             $chatRoom = $this->getOrCreateChatRoom($groupMembers, $pickupGridCenter, $dropoffGridCenter);
 
             // Fetch Names for the Response
-            $pickupName = $this->getAreaName($pickupGridCenter['lat'], $pickupGridCenter['lng']);
-            $dropoffName = $this->getAreaName($dropoffGridCenter['lat'], $dropoffGridCenter['lng']);
+            // $pickupName = $this->getAreaName($pickupGridCenter['lat'], $pickupGridCenter['lng']);
+            // $dropoffName = $this->getAreaName($dropoffGridCenter['lat'], $dropoffGridCenter['lng']);
+            $pickupGridCenter['name'] = $request->pickup_name ?? 'Pickup Location';
+            $dropoffGridCenter['name'] = $request->dropoff_name ?? 'Dropoff Location';
 
-            $pickupGridCenter['name'] = $pickupName;
-            $dropoffGridCenter['name'] = $dropoffName;
+            // $pickupGridCenter['name'] = $pickupName;
+            // $dropoffGridCenter['name'] = $dropoffName;
 
             $groups[] = [
                 'group_id' => 'group_' . $request->id,
@@ -137,10 +139,12 @@ class UpdatedRideMatchingService
                         'pickup' => [
                             'lat' => $member->pickup_lat,
                             'lng' => $member->pickup_lng,
+                            'name' => $member->pickup_name
                         ],
                         'dropoff' => [
                             'lat' => $member->dropoff_lat,
                             'lng' => $member->dropoff_lng,
+                            'name' => $member->dropoff_name
                         ]
                     ];
                 })->values()
@@ -249,7 +253,7 @@ class UpdatedRideMatchingService
         ]);
 
         $areaName = $this->getAreaName($centroidLat, $centroidLng);
-
+        Log::info('centroid area name is: ' . $areaName);
         return [
             'lat' => $centroidLat,
             'lng' => $centroidLng,
@@ -300,6 +304,7 @@ class UpdatedRideMatchingService
      */
     private function getAreaName($lat, $lng)
     {
+        // Rounding to 4 decimal places gives a cache accuracy of ~11 meters
         $latKey = round($lat, 4);
         $lngKey = round($lng, 4);
         $cacheKey = "geo_name_{$latKey}_{$lngKey}";
@@ -308,35 +313,51 @@ class UpdatedRideMatchingService
             return $cachedName;
         }
 
-        Log::info('starting to fetch reversed geocodes');
+        Log::info('Starting to fetch reversed geocodes via Geocodio');
 
         try {
-            $apiKey = config('services.maptiler.key');
+            $apiKey = config('services.geocodio.key');
 
             if (!$apiKey) {
-                Log::error('MapTiler API key is missing in config.');
+                Log::error('Geocodio API key is missing in config.');
                 return "Unknown Area";
             }
 
-            $url = "https://api.maptiler.com/geocoding/{$lng},{$lat}.json?key={$apiKey}";
+            // Geocodio Reverse Geocoding Endpoint
+            $url = "https://api.geocod.io/v1.7/reverse?q={$lat},{$lng}&api_key={$apiKey}";
             $response = Http::timeout(3)->get($url);
 
             if ($response->successful()) {
-                $features = $response->json()['features'] ?? [];
+                $results = $response->json()['results'] ?? [];
 
-                if (!empty($features)) {
-                    $locationName = $features[0]['text'] ?? $features[0]['place_name'] ?? null;
+                if (!empty($results)) {
+                    // Geocodio returns highly specific addresses.
+                    // For a "Meetup Area", combining the street and city usually looks cleaner
+                    // than returning a full address with a zip code.
+                    $components = $results[0]['address_components'] ?? [];
+                    $street = $components['formatted_street'] ?? '';
+                    $city = $components['city'] ?? '';
+
+                    // Fallback to formatted_address if street/city parsing fails
+                    $locationName = trim($street . ', ' . $city, ', ');
+                    if (empty($locationName)) {
+                        $locationName = $results[0]['formatted_address'] ?? null;
+                    }
 
                     if ($locationName) {
+                        // Cache the newly fetched area name
                         Cache::put($cacheKey, $locationName, now()->addWeeks(2));
                         return $locationName;
                     }
                 }
+            } else {
+                Log::error('Geocodio API Error: ' . $response->body());
             }
         } catch (\Exception $e) {
-            Log::error('MapTiler Error: ' . $e->getMessage());
+            Log::error('Geocodio Exception: ' . $e->getMessage());
         }
 
+        // Cache the unknown state temporarily to prevent spamming the API on dead zones
         Cache::put($cacheKey, "Unknown Area", now()->addHour());
         return "Unknown Area";
     }
