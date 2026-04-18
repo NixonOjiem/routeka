@@ -5,6 +5,7 @@ import rideRequestReducer from "./slices/rideRequestSlice";
 import rideGroupsReducer from "./slices/rideGroupsSlice"; // ✅ new slice
 import chatReducer from "./slices/chatSlice"; // ✅ new slice
 import profileSlice from "./slices/profileSlice";
+
 export const store = configureStore({
   reducer: {
     auth: authReducer,
