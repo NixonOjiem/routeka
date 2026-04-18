@@ -13,7 +13,6 @@ const api = axios.create({
 // Add interceptors for auth and guest ID
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  //const guestId = localStorage.getItem("guest_id");
   const guestId = localStorage.getItem("chat_guest_id");
 
   if (token) {
@@ -201,6 +200,12 @@ export const apiService = {
     api.get("/rides/grids", { params: { grid_size: gridSize } }),
 
   getUserProfile: (config?: any) => api.get("/auth/profile", config),
+
+  deleteRideRequest: (request_id: number, config?: any) =>
+    api.delete("/rides/v1/delete-request", {
+      params: { request_id },
+      ...config,
+    }),
 
   // Chat endpoints
   getChatRooms: () =>

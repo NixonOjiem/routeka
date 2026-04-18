@@ -54,6 +54,21 @@ export const fetchGriddedRides = createAsyncThunk(
   },
 );
 
+export const removeRideRequest = createAsyncThunk(
+  "rideGroups/deleteRequest",
+  async (request_id: number, { rejectWithValue }) => {
+    try {
+      const response = await apiService.deleteRideRequest(request_id);
+      return response.data;
+    } catch (error: any) {
+      // Capture the error here
+      return rejectWithValue(
+        error.response?.data?.message || "Something went wrong",
+      );
+    }
+  },
+);
+
 const rideGroupsSlice = createSlice({
   name: "rideGroups",
   initialState,
@@ -73,31 +88,40 @@ const rideGroupsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch ride groups
+      // Fetch groups
       .addCase(fetchRideGroups.pending, (state) => {
         state.isLoading = true;
-        state.error = null;
       })
       .addCase(fetchRideGroups.fulfilled, (state, action) => {
         state.isLoading = false;
         state.groups = action.payload.groups;
-        // state.chatRooms = action.payload.chatRooms;
         state.chatRooms = action.payload.chat_rooms;
       })
       .addCase(fetchRideGroups.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      // Fetch gridded rides
-      .addCase(fetchGriddedRides.pending, (state) => {
+
+      // Delete Request
+      .addCase(removeRideRequest.pending, (state) => {
         state.isLoading = true;
-        state.error = null;
       })
-      .addCase(fetchGriddedRides.fulfilled, (state, action) => {
+      .addCase(removeRideRequest.fulfilled, (state, action) => {
         state.isLoading = false;
-        // Handle response based on your API structure
+        state.groups = state.groups
+          .map((group) => {
+            const newMembers = group.members.filter(
+              (m) => m.id !== action.meta.arg,
+            );
+            return {
+              ...group,
+              members: newMembers,
+              member_count: newMembers.length, // Keep the count in sync
+            };
+          })
+          .filter((group) => group.members.length > 0); // Remove group if now empty
       })
-      .addCase(fetchGriddedRides.rejected, (state, action) => {
+      .addCase(removeRideRequest.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });
@@ -105,6 +129,7 @@ const rideGroupsSlice = createSlice({
 });
 
 export const { setFilters, clearFilters, clearError } = rideGroupsSlice.actions;
+export default rideGroupsSlice.reducer;
 
 // Selectors
 export const selectFilteredGroups = (state: {
@@ -129,8 +154,8 @@ export const selectFilteredGroups = (state: {
     const query = filters.searchQuery.toLowerCase();
     filtered = filtered.filter(
       (group) =>
-        group.pickup_grid.toLowerCase().includes(query) ||
-        group.dropoff_grid.toLowerCase().includes(query) ||
+        group.pickup_grid.name.toLowerCase().includes(query) ||
+        group.dropoff_grid.name.toLowerCase().includes(query) ||
         group.members.some((member) =>
           member.user_name.toLowerCase().includes(query),
         ),
@@ -151,5 +176,3 @@ export const selectGroupStats = (state: { rideGroups: RideGroupsState }) => {
     ),
   };
 };
-
-export default rideGroupsSlice.reducer;
