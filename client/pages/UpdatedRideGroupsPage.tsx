@@ -185,60 +185,65 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
             return (
               <div
                 key={group.group_id}
-                className={`relative rounded-2xl p-6 shadow-sm border transition-all hover:shadow-md ${statusColor}`}
+                className={`relative rounded-2xl p-5 shadow-sm border transition-all hover:shadow-md ${statusColor}`}
               >
-                <div className="absolute top-4 right-4 flex items-center space-x-2">
-                  <button
-                    // UPDATED: Passing both requestId and isMatched
-                    onClick={() =>
-                      requestId && handleDeleteRequest(requestId, isMatched)
-                    }
-                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                    title="Cancel Request"
-                  >
-                    {/* <XIcon className="w-5 h-5" /> */}
-                    <TrashIcon className="h-6 w-6 text-red-400" />
-                  </button>
+                {/* Header: Title + Actions Row */}
+                <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                    <UserGroupIcon className="w-5 h-5 mr-2 text-indigo-500" />
+                    My Request
+                  </h3>
 
-                  {group.members[0]?.scheduled_time && (
-                    <span className="flex items-center text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                      <ClockIcon className="w-3 h-3 mr-1" />
-                      {new Date(
-                        group.members[0].scheduled_time,
-                      ).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  )}
-                  {isMatched ? (
-                    <span className="flex items-center text-xs font-bold text-green-700 bg-green-100 px-3 py-1 rounded-full uppercase tracking-wider">
-                      Matched
-                      <CheckCircleIcon className="w-4 h-4 ml-1 text-green-600" />
-                    </span>
-                  ) : (
-                    <span className="flex items-center text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full uppercase tracking-wider border border-amber-100">
-                      Pending
-                      <span className="ml-2 w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-                    </span>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Delete Button */}
+                    <button
+                      onClick={() =>
+                        requestId && handleDeleteRequest(requestId, isMatched)
+                      }
+                      className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                      title="Cancel Request"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+
+                    {/* Scheduled Time */}
+                    {group.members[0]?.scheduled_time && (
+                      <span className="flex items-center text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                        <ClockIcon className="w-3 h-3 mr-1" />
+                        {new Date(
+                          group.members[0].scheduled_time,
+                        ).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    )}
+
+                    {/* Status Badge */}
+                    {isMatched ? (
+                      <span className="flex items-center text-xs font-bold text-green-700 bg-green-100 px-3 py-1 rounded-full uppercase tracking-wider">
+                        Matched
+                        <CheckCircleIcon className="w-4 h-4 ml-1 text-green-600" />
+                      </span>
+                    ) : (
+                      <span className="flex items-center text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full uppercase tracking-wider border border-amber-100">
+                        Pending
+                        <span className="ml-2 w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="flex-1 pr-4">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                      <UserGroupIcon className="w-5 h-5 mr-2 text-indigo-500" />
-                      My Request
-                    </h3>
-                    <div className="pl-2">
-                      <RouteVisualizer
-                        from={formatGrid(group.pickup_grid)}
-                        to={formatGrid(group.dropoff_grid)}
-                      />
-                    </div>
+                {/* Main Content: Route + Match Info */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                  <div className="flex-1">
+                    <RouteVisualizer
+                      from={formatGrid(group.pickup_grid)}
+                      to={formatGrid(group.dropoff_grid)}
+                    />
                   </div>
 
-                  <div className="flex flex-col items-center md:items-end space-y-3 min-w-50">
+                  <div className="flex flex-col items-stretch md:items-end min-w-[200px]">
                     {isMatched ? (
                       <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-green-100 shadow-sm w-full text-center md:text-right">
                         <div className="flex items-center justify-center md:justify-end text-sm font-medium text-green-800 mb-1">
