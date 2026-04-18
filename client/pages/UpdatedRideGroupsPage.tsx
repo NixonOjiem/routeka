@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiService, RideGroup, User } from "../services/api";
 import { toast } from "react-toastify";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { removeRideRequest } from "@/redux/slices/rideGroupsSlice";
+import { AppDispatch } from "@/redux/store";
 import { RootState } from "@/redux/store";
 import { CategoryGrid } from "@/components/homePageComponent/CategoryGrid";
 import { motion, AnimatePresence } from "framer-motion";
@@ -66,6 +68,18 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
   const [activeTab, setActiveTab] = useState<TabType>("my_rides");
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>(); // Initialize dispatch
+
+  const handleDeleteRequest = async (requestId: number) => {
+    if (window.confirm("Are you sure you want to cancel this ride request?")) {
+      try {
+        await dispatch(removeRideRequest(requestId)).unwrap();
+        toast.success("Ride request cancelled successfully");
+      } catch (error: any) {
+        toast.error(error || "Failed to cancel request");
+      }
+    }
+  };
 
   useEffect(() => {
     fetchGroups();
@@ -154,12 +168,24 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
               ? "bg-green-50 border-green-200"
               : "bg-white border-gray-100";
 
+            const userMemberObj = group.members.find(
+              (m) => m.user_id === currentUser?.id,
+            );
+            const requestId = userMemberObj?.id;
+
             return (
               <div
                 key={group.group_id}
                 className={`relative rounded-2xl p-6 shadow-sm border transition-all hover:shadow-md ${statusColor}`}
               >
                 <div className="absolute top-4 right-4 flex items-center space-x-2">
+                  <button
+                    onClick={() => requestId && handleDeleteRequest(requestId)}
+                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                    title="Cancel Request"
+                  >
+                    <XIcon className="w-5 h-5" />
+                  </button>
                   {group.members[0]?.scheduled_time && (
                     <span className="flex items-center text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                       <ClockIcon className="w-3 h-3 mr-1" />
