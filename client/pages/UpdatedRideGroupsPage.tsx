@@ -19,6 +19,7 @@ import {
   RefreshIcon,
   XIcon,
 } from "@heroicons/react/outline";
+import { TrashIcon } from "@heroicons/react/outline";
 import { CheckCircleIcon } from "@heroicons/react/solid";
 
 type TabType = "my_rides" | "all_rides";
@@ -68,15 +69,23 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
   const [activeTab, setActiveTab] = useState<TabType>("my_rides");
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>(); // Initialize dispatch
+  const dispatch = useDispatch<AppDispatch>();
 
-  const handleDeleteRequest = async (requestId: number) => {
-    if (window.confirm("Are you sure you want to cancel this ride request?")) {
+  // UPDATED: Accept isMatched to provide contextual prompts
+  const handleDeleteRequest = async (requestId: number, isMatched: boolean) => {
+    const confirmMessage = isMatched
+      ? "Are you sure you want to cancel this request and leave your matched ride group?"
+      : "Are you sure you want to cancel this pending ride request?";
+
+    if (window.confirm(confirmMessage)) {
       try {
         await dispatch(removeRideRequest(requestId)).unwrap();
         toast.success("Ride request cancelled successfully");
+        // Refresh the groups list to ensure the UI updates properly
+        // (especially important to sync other users' visibility if you leave a matched group)
+        fetchGroups();
       } catch (error: any) {
-        toast.error(error || "Failed to cancel request");
+        toast.error(error?.message || error || "Failed to cancel request");
       }
     }
   };
@@ -107,7 +116,6 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
     return "Unknown Location";
   };
 
-  // Only logged-in users matched against their user_id
   const isGroupRelevant = (group: RideGroup) => {
     if (!user || !currentUser) return false;
     return group.members.some((member) => member.user_id === currentUser.id);
@@ -132,7 +140,6 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
     if (activeTab === "my_rides") {
       const myRawGroups = groups.filter(isGroupRelevant);
 
-      // If user is not logged in OR has no rides, show blank/empty state
       if (!user || myRawGroups.length === 0) {
         return (
           <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-dashed border-gray-300">
@@ -150,7 +157,6 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
             {user && (
               <button
                 onClick={() => navigate("/request")}
-                // onClick={() => setIsCategoryModalOpen(true)}
                 className="mt-6 px-6 py-2.5 bg-brand hover:bg-teal-600 text-white font-medium rounded-lg shadow-sm transition-colors"
               >
                 Request a Ride
@@ -171,7 +177,10 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
             const userMemberObj = group.members.find(
               (m) => m.user_id === currentUser?.id,
             );
-            const requestId = userMemberObj?.id;
+
+            // UPDATED: Prioritize ride_request_id if your API sends it in the member object, fallback to member id
+            const requestId =
+              userMemberObj?.ride_request_id || userMemberObj?.id;
 
             return (
               <div
@@ -180,12 +189,17 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
               >
                 <div className="absolute top-4 right-4 flex items-center space-x-2">
                   <button
-                    onClick={() => requestId && handleDeleteRequest(requestId)}
-                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                    // UPDATED: Passing both requestId and isMatched
+                    onClick={() =>
+                      requestId && handleDeleteRequest(requestId, isMatched)
+                    }
+                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
                     title="Cancel Request"
                   >
-                    <XIcon className="w-5 h-5" />
+                    {/* <XIcon className="w-5 h-5" /> */}
+                    <TrashIcon className="h-6 w-6 text-red-400" />
                   </button>
+
                   {group.members[0]?.scheduled_time && (
                     <span className="flex items-center text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                       <ClockIcon className="w-3 h-3 mr-1" />
@@ -261,6 +275,7 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
       );
     }
 
+    // ... (rest of the component remains exactly the same for ALL RIDES TAB and Modal)
     // ----------------------------------------------------------------
     // 2. ALL RIDES TAB
     if (groups.length === 0) {
@@ -371,7 +386,7 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* --- Category Selection Popup --- */}
+      {/* Modal and Rest of the Wrapper rendering remains identical... */}
       <AnimatePresence>
         {isCategoryModalOpen && (
           <div className="fixed inset-0 z-100 flex items-center justify-center p-4">

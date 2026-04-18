@@ -128,12 +128,13 @@ class UpdatedRideRequestController extends Controller
 
     public function deleteRideRequest(Request $request)
     {
+        Log::info($request->all());
         $validated = $request->validate([
             'request_id' => 'required|exists:ride_requests,id',
         ]);
 
-        $user = auth()->user();
-
+        $user = Auth::guard('api')->user();
+        Log::info('User data:', $user->toArray());
         $deletedCount = RideRequest::where('id', $validated['request_id'])
             ->where('user_id', $user->id)
             ->delete();
