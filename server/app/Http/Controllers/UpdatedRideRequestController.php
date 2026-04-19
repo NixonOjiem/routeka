@@ -62,69 +62,6 @@ class UpdatedRideRequestController extends Controller
         }
     }
 
-    /**
-     * Get rides grouped by grid
-     */
-    // public function getGriddedRides(Request $request)
-    // {
-    //     // Split grid sizes to match service rules
-    //     $pickupGridSize = $request->input('pickup_grid_size', 0.0145);  // ~1 mile
-    //     $dropoffGridSize = $request->input('dropoff_grid_size', 0.0290); // ~2 miles
-
-    //     $rides = RideRequest::where('status', 'pending')
-    //         ->with('user')
-    //         ->get()
-    //         ->groupBy(function ($ride) use ($pickupGridSize, $dropoffGridSize) {
-    //             $pickupGrid = $this->calculateGrid(
-    //                 $ride->pickup_lat,
-    //                 $ride->pickup_lng,
-    //                 $pickupGridSize
-    //             );
-    //             $dropoffGrid = $this->calculateGrid(
-    //                 $ride->dropoff_lat,
-    //                 $ride->dropoff_lng,
-    //                 $dropoffGridSize
-    //             );
-    //             return "{$pickupGrid}|{$dropoffGrid}";
-    //         });
-
-    //     return response()->json([
-    //         'grids' => $rides->map(function ($groupRides, $gridKey) {
-    //             list($pickupGrid, $dropoffGrid) = explode('|', $gridKey);
-    //             return [
-    //                 'pickup_grid' => $pickupGrid,
-    //                 'dropoff_grid' => $dropoffGrid,
-    //                 'rides' => $groupRides->map(function ($ride) {
-    //                     return [
-    //                         'id' => $ride->id,
-    //                         'user_id' => $ride->user_id,
-    //                         'user_name' => $ride->user->name ?? 'Guest',
-    //                         'pickup' => [
-    //                             'lat' => $ride->pickup_lat,
-    //                             'lng' => $ride->pickup_lng,
-    //                             'address' => $ride->pickup_address
-    //                         ],
-    //                         'dropoff' => [
-    //                             'lat' => $ride->dropoff_lat,
-    //                             'lng' => $ride->dropoff_lng,
-    //                             'address' => $ride->dropoff_address
-    //                         ],
-    //                         'time' => $ride->created_at
-    //                     ];
-    //                 }),
-    //                 'count' => $groupRides->count()
-    //             ];
-    //         })->values()
-    //     ]);
-    // }
-
-    // private function calculateGrid($lat, $lng, $gridSize)
-    // {
-    //     $latGrid = floor($lat / $gridSize);
-    //     $lngGrid = floor($lng / $gridSize);
-    //     return "{$latGrid}_{$lngGrid}";
-    // }
-
     // store data in database
     public function store(Request $request)
     {
@@ -187,6 +124,31 @@ class UpdatedRideRequestController extends Controller
             'message' => 'Ride request submitted successfully',
             //'data' => $ride
         ], 201);
+    }
+
+    public function deleteRideRequest(Request $request)
+    {
+        Log::info($request->all());
+        $validated = $request->validate([
+            'request_id' => 'required|exists:ride_requests,id',
+        ]);
+
+        $user = Auth::guard('api')->user();
+        Log::info('User data:', $user->toArray());
+        $deletedCount = RideRequest::where('id', $validated['request_id'])
+            ->where('user_id', $user->id)
+            ->delete();
+
+        //Handle the response
+        if ($deletedCount) {
+            return response()->json([
+                'message' => 'Your ride request has been deleted.'
+            ], 200);
+        }
+
+        return response()->json([
+            'message' => 'You are not authorized to delete this request, or it does not exist.'
+        ], 403);
     }
 
 }

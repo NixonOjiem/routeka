@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiService, RideGroup, User } from "../services/api";
 import { toast } from "react-toastify";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { removeRideRequest } from "@/redux/slices/rideGroupsSlice";
+import { AppDispatch } from "@/redux/store";
 import { RootState } from "@/redux/store";
 import { CategoryGrid } from "@/components/homePageComponent/CategoryGrid";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,6 +19,7 @@ import {
   RefreshIcon,
   XIcon,
 } from "@heroicons/react/outline";
+import { TrashIcon } from "@heroicons/react/outline";
 import { CheckCircleIcon } from "@heroicons/react/solid";
 
 type TabType = "my_rides" | "all_rides";
@@ -66,6 +69,26 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
   const [activeTab, setActiveTab] = useState<TabType>("my_rides");
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+
+  // UPDATED: Accept isMatched to provide contextual prompts
+  const handleDeleteRequest = async (requestId: number, isMatched: boolean) => {
+    const confirmMessage = isMatched
+      ? "Are you sure you want to cancel this request and leave your matched ride group?"
+      : "Are you sure you want to cancel this pending ride request?";
+
+    if (window.confirm(confirmMessage)) {
+      try {
+        await dispatch(removeRideRequest(requestId)).unwrap();
+        toast.success("Ride request cancelled successfully");
+        // Refresh the groups list to ensure the UI updates properly
+        // (especially important to sync other users' visibility if you leave a matched group)
+        fetchGroups();
+      } catch (error: any) {
+        toast.error(error?.message || error || "Failed to cancel request");
+      }
+    }
+  };
 
   useEffect(() => {
     fetchGroups();
@@ -93,7 +116,6 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
     return "Unknown Location";
   };
 
-  // Only logged-in users matched against their user_id
   const isGroupRelevant = (group: RideGroup) => {
     if (!user || !currentUser) return false;
     return group.members.some((member) => member.user_id === currentUser.id);
@@ -118,7 +140,6 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
     if (activeTab === "my_rides") {
       const myRawGroups = groups.filter(isGroupRelevant);
 
-      // If user is not logged in OR has no rides, show blank/empty state
       if (!user || myRawGroups.length === 0) {
         return (
           <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-dashed border-gray-300">
@@ -136,7 +157,6 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
             {user && (
               <button
                 onClick={() => navigate("/request")}
-                // onClick={() => setIsCategoryModalOpen(true)}
                 className="mt-6 px-6 py-2.5 bg-brand hover:bg-teal-600 text-white font-medium rounded-lg shadow-sm transition-colors"
               >
                 Request a Ride
@@ -154,51 +174,76 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
               ? "bg-green-50 border-green-200"
               : "bg-white border-gray-100";
 
+            const userMemberObj = group.members.find(
+              (m) => m.user_id === currentUser?.id,
+            );
+
+            // UPDATED: Prioritize ride_request_id if your API sends it in the member object, fallback to member id
+            const requestId =
+              userMemberObj?.ride_request_id || userMemberObj?.id;
+
             return (
               <div
                 key={group.group_id}
-                className={`relative rounded-2xl p-6 shadow-sm border transition-all hover:shadow-md ${statusColor}`}
+                className={`relative rounded-2xl p-5 shadow-sm border transition-all hover:shadow-md ${statusColor}`}
               >
-                <div className="absolute top-4 right-4 flex items-center space-x-2">
-                  {group.members[0]?.scheduled_time && (
-                    <span className="flex items-center text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                      <ClockIcon className="w-3 h-3 mr-1" />
-                      {new Date(
-                        group.members[0].scheduled_time,
-                      ).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  )}
-                  {isMatched ? (
-                    <span className="flex items-center text-xs font-bold text-green-700 bg-green-100 px-3 py-1 rounded-full uppercase tracking-wider">
-                      Matched
-                      <CheckCircleIcon className="w-4 h-4 ml-1 text-green-600" />
-                    </span>
-                  ) : (
-                    <span className="flex items-center text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full uppercase tracking-wider border border-amber-100">
-                      Pending
-                      <span className="ml-2 w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-                    </span>
-                  )}
+                {/* Header: Title + Actions Row */}
+                <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                    <UserGroupIcon className="w-5 h-5 mr-2 text-indigo-500" />
+                    My Request
+                  </h3>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Delete Button */}
+                    <button
+                      onClick={() =>
+                        requestId && handleDeleteRequest(requestId, isMatched)
+                      }
+                      className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                      title="Cancel Request"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+
+                    {/* Scheduled Time */}
+                    {group.members[0]?.scheduled_time && (
+                      <span className="flex items-center text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                        <ClockIcon className="w-3 h-3 mr-1" />
+                        {new Date(
+                          group.members[0].scheduled_time,
+                        ).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    )}
+
+                    {/* Status Badge */}
+                    {isMatched ? (
+                      <span className="flex items-center text-xs font-bold text-green-700 bg-green-100 px-3 py-1 rounded-full uppercase tracking-wider">
+                        Matched
+                        <CheckCircleIcon className="w-4 h-4 ml-1 text-green-600" />
+                      </span>
+                    ) : (
+                      <span className="flex items-center text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full uppercase tracking-wider border border-amber-100">
+                        Pending
+                        <span className="ml-2 w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="flex-1 pr-4">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                      <UserGroupIcon className="w-5 h-5 mr-2 text-indigo-500" />
-                      My Request
-                    </h3>
-                    <div className="pl-2">
-                      <RouteVisualizer
-                        from={formatGrid(group.pickup_grid)}
-                        to={formatGrid(group.dropoff_grid)}
-                      />
-                    </div>
+                {/* Main Content: Route + Match Info */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                  <div className="flex-1">
+                    <RouteVisualizer
+                      from={formatGrid(group.pickup_grid)}
+                      to={formatGrid(group.dropoff_grid)}
+                    />
                   </div>
 
-                  <div className="flex flex-col items-center md:items-end space-y-3 min-w-50">
+                  <div className="flex flex-col items-stretch md:items-end min-w-[200px]">
                     {isMatched ? (
                       <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-green-100 shadow-sm w-full text-center md:text-right">
                         <div className="flex items-center justify-center md:justify-end text-sm font-medium text-green-800 mb-1">
@@ -235,6 +280,7 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
       );
     }
 
+    // ... (rest of the component remains exactly the same for ALL RIDES TAB and Modal)
     // ----------------------------------------------------------------
     // 2. ALL RIDES TAB
     if (groups.length === 0) {
@@ -345,7 +391,7 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* --- Category Selection Popup --- */}
+      {/* Modal and Rest of the Wrapper rendering remains identical... */}
       <AnimatePresence>
         {isCategoryModalOpen && (
           <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
@@ -406,6 +452,12 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
         >
           <RefreshIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />{" "}
           Refresh
+        </button>
+        <button
+          onClick={() => navigate("/request")}
+          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl bg-teal-600 hover:bg-brand text-white shadow-lg transition-all"
+        >
+          new request
         </button>
       </div>
 

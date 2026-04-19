@@ -45,6 +45,7 @@ Route::group(['prefix' => 'rides'], function () {
     // Route::post('request', [RideRequestController::class, 'store']);
     // Route::get('groups', [RideRequestController::class, 'index']);
     Route::post('v1/request', [UpdatedRideRequestController::class, 'store']);
+    Route::delete('v1/delete-request', [UpdatedRideRequestController::class, 'deleteRideRequest']);
     Route::get('v1/groups', [UpdatedRideRequestController::class, 'index']);
 });
 
