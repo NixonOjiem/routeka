@@ -453,6 +453,12 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
           <RefreshIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />{" "}
           Refresh
         </button>
+        <button
+          onClick={() => navigate("/request")}
+          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl bg-teal-600 hover:bg-brand text-white shadow-lg transition-all"
+        >
+          new request
+        </button>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2">
