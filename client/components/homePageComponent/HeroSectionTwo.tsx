@@ -1,5 +1,10 @@
 import { useRef, useState } from "react";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+} from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { X as XIcon } from "lucide-react";
 import { CategoryGrid } from "@/components/homePageComponent/CategoryGrid";
@@ -8,7 +13,8 @@ import { CategoryGrid } from "@/components/homePageComponent/CategoryGrid";
 const buttonVariants = {
   hover: {
     scale: 1.05,
-    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+    boxShadow:
+      "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
     transition: { type: "spring", stiffness: 400, damping: 10 },
   },
   tap: { scale: 0.95 },
@@ -26,17 +32,29 @@ export const HeroSectionTwo = () => {
   const carRotate = useTransform(scrollY, [0, 500], [0, -3]);
 
   return (
-<section ref={containerRef} className="relative overflow-hidden flex items-center justify-center">
+    <section
+      ref={containerRef}
+      className="relative overflow-hidden flex items-center justify-center"
+    >
       <div className="w-full">
         {/* Main Hero Card */}
         <div className="relative bg-linear-to-br from-brand to-brand-dark rounded-b-[3rem] shadow-3xl overflow-hidden p-6 sm:p-10 md:p-16 lg:p-24">
-          
           {/* Decorative Grid Texture */}
           <div className="absolute inset-0 opacity-10 pointer-events-none">
             <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1" />
+                <pattern
+                  id="grid"
+                  width="40"
+                  height="40"
+                  patternUnits="userSpaceOnUse"
+                >
+                  <path
+                    d="M 40 0 L 0 0 0 40"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="1"
+                  />
                 </pattern>
               </defs>
               <rect width="100%" height="100%" fill="url(#grid)" />
@@ -68,16 +86,22 @@ export const HeroSectionTwo = () => {
               className="space-y-4 sm:space-y-6 text-center lg:text-left"
             >
               <div className="space-y-1 sm:space-y-2">
-                <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-light text-white leading-tight">
+                {/* <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-light text-white leading-tight">
                   The commute that
                 </h1>
                 <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-white leading-tight">
                   feels like a getaway.
-                </h1>
+                </h1> */}
+                <p>Slash Ride share fares by as much as 66%</p>
+                <p>
+                  We help you others near you, headed to the same destination to
+                  help you save ride share costs.
+                </p>
               </div>
 
               <p className="text-sm sm:text-lg md:text-xl text-white/90 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
-                Book a premium ride, choose your professional network, and arrive refreshed.
+                Book a premium ride, choose your professional network, and
+                arrive refreshed.
               </p>
 
               {/* Trigger Button */}
@@ -86,12 +110,19 @@ export const HeroSectionTwo = () => {
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
-                  onClick={() => navigate('/request')}
+                  onClick={() => navigate("/request")}
                   className="group relative px-7 py-3.5 sm:px-8 sm:py-4 bg-white text-brand-dark font-bold rounded-full shadow-2xl flex items-center gap-3 uppercase tracking-wider text-xs sm:text-sm transition-colors hover:bg-stone-50"
                 >
                   <span>Book a ride</span>
                   <div className="bg-brand/10 p-1.5 rounded-full group-hover:bg-brand/20 group-hover:translate-x-1 transition-all">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
                       <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>
                   </div>
@@ -124,8 +155,12 @@ export const HeroSectionTwo = () => {
             >
               <div className="p-5 sm:p-6 border-b border-stone-100 flex justify-between items-center bg-white">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-stone-800">Choose Ride Type</h2>
-                  <p className="text-stone-500 text-xs sm:text-sm">Select a category to start your journey</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-stone-800">
+                    Choose Ride Type
+                  </h2>
+                  <p className="text-stone-500 text-xs sm:text-sm">
+                    Select a category to start your journey
+                  </p>
                 </div>
                 <button
                   onClick={() => setIsCategoryModalOpen(false)}
