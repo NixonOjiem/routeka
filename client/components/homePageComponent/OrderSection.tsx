@@ -64,10 +64,20 @@ export const OrderSection = () => {
             </span>
           </h1>
 
-          <p className="text-lg md:text-xl text-stone-500 max-w-xl mb-8 leading-relaxed">
+          {/* <p className="text-lg md:text-xl text-stone-500 max-w-xl mb-8 leading-relaxed">
             Just tell us where and when we'll match you with the perfect
             vehicle. Simple, fast, and premium.
-          </p>
+          </p> */}
+          <ol className="list-decimal list-inside mb-5">
+            <li>signup or login</li>
+            <li>
+              Enter desired pickup & dropoff locations and departure time.
+            </li>
+            <li>
+              We match you with others near you headed to the same destination.
+            </li>
+            <li>Join a chat to arrange a ride share</li>
+          </ol>
 
           {/* Value props */}
           <div className="flex flex-wrap gap-3">
