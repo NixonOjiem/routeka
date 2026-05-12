@@ -121,12 +121,12 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
   };
 
   const tabs = [
-    {
-      id: "my_rides",
-      label: "My Requests",
-      icon: StarIcon,
-      color: "text-yellow-500",
-    },
+    // {
+    //   id: "my_rides",
+    //   label: "My Requests",
+    //   icon: StarIcon,
+    //   color: "text-yellow-500",
+    // },
     {
       id: "matched_rides",
       label: "Matched Rides",
