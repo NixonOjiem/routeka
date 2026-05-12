@@ -58,9 +58,9 @@ export const OrderSection = () => {
         >
           {/* Headline */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-light tracking-tight text-stone-900 leading-[1.1] mb-6">
-            Request a ride,
+            {/* Request a ride, */}
             <span className="block font-bold text-brand-600 mt-2">
-              no categories needed.
+              How it works:
             </span>
           </h1>
 
