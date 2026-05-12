@@ -86,23 +86,14 @@ export const HeroSectionTwo = () => {
               className="space-y-4 sm:space-y-6 text-center lg:text-left"
             >
               <div className="space-y-1 sm:space-y-2">
-                {/* <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-light text-white leading-tight">
-                  The commute that
-                </h1>
-                <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-white leading-tight">
-                  feels like a getaway.
-                </h1> */}
-                <p>Slash Ride share fares by as much as 66%</p>
-                <p>
-                  We help you others near you, headed to the same destination to
-                  help you save ride share costs.
+                <p className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-light text-white leading-tight">
+                  Slash Ride share fares by as much as 66%
+                </p>
+                <p className="text-sm sm:text-lg md:text-xl text-white/90 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
+                  We help you find others near you, headed to the same
+                  destination to help you save ride share costs.
                 </p>
               </div>
-
-              <p className="text-sm sm:text-lg md:text-xl text-white/90 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
-                Book a premium ride, choose your professional network, and
-                arrive refreshed.
-              </p>
 
               {/* Trigger Button */}
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6 pt-2">
