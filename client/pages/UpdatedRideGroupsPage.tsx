@@ -18,6 +18,7 @@ import {
   LocationMarkerIcon,
   RefreshIcon,
   XIcon,
+  LinkIcon,
 } from "@heroicons/react/outline";
 import { TrashIcon } from "@heroicons/react/outline";
 import { CheckCircleIcon } from "@heroicons/react/solid";
@@ -129,6 +130,18 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
       color: "text-yellow-500",
     },
     {
+      id: "matched_rides",
+      label: "Matched Rides",
+      icon: LinkIcon,
+      color: "text-yellow-500",
+    },
+    {
+      id: "pending_rides",
+      label: "Pending Rides",
+      icon: ClockIcon,
+      color: "text-yellow-500",
+    },
+    {
       id: "all_rides",
       label: "All Rides",
       icon: UserGroupIcon,
@@ -190,7 +203,7 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
                 {/* Header: Title + Actions Row */}
                 <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
                   <h3 className="text-lg font-bold text-gray-900 flex items-center">
-                    <UserGroupIcon className="w-5 h-5 mr-2 text-indigo-500" />
+                    <UserGroupIcon className="w-5 h-5 mr-2 text-brand" />
                     My Request
                   </h3>
 
@@ -448,14 +461,14 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
         </div>
         <button
           onClick={fetchGroups}
-          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg transition-all"
+          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl text-white bg-brand hover:bg-brand-100 hover:text-brand shadow-lg transition-all"
         >
           <RefreshIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />{" "}
           Refresh
         </button>
         <button
           onClick={() => navigate("/request")}
-          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl bg-teal-600 hover:bg-brand text-white shadow-lg transition-all"
+          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl text-white bg-brand hover:bg-brand-100 hover:text-brand shadow-lg transition-all"
         >
           new request
         </button>
