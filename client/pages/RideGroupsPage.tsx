@@ -553,7 +553,7 @@ export const RideGroupsPage: React.FC<RideGroupsPageProps> = () => {
         </div>
         <button
           onClick={fetchGroups}
-          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg transition-all"
+          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl text-white bg-brand-50 hover:bg-indigo-700 shadow-lg transition-all"
         >
           <RefreshIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />{" "}
           Refresh
