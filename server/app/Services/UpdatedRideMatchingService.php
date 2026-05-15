@@ -115,13 +115,8 @@ class UpdatedRideMatchingService
             $chatRoom = $this->getOrCreateChatRoom($groupMembers, $pickupGridCenter, $dropoffGridCenter);
 
             // Fetch Names for the Response
-            // $pickupName = $this->getAreaName($pickupGridCenter['lat'], $pickupGridCenter['lng']);
-            // $dropoffName = $this->getAreaName($dropoffGridCenter['lat'], $dropoffGridCenter['lng']);
             $pickupGridCenter['name'] = $request->pickup_name ?? 'Pickup Location';
             $dropoffGridCenter['name'] = $request->dropoff_name ?? 'Dropoff Location';
-
-            // $pickupGridCenter['name'] = $pickupName;
-            // $dropoffGridCenter['name'] = $dropoffName;
 
             $groups[] = [
                 'group_id' => 'group_' . $request->id,
@@ -332,8 +327,6 @@ class UpdatedRideMatchingService
 
                 if (!empty($results)) {
                     // Geocodio returns highly specific addresses.
-                    // For a "Meetup Area", combining the street and city usually looks cleaner
-                    // than returning a full address with a zip code.
                     $components = $results[0]['address_components'] ?? [];
                     $street = $components['formatted_street'] ?? '';
                     $city = $components['city'] ?? '';
