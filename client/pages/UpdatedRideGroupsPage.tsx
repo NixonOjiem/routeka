@@ -145,12 +145,12 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
       icon: StarIcon,
       color: "text-purple-500",
     },
-    {
-      id: "all_rides",
-      label: "All Rides",
-      icon: UserGroupIcon,
-      color: "text-indigo-500",
-    },
+    // {
+    //   id: "all_rides",
+    //   label: "All Rides",
+    //   icon: UserGroupIcon,
+    //   color: "text-indigo-500",
+    // },
   ];
 
   const renderTabContent = () => {
