@@ -121,12 +121,6 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
   };
 
   const tabs = [
-    // {
-    //   id: "my_rides",
-    //   label: "My Requests",
-    //   icon: StarIcon,
-    //   color: "text-yellow-500",
-    // },
     {
       id: "matched_rides",
       label: "Matched Rides",
@@ -145,6 +139,7 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
       icon: UserGroupIcon,
       color: "text-indigo-500",
     },
+    //popular routes tab
   ];
 
   const renderTabContent = () => {
