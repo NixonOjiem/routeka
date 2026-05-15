@@ -14,8 +14,9 @@ return [
     'allowed_methods' => ['*'],
 
     // For production, replace '*' with your actual frontend URL
-    //'allowed_origins' => [env('FRONTEND_URL', 'http://192.168.100.249:3000/')],
-    'allowed_origins' => ['*'],
+    //'allowed_origins' => [env('FRONTEND_URL', 'http://192.168.100.249:3000/'), 'https://routeka-ride.duckdns.org/rides'],
+    'allowed_origins' => ['https://routeka-ride.duckdns.org'],
+    // 'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
 
