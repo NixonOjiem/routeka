@@ -29,7 +29,7 @@ class UpdatedRideRequestController extends Controller
     public function index(Request $request)
     {
         try {
-            $groupedRides = $this->rideService->getGroupedRides();
+            // $groupedRides = $this->rideService->getGroupedRides();
 
             // Check if user is logged in via JWT
             $user = Auth::guard('api')->user();
@@ -38,13 +38,17 @@ class UpdatedRideRequestController extends Controller
             $guestId = $request->header('X-Guest-ID');
             Log::info('Detected guest ID from index function: ' . $guestId);
 
-            $chatRooms = $this->rideService->getAvailableChatRooms(
-                $user ? $user->id : null
-            );
+            // Fetch the categorized rides passing the user ID and guest ID
+            $userId = $user ? $user->id : null;
+            $segmentedData = $this->rideService->getSegmentedRides($userId, $guestId);
+
+            $chatRooms = $this->rideService->getAvailableChatRooms($userId);
 
             return response()->json([
                 'success' => true,
-                'groups' => $groupedRides,
+                'matched_rides' => $segmentedData['matched_rides'], // User's matched groups (>1 member)
+                'pending_rides' => $segmentedData['pending_rides'], // User's unmatched requests (1 member)
+                'popular_rides' => $segmentedData['popular_rides'], // Any groups with >= 3 members
                 'chat_rooms' => $chatRooms,
                 'user' => $user ? [
                     'id' => $user->id,

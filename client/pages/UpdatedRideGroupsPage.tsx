@@ -23,7 +23,11 @@ import {
 import { TrashIcon } from "@heroicons/react/outline";
 import { CheckCircleIcon } from "@heroicons/react/solid";
 
-type TabType = "my_rides" | "matched_rides" | "pending_rides" | "all_rides";
+type TabType =
+  | "matched_rides"
+  | "pending_rides"
+  | "popular_rides"
+  | "all_rides";
 
 // --- Helper Components ---
 interface RideGroupsPageProps {
@@ -64,15 +68,18 @@ const MemberStack = ({ members }: { members: any[] }) => (
 
 export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
   const { user } = useSelector((state: RootState) => state.auth);
-  const [groups, setGroups] = useState<RideGroup[]>([]);
+  const [matchedRides, setMatchedRides] = useState<RideGroup[]>([]);
+  const [pendingRides, setPendingRides] = useState<RideGroup[]>([]);
+  const [popularRides, setPopularRides] = useState<RideGroup[]>([]);
+  const [chatRooms, setChatRooms] = useState<any[]>([]); // optional, keep if needed elsewhere
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>("my_rides");
+  const [activeTab, setActiveTab] = useState<TabType>("matched_rides");
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
-  // UPDATED: Accept isMatched to provide contextual prompts
+  // Delete request handler – uses ride request id from member matching current user's name
   const handleDeleteRequest = async (requestId: number, isMatched: boolean) => {
     const confirmMessage = isMatched
       ? "Are you sure you want to cancel this request and leave your matched ride group?"
@@ -82,7 +89,7 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
       try {
         await dispatch(removeRideRequest(requestId)).unwrap();
         toast.success("Ride request cancelled successfully");
-        fetchGroups();
+        fetchGroups(); // refresh data
       } catch (error: any) {
         toast.error(error?.message || error || "Failed to cancel request");
       }
@@ -97,7 +104,11 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
     try {
       setIsLoading(true);
       const response = await apiService.getGroupedRides();
-      setGroups(response.data.groups || []);
+      // Backend now returns segmented arrays
+      setMatchedRides(response.data.matched_rides || []);
+      setPendingRides(response.data.pending_rides || []);
+      setPopularRides(response.data.popular_rides || []);
+      setChatRooms(response.data.chat_rooms || []);
       if (response.data.user) setCurrentUser(response.data.user);
     } catch (error) {
       toast.error("Failed to load ride groups");
@@ -115,42 +126,38 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
     return "Unknown Location";
   };
 
-  const isGroupRelevant = (group: RideGroup) => {
-    if (!user || !currentUser) return false;
-    return group.members.some((member) => member.user_id === currentUser.id);
-  };
-
   const tabs = [
-    // {
-    //   id: "my_rides",
-    //   label: "My Requests",
-    //   icon: StarIcon,
-    //   color: "text-yellow-500",
-    // },
     {
       id: "matched_rides",
       label: "Matched Rides",
       icon: LinkIcon,
-      color: "text-yellow-500",
+      color: "text-green-500",
     },
     {
       id: "pending_rides",
       label: "Pending Rides",
       icon: ClockIcon,
-      color: "text-yellow-500",
+      color: "text-amber-500",
     },
     {
-      id: "all_rides",
-      label: "All Rides",
-      icon: UserGroupIcon,
-      color: "text-indigo-500",
+      id: "popular_rides",
+      label: "Popular Routes",
+      icon: StarIcon,
+      color: "text-purple-500",
     },
+    // {
+    //   id: "all_rides",
+    //   label: "All Rides",
+    //   icon: UserGroupIcon,
+    //   color: "text-indigo-500",
+    // },
   ];
 
   const renderTabContent = () => {
-    // ALL RIDES TAB – display every group
+    // ---- ALL RIDES TAB – combine all segments ----
     if (activeTab === "all_rides") {
-      if (groups.length === 0) {
+      const allGroups = [...matchedRides, ...pendingRides, ...popularRides];
+      if (allGroups.length === 0) {
         return (
           <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 mb-4">
@@ -168,7 +175,7 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
 
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {groups.map((group) => (
+          {allGroups.map((group) => (
             <div
               key={group.group_id}
               className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-indigo-100 transition-all duration-300 flex flex-col"
@@ -251,33 +258,33 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
       );
     }
 
-    // --- User‑specific tabs (my_rides / matched_rides / pending_rides) ---
-    let myRawGroups = groups.filter(isGroupRelevant);
+    // ---- USER‑SPECIFIC TABS (matched / pending / popular) ----
+    let groupsToShow: RideGroup[] = [];
+    let emptyTitle = "";
+    let emptyMessage = "";
 
     if (activeTab === "matched_rides") {
-      myRawGroups = myRawGroups.filter((g) => g.member_count > 1);
+      groupsToShow = matchedRides;
+      emptyTitle = "No matched rides yet";
+      emptyMessage =
+        "Once someone else requests a similar route, your ride will appear here.";
     } else if (activeTab === "pending_rides") {
-      myRawGroups = myRawGroups.filter((g) => g.member_count === 1);
+      groupsToShow = pendingRides;
+      emptyTitle = "No pending rides";
+      emptyMessage = "All your ride requests have been matched. Great!";
+    } else if (activeTab === "popular_rides") {
+      groupsToShow = popularRides;
+      emptyTitle = "No popular routes";
+      emptyMessage = "Popular routes with 3+ members will show up here.";
     }
 
-    if (!user || myRawGroups.length === 0) {
-      let emptyTitle = "No active ride requests";
-      let emptyMessage =
-        "Start your journey by creating a ride request. We'll match you with others nearby.";
+    if (!user) {
+      emptyTitle = "Sign in to view your rides";
+      emptyMessage =
+        "You need to be logged in to see your personal ride matches.";
+    }
 
-      if (activeTab === "matched_rides") {
-        emptyTitle = "No matched rides yet";
-        emptyMessage =
-          "Once someone else requests a similar route, your ride will appear here.";
-      } else if (activeTab === "pending_rides") {
-        emptyTitle = "No pending rides";
-        emptyMessage = "All your ride requests have been matched. Great!";
-      } else if (!user) {
-        emptyTitle = "Sign in to view your rides";
-        emptyMessage =
-          "You need to be logged in to see your personal ride matches.";
-      }
-
+    if (groupsToShow.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-dashed border-gray-300">
           <div className="bg-indigo-50 p-4 rounded-full mb-4">
@@ -301,18 +308,17 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
 
     return (
       <div className="grid grid-cols-1 gap-6">
-        {myRawGroups.map((group) => {
+        {groupsToShow.map((group) => {
           const isMatched = group.member_count > 1;
           const statusColor = isMatched
             ? "bg-green-50 border-green-200"
             : "bg-white border-gray-100";
 
+          // Identify the current user's ride request ID by matching user_name
           const userMemberObj = group.members.find(
-            (m) => m.user_id === currentUser?.id,
+            (m) => m.user_name === currentUser?.name,
           );
-
-          // UPDATED: Prioritize ride_request_id if your API sends it in the member object, fallback to member id
-          const requestId = userMemberObj?.ride_request_id || userMemberObj?.id;
+          const requestId = userMemberObj?.id; // this is the ride request id
 
           return (
             <div
@@ -328,15 +334,15 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
 
                 <div className="flex flex-wrap items-center gap-2">
                   {/* Delete Button */}
-                  <button
-                    onClick={() =>
-                      requestId && handleDeleteRequest(requestId, isMatched)
-                    }
-                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                    title="Cancel Request"
-                  >
-                    <TrashIcon className="h-5 w-5" />
-                  </button>
+                  {requestId && (
+                    <button
+                      onClick={() => handleDeleteRequest(requestId, isMatched)}
+                      className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                      title="Cancel Request"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+                  )}
 
                   {/* Scheduled Time */}
                   {group.members[0]?.scheduled_time && (
@@ -419,12 +425,11 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
       </div>
     );
 
-  // Tab badge counts
-  const myRelevant = groups.filter(isGroupRelevant);
-  const matchedCount = myRelevant.filter((g) => g.member_count > 1).length;
-  const pendingCount = myRelevant.filter((g) => g.member_count === 1).length;
-  const myRidesCount = myRelevant.length;
-  const allCount = groups.length;
+  // Badge counts
+  const matchedCount = matchedRides.length;
+  const pendingCount = pendingRides.length;
+  const popularCount = popularRides.length;
+  const allCount = matchedCount + pendingCount + popularCount;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -484,19 +489,21 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
             Manage your active requests and discover ride-sharing groups.
           </p>
         </div>
-        <button
-          onClick={fetchGroups}
-          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl text-white bg-brand hover:bg-brand-100 hover:text-brand shadow-lg transition-all"
-        >
-          <RefreshIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />{" "}
-          Refresh
-        </button>
-        <button
-          onClick={() => navigate("/request")}
-          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl text-white bg-brand hover:bg-brand-100 hover:text-brand shadow-lg transition-all"
-        >
-          new request
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={fetchGroups}
+            className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl text-white bg-brand hover:bg-brand-100 hover:text-brand shadow-lg transition-all"
+          >
+            <RefreshIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />{" "}
+            Refresh
+          </button>
+          <button
+            onClick={() => navigate("/request")}
+            className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl text-white bg-brand hover:bg-brand-100 hover:text-brand shadow-lg transition-all"
+          >
+            New Request
+          </button>
+        </div>
       </div>
 
       {/* Tab bar */}
@@ -508,9 +515,9 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             let count = 0;
-            if (tab.id === "my_rides") count = myRidesCount;
-            else if (tab.id === "matched_rides") count = matchedCount;
+            if (tab.id === "matched_rides") count = matchedCount;
             else if (tab.id === "pending_rides") count = pendingCount;
+            else if (tab.id === "popular_rides") count = popularCount;
             else if (tab.id === "all_rides") count = allCount;
 
             return (

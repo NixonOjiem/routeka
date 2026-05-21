@@ -47,6 +47,75 @@ class UpdatedRideMatchingService
     }
 
     /**
+     * Get rides segmented into matched, pending, and popular categories
+     */
+    public function getSegmentedRides($userId = null, $guestId = null)
+    {
+        try {
+            $hasStatusColumn = Schema::hasColumn('ride_requests', 'status');
+
+            //  need everyone's data to calculate matches and popular rides
+            $query = RideRequest::with('user');
+            if ($hasStatusColumn) {
+                $query->where('status', 'pending');
+            }
+            $allRequests = $query->get();
+
+            // Run the matching logic to get all groupings
+            $allGroups = $this->runGridMatching($allRequests);
+
+            $matchedRides = [];
+            $pendingRides = [];
+            $popularRides = [];
+
+            foreach ($allGroups as $group) {
+                // Determine if this is a "Popular Ride" (Minimum 3 people)
+                if ($group['member_count'] >= 3) {
+                    $popularRides[] = $group;
+                }
+
+                // Determine if the current user/guest is a part of this specific group
+                $isUserInGroup = false;
+                foreach ($group['members'] as $member) {
+                    // Check user_id, or fallback to checking a guest_id if you store it in the database
+                    if (
+                        ($userId && $member['user_id'] == $userId) ||
+                        ($guestId && isset($member['guest_id']) && $member['guest_id'] === $guestId)
+                    ) {
+                        $isUserInGroup = true;
+                        break;
+                    }
+                }
+
+                // If the user is in this group, categorize it as Matched or Pending
+                if ($isUserInGroup) {
+                    if ($group['member_count'] > 1) {
+                        // User is in a group with at least one other person
+                        $matchedRides[] = $group;
+                    } else {
+                        // User is the only one in the group, so it is still pending
+                        $pendingRides[] = $group;
+                    }
+                }
+            }
+
+            return [
+                'matched_rides' => array_values($matchedRides),
+                'pending_rides' => array_values($pendingRides),
+                'popular_rides' => array_values($popularRides),
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error in getSegmentedRides: ' . $e->getMessage());
+            return [
+                'matched_rides' => [],
+                'pending_rides' => [],
+                'popular_rides' => []
+            ];
+        }
+    }
+
+    /**
      * Reusable matching logic
      * @param $requests - Collection of RideRequest
      */
@@ -115,13 +184,8 @@ class UpdatedRideMatchingService
             $chatRoom = $this->getOrCreateChatRoom($groupMembers, $pickupGridCenter, $dropoffGridCenter);
 
             // Fetch Names for the Response
-            // $pickupName = $this->getAreaName($pickupGridCenter['lat'], $pickupGridCenter['lng']);
-            // $dropoffName = $this->getAreaName($dropoffGridCenter['lat'], $dropoffGridCenter['lng']);
             $pickupGridCenter['name'] = $request->pickup_name ?? 'Pickup Location';
             $dropoffGridCenter['name'] = $request->dropoff_name ?? 'Dropoff Location';
-
-            // $pickupGridCenter['name'] = $pickupName;
-            // $dropoffGridCenter['name'] = $dropoffName;
 
             $groups[] = [
                 'group_id' => 'group_' . $request->id,
@@ -332,8 +396,6 @@ class UpdatedRideMatchingService
 
                 if (!empty($results)) {
                     // Geocodio returns highly specific addresses.
-                    // For a "Meetup Area", combining the street and city usually looks cleaner
-                    // than returning a full address with a zip code.
                     $components = $results[0]['address_components'] ?? [];
                     $street = $components['formatted_street'] ?? '';
                     $city = $components['city'] ?? '';
