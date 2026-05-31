@@ -29,4 +29,10 @@ class group extends Model
         return $this->belongsToMany(User::class, 'group_user')->withTimestamps();
     }
 
+    //group has one chat room
+    public function chatRoom()
+    {
+        return $this->hasOne(ChatRoom::class);
+    }
+
 }
