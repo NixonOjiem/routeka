@@ -33,13 +33,13 @@ class RolesAndPermissionSeeder extends Seeder
         $superAdminRole = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'api']);
         $userRole = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'api']);
 
-        // 3. Assign Permissions to Roles
+        // Assign Permissions to Roles
 
         // Super Admin gets EVERYTHING
         $superAdminRole->syncPermissions(Permission::all());
 
         // Standard User gets baseline permissions.
-        // Note: Our Laravel Policy will strictly check the pivot table before allowing them to actually use the 'update groups' or 'delete groups' permissions.
+        // Note:Laravel Policy will strictly check the pivot table before allowing them to actually use the 'update groups' or 'delete groups' permissions.
         $userRole->syncPermissions([
             'create groups',
             'read groups',
@@ -55,13 +55,13 @@ class RolesAndPermissionSeeder extends Seeder
             'read chatmessages'
         ]);
 
-        // 4. Create the default Super Admin User
+        // Create the default Super Admin User
         $superAdmin = User::firstOrCreate(
-            ['email' => 'superadmin@example.com'],
+            ['email' => 'superadmin@app.com.com'],
             [
                 'name' => 'System Super Admin',
-                'user_name' => 'super_admin',
-                'password' => Hash::make('password123'),
+                'user_name' => 'superadmin',
+                'password' => Hash::make('secret@12345'),
                 'email_verified_at' => now(),
             ]
         );
