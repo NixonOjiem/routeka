@@ -34,7 +34,7 @@ class GroupController extends Controller
         // Trigger email notification to the application admin
         // Note: You will need to build the App\Mail\GroupRequestNotification class
         try {
-            Mail::to('admin@yourdomain.com')->send(new \App\Mail\GroupRequestNotification($group));
+            Mail::to(env('MAIL_USERNAME'))->send(new \App\Mail\GroupRequestNotification($group));
         } catch (\Exception $e) {
             // Log error but don't crash the request if mail server is down
             info("Failed sending group request email: " . $e->getMessage());
