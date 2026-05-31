@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Log;
 
 class GroupController extends Controller
 {
@@ -102,6 +103,8 @@ class GroupController extends Controller
 
         // Notify the user of the decision dynamically using their account email
         try {
+            Log::info("Attempting to send group status email to user: " . $group->creator->email);
+            Log::info("Attempting to send group status email to user: ");
             Mail::to($group->creator->email)->send(new GroupStatusNotification($group));
         } catch (\Exception $e) {
             info("Failed sending group status email to user: " . $e->getMessage());
