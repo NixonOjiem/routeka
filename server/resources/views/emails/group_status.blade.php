@@ -1,14 +1,14 @@
 @component('mail::message')
-# Hello {{ $this->group->creator->name }},
+# Hello {{ $group->creator->name }},
 
-We have reviewed your request to create the group **{{ $this->group->name }}**.
+We have reviewed your request to create the group **{{ $group->name }}**.
 
-@if($this->group->status === 'approved')
+@if($group->status === 'approved')
     ## 🎉 Your Group Has Been Approved!
     You have been automatically designated as the **Group Admin**. Your dedicated group chat room is now fully set up and
     ready for use.
 
-    @component('mail::button', ['url' => env('FRONTEND_URL') . '/dashboard/groups/' . $this->group->id])
+    @component('mail::button', ['url' => env('FRONTEND_URL') . '/dashboard/groups/' . $group->id])
     Go To Your Group
     @endcomponent
 
