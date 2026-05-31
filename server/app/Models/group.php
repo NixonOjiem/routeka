@@ -14,7 +14,19 @@ class group extends Model
         'name',
         'description',
         'creator_id',
-        'status',
+        'status', // pending approved or rejected
     ];
+
+    //Group creator
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'creator_id');
+    }
+
+    //group members
+    public function members()
+    {
+        return $this->belongsToMany(User::class, 'group_user')->withTimestamps();
+    }
 
 }
