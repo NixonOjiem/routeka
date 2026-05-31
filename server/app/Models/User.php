@@ -88,4 +88,15 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         SendVerificationEmail::dispatch($this);
     }
 
+    public function createdGroups()
+    {
+        return $this->hasMany(Group::class, 'creator_id');
+    }
+
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_user')->withTimestamps();
+    }
+
+
 }
