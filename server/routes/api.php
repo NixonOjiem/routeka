@@ -4,10 +4,9 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\GroupController;
 use App\Http\Controllers\PersonaWebHookController;
 use App\Http\Controllers\UpdatedRideRequestController;
-// use App\Http\Controllers\RideRequestController;
-// use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 //Auth routes
@@ -55,6 +54,11 @@ Route::prefix('chat')->group(function () {
     Route::get('/rooms/{roomId}/join', [ChatController::class, 'joinRoom']);
     Route::get('/rooms/{roomId}/messages', [ChatController::class, 'getMessages']);
     Route::post('/rooms/{roomId}/messages', [ChatController::class, 'sendMessage']);
+});
+
+Route::group(['prefix' => 'groups'], function () {
+    Route::post('/request', [GroupController::class, 'requestGroup'])->middleware('auth:api');
+    Route::post('/review-group/{id}', [GroupController::class, 'reviewGroup'])->middleware('auth:api');
 });
 
 // Optional: WebSocket/Pusher event broadcasting

@@ -20,21 +20,24 @@ class VerificationController extends Controller
         $user = User::find($id);
 
         if (!$user) {
-            return redirect(env('FRONTEND_URL') . '/auth?error=invalid_user',);
+            return redirect(env('FRONTEND_URL') . '/auth?error=invalid_user', );
         }
 
         if (!$user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
+            if (!$user->hasRole('user', 'api')) {
+                $user->assignRole('user');
+            }
             event(new Verified($user));
         }
 
-    return redirect(env('FRONTEND_URL') . '/auth?verified=true');
+        return redirect(env('FRONTEND_URL') . '/auth?verified=true');
     }
 
     public function resend(Request $request)
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect(env('FRONTEND_URL'). '/auth?verified=true', );
+            return redirect(env('FRONTEND_URL') . '/auth?verified=true', );
         }
 
         $request->user()->sendEmailVerificationNotification();

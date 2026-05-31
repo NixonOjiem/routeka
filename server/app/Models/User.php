@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Jobs\SendVerificationEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -87,5 +88,16 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         // Dispatch the Job to the queue
         SendVerificationEmail::dispatch($this);
     }
+
+    public function createdGroups()
+    {
+        return $this->hasMany(Group::class, 'creator_id');
+    }
+
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_user')->withPivot('role')->withTimestamps();
+    }
+
 
 }
