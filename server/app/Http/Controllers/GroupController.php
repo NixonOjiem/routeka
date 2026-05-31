@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\GroupStatusNotification;
+use App\Models\ChatRoom;
 use App\Models\Group;
 use App\Models\User;
-use App\Models\ChatRoom;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -33,12 +34,15 @@ class GroupController extends Controller
         ]);
 
         // Trigger email notification to the application admin
-        // Note: You will need to build the App\Mail\GroupRequestNotification class
         try {
-            Mail::to(env('MAIL_USERNAME'))->send(new \App\Mail\GroupRequestNotification($group));
+            Mail::to(config('mail.from.address'))->send(new \App\Mail\GroupRequestNotification($group));
         } catch (\Exception $e) {
             // Log error but don't crash the request if mail server is down
             info("Failed sending group request email: " . $e->getMessage());
+            return response()->json([
+                'message' => 'Group creation request submitted successfully, but we failed to send the notification email to the admin. We will still review your request as normal.',
+                'group' => $group
+            ], 201);
         }
 
         return response()->json([
