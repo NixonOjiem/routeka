@@ -20,7 +20,8 @@ class GroupStatusNotification extends Mailable
         $this->group = $group->relationLoaded('creator') ? $group : $group->load('creator');
     }
 
-    public function getEnvelope(): Envelope
+    // ✅ must be envelope()
+    public function envelope(): Envelope
     {
         $statusText = ucfirst($this->group->status);
         return new Envelope(
@@ -28,7 +29,8 @@ class GroupStatusNotification extends Mailable
         );
     }
 
-    public function getContent(): Content
+    // ✅ must be content()
+    public function content(): Content
     {
         return new Content(
             markdown: 'emails.group_status',
