@@ -20,6 +20,7 @@ class GroupController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
+            'requester_email' => 'required|email|max:255', // For notification purposes
         ]);
 
         $user = $request->user();
@@ -41,7 +42,7 @@ class GroupController extends Controller
         }
 
         return response()->json([
-            'message' => 'Group creation request submitted successfully. It is currently pending admin approval.',
+            'message' => 'Group creation request submitted successfully. It is currently pending admin approval.We will notify you via email once it has been reviewed.',
             'group' => $group
         ], 201);
     }
@@ -50,39 +51,60 @@ class GroupController extends Controller
      * Step 2: Super Admin approves the group.
      * Automatically creates a ChatRoom and links it.
      */
-    public function approveGroup(Request $request, $id)
+    public function reviewGroup(Request $request, $id)
     {
-        // Global Spatie Check: Only global super-admins can approve groups
+        // Global Spatie Check: Only super-admins can process requests
         if (!$request->user()->hasRole('super-admin', 'api')) {
-            return response()->json(['error' => 'Unauthorized. Only system administrators can approve groups.'], 403);
+            return response()->json(['error' => 'Unauthorized. Only system administrators can review group requests.'], 403);
         }
+
+        // Validate the incoming decision
+        $request->validate([
+            'status' => 'required|string|in:approved,rejected',
+        ]);
 
         $group = Group::findOrFail($id);
 
+        // Make sure we aren't reprocessing an already handled request
         if ($group->status !== 'pending') {
-            return response()->json(['message' => 'This group has already been processed.'], 400);
+            return response()->json(['message' => 'This group request has already been processed.'], 400);
         }
 
-        // Update status
-        $group->update(['status' => 'approved']);
+        $decision = $request->status;
 
-        // Attach creator as the initial local 'group-admin' in the pivot table
-        $group->members()->attach($group->creator_id, ['role' => 'group-admin']);
+        // Handle Approval Logic
+        if ($decision === 'approved') {
+            $group->update(['status' => 'approved']);
 
-        // Create the associated ChatRoom matching your original schema requirements
-        $chatRoom = ChatRoom::create([
-            'room_id' => 'room_' . Str::random(16),
-            'group_id' => $group->id,
-            'name' => $group->name,
-            'ride_ids' => [], // Empty array as this is a custom group, not a ride match
-            'user_ids' => [$group->creator_id], // Add the creator to the array setup
-            'pickup_grid' => null,
-            'dropoff_grid' => null,
-            'is_active' => true
-        ]);
+            // Attach creator as local group-admin
+            $group->members()->attach($group->creator_id, ['role' => 'group-admin']);
+
+            // Generate the ChatRoom
+            ChatRoom::create([
+                'room_id' => 'room_' . Str::random(16),
+                'group_id' => $group->id,
+                'name' => $group->name,
+                'ride_ids' => [],
+                'user_ids' => [(int) $group->creator_id],
+                'pickup_grid' => null,
+                'dropoff_grid' => null,
+                'is_active' => true
+            ]);
+        }
+        // Handle Rejection Logic
+        else {
+            $group->update(['status' => 'rejected']);
+        }
+
+        // Notify the user of the decision dynamically using their account email
+        try {
+            Mail::to($group->creator->email)->send(new GroupStatusNotification($group));
+        } catch (\Exception $e) {
+            info("Failed sending group status email to user: " . $e->getMessage());
+        }
 
         return response()->json([
-            'message' => 'Group approved successfully and chat room generated.',
+            'message' => "Group request has been successfully {$decision}.",
             'group' => $group->load('chatRoom')
         ], 200);
     }
