@@ -13,6 +13,15 @@ use Log;
 
 class GroupController extends Controller
 {
+
+    public function fetchUserGroups()
+    {
+        $user = auth()->user();
+
+        $groups = $user->groups()->with('chatRoom')->get();
+
+        return response()->json(['groups' => $groups]);
+    }
     /**
      * Step 1: User submits a group creation request.
      * Status is 'pending' until approved by an admin.
