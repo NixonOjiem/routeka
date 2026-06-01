@@ -18,7 +18,8 @@ export const fetchUserGroups = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await apiService.getUserGroups();
-      return response.data.groups;
+      // response.data.groups is now PaginatedGroups
+      return response.data.groups.data; // this is UserGroup[]
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to load your groups",

@@ -42,6 +42,17 @@ api.interceptors.response.use(
 
 // Types
 // User groups
+
+export interface PaginatedGroups {
+  current_page: number;
+  data: UserGroup[];
+  first_page_url: string;
+  from: number;
+  last_page: number;
+  last_page_url: string;
+  // ... other pagination fields if needed
+}
+
 export interface UserGroup {
   id: number;
   name: string;
@@ -218,7 +229,7 @@ export const apiService = {
 
   // Group management
   getUserGroups: (perPage = 100) =>
-    api.get<{ groups: UserGroup[] }>("/groups/fetch-groups", {
+    api.get<{ groups: PaginatedGroups }>("/groups/fetch-groups", {
       params: { per_page: perPage },
     }),
 

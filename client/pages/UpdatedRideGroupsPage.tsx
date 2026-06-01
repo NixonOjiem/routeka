@@ -370,7 +370,7 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
           </div>
 
           {/* Group list */}
-          {userGroups.length === 0 ? (
+          {!Array.isArray(userGroups) || userGroups.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
               <div className="bg-gray-50 inline-flex p-4 rounded-full">
                 <UserGroupIcon className="w-8 h-8 text-gray-400" />
