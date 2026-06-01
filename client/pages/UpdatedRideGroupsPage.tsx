@@ -27,6 +27,7 @@ type TabType =
   | "matched_rides"
   | "pending_rides"
   | "popular_rides"
+  | "my_groups"
   | "all_rides";
 
 // --- Helper Components ---
