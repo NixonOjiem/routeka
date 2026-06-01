@@ -234,4 +234,19 @@ class AuthController extends Controller
         ], 200);
     }
 
+    public function search(Request $request)
+    {
+        $query = $request->input('email', '');
+
+        $users = User::where('email', 'like', '%' . $query . '%')
+            ->whereDoesntHave('roles', function ($q) {
+                $q->where('name', 'super-admin');
+            })
+            ->where('email', 'not like', '%@routeka%')  // exclude @routeka domain
+            ->limit(10)
+            ->get(['id', 'name', 'email']);
+
+        return response()->json(['users' => $users]);
+    }
+
 }
