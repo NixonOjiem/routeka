@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ProtectedRoute } from "./components/authPages/ProtectedRoute";
 import {
   BrowserRouter as Router,
@@ -15,6 +15,9 @@ import { Footer } from "./components/layout/Footer";
 import { NotificationToast } from "./components/redundant/NotificationToast";
 import { Provider } from "react-redux";
 import { store } from "./redux/store";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "./redux/store";
+import { fetchUserProfile } from "./redux/slices/authSlice";
 
 // Page Imports
 import { HomePage } from "./pages/HomePage";
@@ -28,9 +31,24 @@ import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPPasswordPage from "@/pages/ResetPPasswordPage";
 import { UpdatedRideGroupsPage } from "./pages/UpdatedRideGroupsPage";
 import AdminGroupReview from "./components/admin/AdminGroupReview";
+import { apiService } from "./services/api";
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch<AppDispatch>();
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+
+  //Fetch user profile (with roles) if the user is logged in but roles are missing
+  useEffect(() => {
+    console.log("running useeffect now for profile");
+    if (currentUser && (!currentUser.roles || currentUser.roles.length === 0)) {
+      console.log("rinning apiservice to get profile");
+      apiService
+        .getUserProfile()
+        .then((res) => console.log("Profile API response:", res))
+        .catch((err) => console.error("Profile API error:", err));
+    }
+  }, [currentUser]);
 
   const isAuthPage =
     /^\/(auth|signin|signup|chat|forgot-password|reset-password)/.test(

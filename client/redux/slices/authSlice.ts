@@ -7,6 +7,8 @@ import {
   requestPasswordReset,
   confirmPasswordReset,
 } from "@/services/api";
+import { apiService } from "@/services/api";
+
 // Types
 interface User {
   id?: number;
@@ -16,6 +18,7 @@ interface User {
   email_verified_at?: any;
   user_name?: string;
   avatar?: string;
+  roles?: { name: string }[]; // Spatie roles
 }
 
 interface AuthState {
@@ -28,6 +31,15 @@ interface AuthState {
   message: string;
   isSuccess: boolean;
 }
+// export interface User {
+//   id?: number;
+//   name: string;
+//   email: string;
+//   user_name?: string;
+//   email_verified_at?: string;
+//   avatar?: string;
+//   roles?: { name: string }[]; // Spatie roles
+// }
 
 const getGuestId = (): string => {
   let guestId = localStorage.getItem("guest_id");
@@ -134,6 +146,18 @@ export const resetNewPassword = createAsyncThunk<
   }
 });
 
+export const fetchUserProfile = createAsyncThunk(
+  "auth/fetchProfile",
+  async (_, thunkAPI) => {
+    try {
+      const response = await apiService.getUserProfile();
+      return response.data.data; // your backend returns { message, data: {...} }
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  },
+);
+
 // Slice
 const authSlice = createSlice({
   name: "auth",
@@ -160,6 +184,11 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      //profile
+      .addCase(fetchUserProfile.fulfilled, (state, action) => {
+        state.user = action.payload;
+        localStorage.setItem("user", JSON.stringify(action.payload));
+      })
 
       // Forgot Password Cases
       .addCase(forgotPassword.pending, (state) => {

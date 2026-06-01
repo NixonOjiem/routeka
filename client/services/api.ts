@@ -89,6 +89,7 @@ export interface User {
   user_name?: string;
   email_verified_at?: string;
   avatar?: string;
+  roles?: { name: string }[]; // Spatie roles
 }
 
 export interface RideLocation {
