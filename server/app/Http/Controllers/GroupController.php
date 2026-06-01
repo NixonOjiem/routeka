@@ -145,7 +145,8 @@ class GroupController extends Controller
         try {
             Log::info("Attempting to send group status email to user: " . $group->creator->email);
             Log::info("Attempting to send group status email to user: ");
-            Mail::to($group->creator->email)->send(new GroupStatusNotification($group));
+            // Mail::to($group->creator->email)->send(new GroupStatusNotification($group));
+            Mail::to($group->creator->email)->queue(new GroupStatusNotification($group));
         } catch (\Exception $e) {
             info("Failed sending group status email to user: " . $e->getMessage());
         }
