@@ -234,7 +234,7 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function search(Request $request)
+    public function searchUsersByEmail(Request $request)
     {
         $query = $request->input('email', '');
 
