@@ -13,6 +13,34 @@ use Log;
 
 class GroupController extends Controller
 {
+
+    public function fetchUserGroups(Request $request)
+    {
+        $user = $request->user();
+        $perPage = (int) $request->input('per_page', 15);
+
+        // Super-admin sees all groups
+        if ($user->hasRole('super-admin', 'api')) {
+            $groups = Group::with('chatRoom')
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage);
+
+            return response()->json(['groups' => $groups]);
+        }
+
+        // Regular user sees only groups they created or are a member of
+        $groups = Group::with('chatRoom')
+            ->where(function ($query) use ($user) {
+                $query->where('creator_id', $user->id)
+                    ->orWhereHas('members', function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        return response()->json(['groups' => $groups]);
+    }
     /**
      * Step 1: User submits a group creation request.
      * Status is 'pending' until approved by an admin.
