@@ -60,6 +60,7 @@ Route::group(['prefix' => 'groups'], function () {
     Route::post('/request', [GroupController::class, 'requestGroup'])->middleware('auth:api');
     Route::post('/review-group/{id}', [GroupController::class, 'reviewGroup'])->middleware('auth:api');
     Route::get('/fetch-groups', [GroupController::class, 'fetchUserGroups'])->middleware('auth:api');
+    Route::get('/groups/{group}', [GroupController::class, 'fetchGroupbyId'])->middleware('auth:api');
 });
 
 // Optional: WebSocket/Pusher event broadcasting

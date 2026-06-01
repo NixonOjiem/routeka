@@ -14,6 +14,17 @@ use Log;
 class GroupController extends Controller
 {
 
+    public function fetchGroupbyId(Group $group)
+    {
+        // Only super-admin or the creator can view the group
+        $user = request()->user();
+        if (!$user->hasRole('super-admin', 'api') && $user->id !== $group->creator_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        return response()->json(['group' => $group->load('chatRoom', 'creator')]);
+    }
+
     public function fetchUserGroups(Request $request)
     {
         $user = $request->user();
