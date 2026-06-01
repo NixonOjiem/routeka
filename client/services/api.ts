@@ -41,6 +41,17 @@ api.interceptors.response.use(
 );
 
 // Types
+// User groups
+export interface UserGroup {
+  id: number;
+  name: string;
+  description: string | null;
+  creator_id: number;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  updated_at: string;
+  chat_room?: ChatRoom | null; // populated when approved
+}
 
 export interface UpdateProfilePayload {
   name?: string;
@@ -69,30 +80,28 @@ export interface RideGroupMember {
   user_id: number;
   user_name: string;
   category: string;
-  //pickup: RideLocation;
-  //dropoff: RideLocation;
   guest_id: string | null;
   commute_time?: string;
-  pickup: { lat: number; lng: number };
-  dropoff: { lat: number; lng: number };
+  pickup?: { lat: number; lng: number };
+  dropoff?: { lat: number; lng: number };
 }
 
 export interface RideGroup {
   group_id: string;
   chat_room_id: string | null;
   group_type: string;
-  meetup_point: {
+  meetup_point?: {
     lat: number;
     lng: number;
     name: string;
   };
-  pickup_grid: {
+  pickup_grid?: {
     lat: number;
     lng: number;
     grid_cell: string;
     name: string;
   };
-  dropoff_grid: {
+  dropoff_grid?: {
     lat: number;
     lng: number;
     grid_cell: string;
@@ -106,8 +115,8 @@ export interface ChatRoom {
   room_id: string;
   name: string;
   is_member: boolean;
-  pickup_grid: string;
-  dropoff_grid: string;
+  pickup_grid?: string;
+  dropoff_grid?: string;
   member_count: number;
   message_count: number;
   last_activity: string;
@@ -206,6 +215,18 @@ export const apiService = {
       params: { request_id },
       ...config,
     }),
+
+  // Group management
+  getUserGroups: (perPage = 100) =>
+    api.get<{ groups: UserGroup[] }>("/groups/fetch-groups", {
+      params: { per_page: perPage },
+    }),
+
+  requestGroup: (data: {
+    name: string;
+    description?: string;
+    requester_email: string;
+  }) => api.post("/groups/request", data),
 
   // Chat endpoints
   getChatRooms: () =>
