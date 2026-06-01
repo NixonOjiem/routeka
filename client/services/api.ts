@@ -42,7 +42,18 @@ api.interceptors.response.use(
 
 // Types
 // User groups
+export interface GroupMember {
+  id: number;
+  name: string;
+  email: string;
+  role: string; // 'group-admin' or 'member'
+}
 
+export interface SearchUser {
+  id: number;
+  name: string;
+  email: string;
+}
 export interface PaginatedGroups {
   current_page: number;
   data: UserGroup[];
@@ -240,7 +251,23 @@ export const apiService = {
   }) => api.post("/groups/request", data),
 
   getAdminGroup: (groupId: number) =>
-    api.get<{ group: UserGroup & { creator?: User } }>(`/groups/${groupId}`),
+    api.get<{ group: UserGroup & { creator?: User; members?: GroupMember[] } }>(
+      `/groups/${groupId}`,
+    ),
+  // Member management
+  getGroupMembers: (groupId: number) =>
+    api.get<{ members: GroupMember[] }>(`/groups/${groupId}/members`),
+
+  searchUsers: (email: string) =>
+    api.get<{ users: SearchUser[] }>("/users/search", { params: { email } }),
+
+  addGroupMembers: (groupId: number, userIds: number[]) =>
+    api.post<{ message: string }>(`/groups/${groupId}/members`, {
+      user_ids: userIds,
+    }),
+
+  removeGroupMember: (groupId: number, userId: number) =>
+    api.delete(`/groups/${groupId}/members/${userId}`),
 
   reviewGroup: (groupId: number, status: "approved" | "rejected") =>
     api.post(`/groups/review-group/${groupId}`, { status }),
