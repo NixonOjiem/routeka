@@ -4,6 +4,12 @@ import { apiService, RideGroup, User } from "../services/api";
 import { toast } from "react-toastify";
 import { useSelector, useDispatch } from "react-redux";
 import { removeRideRequest } from "@/redux/slices/rideGroupsSlice";
+import {
+  fetchUserGroups,
+  createGroupRequest,
+} from "@/redux/slices/userGroupsSlice";
+import type { UserGroup } from "@/services/api";
+
 import { AppDispatch } from "@/redux/store";
 import { RootState } from "@/redux/store";
 import { CategoryGrid } from "@/components/homePageComponent/CategoryGrid";
@@ -80,6 +86,48 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
+  const {
+    groups: userGroups,
+    isLoading: userGroupsLoading,
+    error: userGroupsError,
+  } = useSelector((state: RootState) => state.userGroups);
+
+  // State for the creation modal
+  const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupDescription, setNewGroupDescription] = useState("");
+
+  useEffect(() => {
+    if (activeTab === "my_groups" && user) {
+      dispatch(fetchUserGroups());
+    }
+  }, [activeTab, user, dispatch]);
+
+  // Handler for group creation
+  const handleCreateGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.email) {
+      toast.error("Cannot submit request without an email address.");
+      return;
+    }
+    try {
+      await dispatch(
+        createGroupRequest({
+          name: newGroupName,
+          description: newGroupDescription,
+          requester_email: user.email,
+        }),
+      ).unwrap();
+      toast.success("Group request submitted for admin approval!");
+      setIsCreateGroupModalOpen(false);
+      setNewGroupName("");
+      setNewGroupDescription("");
+      dispatch(fetchUserGroups()); // refresh list
+    } catch (error: any) {
+      toast.error(typeof error === "string" ? error : "Failed to create group");
+    }
+  };
+
   // Delete request handler – uses ride request id from member matching current user's name
   const handleDeleteRequest = async (requestId: number, isMatched: boolean) => {
     const confirmMessage = isMatched
@@ -145,6 +193,12 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
       label: "Popular Routes",
       icon: StarIcon,
       color: "text-purple-500",
+    },
+    {
+      id: "my_groups",
+      label: "My Groups",
+      icon: UserGroupIcon,
+      color: "text-sky-500",
     },
     // {
     //   id: "all_rides",
@@ -255,6 +309,205 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
               </div>
             </div>
           ))}
+        </div>
+      );
+    }
+
+    if (activeTab === "my_groups") {
+      if (!user) {
+        return (
+          <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
+            <LockClosedIcon className="w-16 h-16 text-gray-300 mx-auto" />
+            <h3 className="text-lg font-medium text-gray-900 mt-4">
+              Sign in required
+            </h3>
+            <p className="text-gray-500 max-w-sm mx-auto mt-2">
+              Please sign in to view and manage your custom groups.
+            </p>
+            <Link
+              to="/signin"
+              className="mt-4 inline-block text-brand font-medium"
+            >
+              Sign in
+            </Link>
+          </div>
+        );
+      }
+
+      if (userGroupsLoading) {
+        return (
+          <div className="flex justify-center py-16">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
+          </div>
+        );
+      }
+
+      if (userGroupsError) {
+        return (
+          <div className="text-center py-16 bg-red-50 rounded-2xl">
+            <p className="text-red-600">{userGroupsError}</p>
+            <button
+              onClick={() => dispatch(fetchUserGroups())}
+              className="mt-3 text-sm text-indigo-600 underline"
+            >
+              Retry
+            </button>
+          </div>
+        );
+      }
+
+      return (
+        <div className="space-y-6">
+          {/* Create Group button */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => setIsCreateGroupModalOpen(true)}
+              className="inline-flex items-center px-4 py-2 bg-brand text-white text-sm font-medium rounded-lg shadow hover:bg-brand-600 transition-colors"
+            >
+              <UserGroupIcon className="w-5 h-5 mr-2" />
+              Create Group
+            </button>
+          </div>
+
+          {/* Group list */}
+          {userGroups.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
+              <div className="bg-gray-50 inline-flex p-4 rounded-full">
+                <UserGroupIcon className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mt-4">
+                No groups yet
+              </h3>
+              <p className="text-gray-500 max-w-sm mx-auto mt-2">
+                Create your first group to connect with others for study,
+                travel, or social activities.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {userGroups.map((group: UserGroup) => (
+                <div
+                  key={group.id}
+                  className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="font-bold text-gray-900">{group.name}</h3>
+                    <span
+                      className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+                        group.status === "approved"
+                          ? "bg-green-100 text-green-700"
+                          : group.status === "pending"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {group.status}
+                    </span>
+                  </div>
+                  {group.description && (
+                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                      {group.description}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>
+                      Created {new Date(group.created_at).toLocaleDateString()}
+                    </span>
+                    {group.status === "approved" && group.chat_room && (
+                      <Link
+                        to={`/chat/${group.chat_room.room_id}`}
+                        className="text-indigo-600 font-medium hover:underline"
+                      >
+                        Open Chat
+                      </Link>
+                    )}
+                    {group.status === "pending" && (
+                      <span className="italic">Awaiting approval</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Create Group Modal */}
+          <AnimatePresence>
+            {isCreateGroupModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsCreateGroupModalOpen(false)}
+                  className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                />
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-gray-900">
+                      Create a Group
+                    </h2>
+                    <button
+                      onClick={() => setIsCreateGroupModalOpen(false)}
+                      className="p-1 rounded-full hover:bg-gray-100"
+                    >
+                      <XIcon className="w-5 h-5 text-gray-500" />
+                    </button>
+                  </div>
+                  <form onSubmit={handleCreateGroup} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Group Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={newGroupName}
+                        onChange={(e) => setNewGroupName(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="e.g., Morning Study Group"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description (optional)
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={newGroupDescription}
+                        onChange={(e) => setNewGroupDescription(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="What is this group about?"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      * Your group request will be reviewed by an admin before
+                      it becomes active.
+                    </p>
+                    <div className="flex justify-end gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsCreateGroupModalOpen(false)}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-600"
+                      >
+                        Submit Request
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
         </div>
       );
     }
