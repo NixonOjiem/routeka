@@ -81,7 +81,8 @@ class AuthController extends Controller
         if (!auth('api')->check()) {
             return response()->json(['message' => 'Please login to continue'], 401);
         }
-        return response()->json(auth('api')->user());
+        $user = auth('api')->user()->load('roles');
+        return response()->json($user);
     }
 
     public function profile()
@@ -90,13 +91,15 @@ class AuthController extends Controller
             return response()->json(['message' => 'Please login to continue'], 401);
         }
 
-        $user = auth('api')->user();
+        $user = auth('api')->user()->load('roles');
         $userData = [
             'name' => $user->name,
             'email' => $user->email,
             'user_name' => $user->user_name,
             'email_verified_at' => $user->email_verified_at,
             'verification_status' => $user->verification_status,
+            'roles' => $user->roles->pluck('name'), // or full role objects if needed
+
         ];
         Log::info($userData);
         return response()->json(['message' => 'Profile retrieved successfully', 'data' => $userData]);
@@ -111,6 +114,7 @@ class AuthController extends Controller
     // Helper function to format the response
     protected function respondWithToken($token, $user, $user_name)
     {
+        $user->load('roles');
         return response()->json([
             'token' => $token,
             'user' => $user,

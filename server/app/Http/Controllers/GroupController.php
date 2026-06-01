@@ -243,35 +243,34 @@ class GroupController extends Controller
         }
 
         $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'role' => 'nullable|string|in:member,group-admin' // Allows adding directly or promoting directly
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:users,id',
+            'role' => 'nullable|string|in:member,group-admin'
         ]);
 
-        $targetUserId = $request->user_id;
-        $targetRole = $request->input('role', 'member');
+        $role = $request->input('role', 'member');
+        $added = [];
 
-        // Prevent duplicate structural inserts
-        if ($group->members()->where('user_id', $targetUserId)->exists()) {
-            return response()->json(['message' => 'User is already a member of this group.'], 422);
-        }
+        foreach ($request->user_ids as $targetUserId) {
+            if ($group->members()->where('user_id', $targetUserId)->exists()) {
+                continue; // skip duplicates
+            }
+            $group->members()->attach($targetUserId, ['role' => $role]);
+            $added[] = $targetUserId;
 
-        // 1. Attach to pivot table
-        $group->members()->attach($targetUserId, ['role' => $targetRole]);
-
-        // 2. Synchronize ChatRoom tracking array
-        if ($group->chatRoom) {
-            $chatRoom = $group->chatRoom;
-            $currentUsers = $chatRoom->user_ids ?? [];
-
-            if (!in_array($targetUserId, $currentUsers)) {
-                $currentUsers[] = (int) $targetUserId;
-                $chatRoom->update(['user_ids' => $currentUsers]);
+            // Sync chat room
+            if ($group->chatRoom) {
+                $chatRoom = $group->chatRoom;
+                $currentUsers = $chatRoom->user_ids ?? [];
+                if (!in_array($targetUserId, $currentUsers)) {
+                    $currentUsers[] = (int) $targetUserId;
+                    $chatRoom->update(['user_ids' => $currentUsers]);
+                }
             }
         }
 
-        return response()->json(['message' => 'Member added successfully to group and chat room.']);
+        return response()->json(['message' => 'Members added successfully', 'added' => $added]);
     }
-
     /**
      * Remove a member from a group.
      * Updates pivot table AND syncs the ChatRoom user_ids array.
