@@ -14,6 +14,17 @@ use Log;
 class GroupController extends Controller
 {
 
+    public function fetchGroupbyId(Group $group)
+    {
+        // Only super-admin or the creator can view the group
+        $user = request()->user();
+        if (!$user->hasRole('super-admin', 'api') && $user->id !== $group->creator_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        return response()->json(['group' => $group->load('chatRoom', 'creator')]);
+    }
+
     public function fetchUserGroups(Request $request)
     {
         $user = $request->user();
@@ -50,7 +61,7 @@ class GroupController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'requester_email' => 'required|email|max:255', // For notification purposes
+            // 'requester_email' => 'required|email|max:255', // For notification purposes
         ]);
 
         $user = $request->user();
@@ -64,7 +75,8 @@ class GroupController extends Controller
 
         // Trigger email notification to the application admin
         try {
-            Mail::to(config('mail.from.address'))->send(new \App\Mail\GroupRequestNotification($group));
+            // Mail::to(config('mail.from.address'))->send(new \App\Mail\GroupRequestNotification($group));
+            Mail::to(config('mail.from.address'))->queue(new \App\Mail\GroupRequestNotification($group));
         } catch (\Exception $e) {
             // Log error but don't crash the request if mail server is down
             info("Failed sending group request email: " . $e->getMessage());
@@ -133,7 +145,8 @@ class GroupController extends Controller
         try {
             Log::info("Attempting to send group status email to user: " . $group->creator->email);
             Log::info("Attempting to send group status email to user: ");
-            Mail::to($group->creator->email)->send(new GroupStatusNotification($group));
+            // Mail::to($group->creator->email)->send(new GroupStatusNotification($group));
+            Mail::to($group->creator->email)->queue(new GroupStatusNotification($group));
         } catch (\Exception $e) {
             info("Failed sending group status email to user: " . $e->getMessage());
         }

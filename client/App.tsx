@@ -27,6 +27,7 @@ import ChatPage from "@/pages/ChatPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPPasswordPage from "@/pages/ResetPPasswordPage";
 import { UpdatedRideGroupsPage } from "./pages/UpdatedRideGroupsPage";
+import AdminGroupReview from "./components/admin/AdminGroupReview";
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -107,6 +108,15 @@ function AppContent() {
           <Route path="chat/:roomId" element={<ChatPage />} />
 
           {/* protected routes */}
+          <Route path="/admin/groups/:id" element={<AdminGroupReview />} />
+          {/* <Route
+            path="/admin/groups/:id"
+            element={
+              <ProtectedRoute>
+                <AdminGroupReview />
+              </ProtectedRoute>
+            }
+          /> */}
           <Route
             path="/request"
             element={
