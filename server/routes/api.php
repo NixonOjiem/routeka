@@ -55,12 +55,15 @@ Route::prefix('chat')->group(function () {
     Route::get('/rooms/{roomId}/messages', [ChatController::class, 'getMessages']);
     Route::post('/rooms/{roomId}/messages', [ChatController::class, 'sendMessage']);
 });
-
+Route::get('/users/search', [AuthController::class, 'searchUsersByEmail'])->middleware('auth:api');
 Route::group(['prefix' => 'groups'], function () {
     Route::post('/request', [GroupController::class, 'requestGroup'])->middleware('auth:api');
     Route::post('/review-group/{id}', [GroupController::class, 'reviewGroup'])->middleware('auth:api');
     Route::get('/fetch-groups', [GroupController::class, 'fetchUserGroups'])->middleware('auth:api');
     Route::get('/{group}', [GroupController::class, 'fetchGroupbyId'])->middleware('auth:api');
+    Route::get('/{group}/members', [GroupController::class, 'groupMembers'])->middleware('auth:api');
+    Route::post('/{id}/members', [GroupController::class, 'addGroupMember'])->middleware('auth:api');
+    Route::delete('/{id}/members/{userId}', [GroupController::class, 'removegroupMember'])->middleware('auth:api');
 });
 
 // Optional: WebSocket/Pusher event broadcasting
