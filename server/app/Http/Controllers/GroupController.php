@@ -210,6 +210,21 @@ class GroupController extends Controller
         return response()->json(['message' => 'Group dissolved successfully.']);
     }
 
+    public function groupMembers($id)
+    {
+        $group = Group::findOrFail($id);
+        // Optional: authorization check
+        $members = $group->members()->withPivot('role')->get()->map(function ($member) {
+            return [
+                'id' => $member->id,
+                'name' => $member->name,
+                'email' => $member->email,
+                'role' => $member->pivot->role,
+            ];
+        });
+
+        return response()->json(['members' => $members]);
+    }
     /**
      * Add a member to a group.
      * Updates pivot table AND syncs the ChatRoom user_ids array.
