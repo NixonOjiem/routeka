@@ -239,6 +239,12 @@ export const apiService = {
     requester_email: string;
   }) => api.post("/groups/request", data),
 
+  getAdminGroup: (groupId: number) =>
+    api.get<{ group: UserGroup & { creator?: User } }>(`/groups/${groupId}`),
+
+  reviewGroup: (groupId: number, status: "approved" | "rejected") =>
+    api.post(`/groups/review-group/${groupId}`, { status }),
+
   // Chat endpoints
   getChatRooms: () =>
     api.get<{ rooms: ChatRoom[]; guest_id: string }>("/chat/rooms"),
