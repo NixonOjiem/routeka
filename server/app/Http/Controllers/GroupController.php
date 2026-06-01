@@ -50,7 +50,7 @@ class GroupController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'requester_email' => 'required|email|max:255', // For notification purposes
+            // 'requester_email' => 'required|email|max:255', // For notification purposes
         ]);
 
         $user = $request->user();
@@ -64,7 +64,8 @@ class GroupController extends Controller
 
         // Trigger email notification to the application admin
         try {
-            Mail::to(config('mail.from.address'))->send(new \App\Mail\GroupRequestNotification($group));
+            // Mail::to(config('mail.from.address'))->send(new \App\Mail\GroupRequestNotification($group));
+            Mail::to(config('mail.from.address'))->queue(new \App\Mail\GroupRequestNotification($group));
         } catch (\Exception $e) {
             // Log error but don't crash the request if mail server is down
             info("Failed sending group request email: " . $e->getMessage());
