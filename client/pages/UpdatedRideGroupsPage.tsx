@@ -28,7 +28,7 @@ import {
 } from "@heroicons/react/outline";
 import { TrashIcon } from "@heroicons/react/outline";
 import { CheckCircleIcon } from "@heroicons/react/solid";
-
+import { PencilIcon } from "@heroicons/react/outline";
 type TabType =
   | "matched_rides"
   | "pending_rides"
@@ -290,7 +290,7 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
                     <>
                       {user ? (
                         <Link
-                          to={`/chat/${group.chat_room_id}`}
+                          to={`/chat/${group.chat_room_id}?groupId=${group.group_id}`}
                           className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
                         >
                           Join Chat
@@ -415,7 +415,8 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
                     </span>
                     {group.status === "approved" && group.chat_room && (
                       <Link
-                        to={`/chat/${group.chat_room.room_id}`}
+                        // to={`/chat/${group.chat_room.room_id}`}
+                        to={`/chat/${group.chat_room.room_id}?groupId=${group.id}`}
                         className="text-indigo-600 font-medium hover:underline"
                       >
                         Open Chat
@@ -430,7 +431,7 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
                         className="text-gray-400 hover:text-indigo-600 transition-colors ml-1"
                         title="Manage group"
                       >
-                        Manage
+                        Manage <PencilIcon className="w-4 h-4" />
                       </Link>
                     )}
                   </div>

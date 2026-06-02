@@ -20,17 +20,7 @@ const AdminGroupReview: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
-  console.log("currentUser?.roles:", currentUser?.roles);
-  console.log("group status:", group?.status);
-
   const isGroupCreator = currentUser?.id === group?.creator_id;
-  console.log(
-    "current user id:" +
-      currentUser?.id +
-      " group creator id:" +
-      group?.creator_id,
-  );
-
   const isGroupAdmin = members.some(
     (m) => m.email === currentUser?.email && m.role === "group-admin",
   );
@@ -41,6 +31,7 @@ const AdminGroupReview: React.FC = () => {
   });
 
   const canManage = isSuperAdmin || isGroupAdmin || isGroupCreator;
+
   useEffect(() => {
     fetchGroup();
   }, [id]);
@@ -73,7 +64,6 @@ const AdminGroupReview: React.FC = () => {
     }
   };
 
-  // Debounced search
   const debounce = (fn: Function, ms = 300) => {
     let timer: NodeJS.Timeout;
     return (...args: any) => {
@@ -153,7 +143,7 @@ const AdminGroupReview: React.FC = () => {
       setProcessing(true);
       await apiService.reviewGroup(group.id, status);
       toast.success(`Group ${status} successfully!`);
-      fetchGroup(); // refresh data
+      fetchGroup();
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Action failed");
     } finally {
@@ -163,8 +153,8 @@ const AdminGroupReview: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-16">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
       </div>
     );
   }
@@ -178,77 +168,141 @@ const AdminGroupReview: React.FC = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10">
-      <div className="bg-white rounded-2xl shadow p-6 space-y-6">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      {/* Page Header Layout */}
+      <header className="mb-8 pb-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{group.name}</h1>
-          <p className="text-sm text-gray-500">Group ID: {group.id}</p>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+            {group.name}
+          </h1>
+          <p className="text-xs text-gray-500 mt-0.5">ID: {group.id}</p>
         </div>
-
-        <div className="border-t pt-4">
-          <h2 className="text-sm font-medium text-gray-500">Description</h2>
-          <p className="mt-1 text-gray-800">
-            {group.description || "No description provided."}
-          </p>
-        </div>
-
-        <div className="border-t pt-4">
-          <h2 className="text-sm font-medium text-gray-500">Creator</h2>
-          <p className="mt-1 text-gray-800">
-            {group.creator?.name || "Unknown"} ({group.creator?.email})
-          </p>
-        </div>
-
-        <div className="border-t pt-4">
-          <h2 className="text-sm font-medium text-gray-500">Status</h2>
+        <div>
           <span
-            className={`mt-1 inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+            className={`inline-flex px-3 py-1 rounded text-xs font-semibold tracking-wide uppercase ${
               group.status === "approved"
-                ? "bg-green-100 text-green-700"
+                ? "bg-green-50 text-green-700 border border-green-200"
                 : group.status === "pending"
-                  ? "bg-amber-100 text-amber-700"
-                  : "bg-red-100 text-red-700"
+                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                  : "bg-red-50 text-red-700 border border-red-200"
             }`}
           >
             {group.status}
           </span>
         </div>
+      </header>
 
-        {/* Member management section (only for approved groups and authorized users) */}
-        {group.status === "approved" && canManage && (
-          <div className="border-t pt-6 space-y-6">
-            <h2 className="text-xl font-semibold text-gray-800">Members</h2>
+      {/* Main Content Grid Split */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+        {/* Left Hand Details Column */}
+        <aside className="md:col-span-1 space-y-6 md:pr-4 md:border-r md:border-gray-100 min-h-full">
+          <div>
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+              Description
+            </h2>
+            <p className="text-sm text-gray-700 leading-normal">
+              {group.description || "No description provided."}
+            </p>
+          </div>
 
-            {/* Current members list */}
-            <div className="space-y-2">
-              {members.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center justify-between bg-gray-50 p-2 rounded-lg"
-                >
-                  <div>
-                    <span className="font-medium">{member.name}</span>
-                    <span className="text-sm text-gray-500 ml-2">
-                      ({member.email}) –{" "}
-                      <span className="capitalize">{member.role}</span>
-                    </span>
-                  </div>
-                  {member.id !== group.creator_id && (
-                    <button
-                      onClick={() => handleRemoveMember(member.id)}
-                      className="text-red-500 hover:text-red-700 text-sm font-medium"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-              ))}
+          <div>
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+              Creator
+            </h2>
+            <div className="text-sm">
+              <p className="font-medium text-gray-900">
+                {group.creator?.name || "Unknown"}
+              </p>
+              <p className="text-gray-500 text-xs">{group.creator?.email}</p>
             </div>
+          </div>
 
-            {/* Add member search & select */}
-            <div className="space-y-3">
-              <h3 className="font-medium text-gray-700">Add Members</h3>
-              <div className="relative">
+          {/* Action Module for Review Status */}
+          {group.status === "pending" && (
+            <div className="pt-4 border-t border-gray-100">
+              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                Review Request
+              </h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleReview("approved")}
+                  disabled={processing}
+                  className="flex-1 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => handleReview("rejected")}
+                  disabled={processing}
+                  className="flex-1 py-2 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 disabled:opacity-50 transition-colors"
+                >
+                  Reject
+                </button>
+              </div>
+            </div>
+          )}
+
+          {group.status !== "pending" && group.status !== "approved" && (
+            <div className="pt-2">
+              <p className="text-xs text-gray-400 italic">
+                This request context is finalized.
+              </p>
+            </div>
+          )}
+        </aside>
+
+        {/* Right Hand Functional Management Area */}
+        {group.status === "approved" && canManage && (
+          <main className="md:col-span-2 space-y-8">
+            {/* User List Panel */}
+            <section>
+              <h2 className="text-lg font-bold text-gray-900 mb-4">
+                Current Members
+              </h2>
+              {members.length === 0 ? (
+                <p className="text-sm text-gray-500 italic">
+                  No members assigned to this group.
+                </p>
+              ) : (
+                <div className="border border-gray-100 rounded-lg divide-y divide-gray-100 overflow-hidden">
+                  {members.map((member) => (
+                    <div
+                      key={member.id}
+                      className="p-3.5 flex items-center justify-between hover:bg-gray-50/50 transition-colors group"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {member.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {member.email} <span className="mx-1.5">•</span>
+                          <span className="capitalize font-medium text-indigo-600">
+                            {member.role}
+                          </span>
+                        </p>
+                      </div>
+                      {member.id !== group.creator_id && (
+                        <button
+                          onClick={() => handleRemoveMember(member.id)}
+                          className="text-xs font-medium text-red-600 md:opacity-0 group-hover:opacity-100 transition-opacity hover:underline focus:opacity-100"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* Invite/Search Module Panel */}
+            <section className="bg-gray-50/60 p-5 rounded-xl border border-gray-100">
+              <h2 className="text-base font-bold text-gray-900">Add Members</h2>
+              <p className="text-xs text-gray-500 mb-4">
+                Query network profiles by email addresses.
+              </p>
+
+              <div className="relative max-w-sm">
                 <input
                   type="text"
                   placeholder="Search by email..."
@@ -257,84 +311,79 @@ const AdminGroupReview: React.FC = () => {
                   onFocus={() =>
                     searchResults.length > 0 && setIsSearchOpen(true)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded shadow-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                 />
+
                 {isSearchOpen && searchResults.length > 0 && (
-                  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                  <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded shadow-lg max-h-48 overflow-auto">
                     {searchResults.map((user) => (
                       <div
                         key={user.id}
                         onClick={() => handleSelectUser(user)}
-                        className="px-4 py-2 hover:bg-indigo-50 cursor-pointer flex justify-between"
+                        className="px-3 py-2 hover:bg-indigo-50 cursor-pointer flex justify-between items-center border-b border-gray-50 last:border-0"
                       >
-                        <span>
-                          {user.name}{" "}
-                          <span className="text-gray-500">({user.email})</span>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-medium text-gray-900 truncate">
+                            {user.name}
+                          </span>
+                          <span className="text-[11px] text-gray-500 truncate">
+                            {user.email}
+                          </span>
+                        </div>
+                        <span className="text-xs font-semibold text-indigo-600 whitespace-nowrap ml-2">
+                          Select
                         </span>
-                        <span className="text-xs text-indigo-600">Add</span>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Selected users tags */}
+              {/* Active Selection Staging Badges */}
               {selectedUsers.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {selectedUsers.map((user) => (
-                    <span
-                      key={user.id}
-                      className="inline-flex items-center bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm"
-                    >
-                      {user.name}
-                      <button
-                        onClick={() => handleRemoveSelectedUser(user.id)}
-                        className="ml-2 text-indigo-600 hover:text-indigo-800"
+                <div className="mt-4 pt-4 border-t border-gray-200/60">
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    Staged Additions
+                  </h3>
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {selectedUsers.map((user) => (
+                      <span
+                        key={user.id}
+                        className="inline-flex items-center bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded text-xs font-medium border border-indigo-100"
                       >
-                        ×
-                      </button>
-                    </span>
-                  ))}
+                        {user.name}
+                        <button
+                          onClick={() => handleRemoveSelectedUser(user.id)}
+                          className="ml-1.5 text-indigo-400 hover:text-indigo-700 transition-colors focus:outline-none"
+                          aria-label="Deselect user"
+                        >
+                          <svg
+                            className="h-3 w-3"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={handleAddMembers}
+                    disabled={processing}
+                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                  >
+                    {processing ? "Saving..." : "Commit Members"}
+                  </button>
                 </div>
               )}
-
-              <button
-                onClick={handleAddMembers}
-                disabled={selectedUsers.length === 0 || processing}
-                className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {processing ? "Adding..." : "Add Members"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Approval / rejection buttons */}
-        {group.status === "pending" && (
-          <div className="border-t pt-6 flex gap-4">
-            <button
-              onClick={() => handleReview("approved")}
-              disabled={processing}
-              className="w-full md:w-auto px-6 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50"
-            >
-              Approve
-            </button>
-            <button
-              onClick={() => handleReview("rejected")}
-              disabled={processing}
-              className="w-full md:w-auto px-6 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 disabled:opacity-50"
-            >
-              Reject
-            </button>
-          </div>
-        )}
-
-        {group.status !== "pending" && group.status !== "approved" && (
-          <div className="border-t pt-4">
-            <p className="text-sm text-gray-500">
-              This group request has already been processed.
-            </p>
-          </div>
+            </section>
+          </main>
         )}
       </div>
     </div>
