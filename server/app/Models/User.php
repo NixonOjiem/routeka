@@ -37,7 +37,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
      */
     protected $hidden = [
         'google_id',
-        'id',
+        // 'id',
         'email_verified_at',
         'created_at',
         'password',
