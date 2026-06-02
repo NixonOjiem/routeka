@@ -23,18 +23,6 @@ const AdminGroupReview: React.FC = () => {
   console.log("currentUser?.roles:", currentUser?.roles);
   console.log("group status:", group?.status);
 
-  // const isGroupAdmin = members.some(
-  //   (m) => m.id === currentUser?.id && m.role === "group-admin",
-  // );
-  // // const isSuperAdmin = (currentUser as any)?.role === "super-admin"; // or just currentUser?.role if interface is fixed
-  // const isSuperAdmin = currentUser?.roles?.some((r) => {
-  //   if (typeof r === "string") return r === "super-admin";
-  //   if (typeof r === "object" && r !== null) return r.name === "super-admin";
-  //   return false;
-  // });
-  // const canManage = isSuperAdmin || isGroupAdmin;
-  // const canManage = true;
-
   const isGroupCreator = currentUser?.id === group?.creator_id;
   console.log(
     "current user id:" +
