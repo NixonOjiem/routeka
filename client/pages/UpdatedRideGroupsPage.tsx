@@ -424,6 +424,15 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
                     {group.status === "pending" && (
                       <span className="italic">Awaiting approval</span>
                     )}
+                    {group.status === "approved" && (
+                      <Link
+                        to={`/admin/groups/${group.id}`}
+                        className="text-gray-400 hover:text-indigo-600 transition-colors ml-1"
+                        title="Manage group"
+                      >
+                        Manage
+                      </Link>
+                    )}
                   </div>
                 </div>
               ))}
