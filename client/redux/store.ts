@@ -5,6 +5,7 @@ import rideRequestReducer from "./slices/rideRequestSlice";
 import rideGroupsReducer from "./slices/rideGroupsSlice"; // ✅ new slice
 import chatReducer from "./slices/chatSlice"; // ✅ new slice
 import profileSlice from "./slices/profileSlice";
+import userGroupsReducer from "./slices/userGroupsSlice"; // ✅ new slice
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     rideRequest: rideRequestReducer,
     rideGroups: rideGroupsReducer, // ✅ integrated
     chat: chatReducer, // ✅ integrated
+    userGroups: userGroupsReducer, // ✅ integrated
     profile: profileSlice,
   },
   devTools: import.meta.env.VITE_ENVIRONMENT !== "production",

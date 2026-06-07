@@ -11,6 +11,7 @@ class ChatRoom extends Model
 
     protected $fillable = [
         'room_id',
+        'group_id',
         'name',
         'ride_ids',
         'user_ids',
@@ -32,5 +33,10 @@ class ChatRoom extends Model
     public function rideRequests()
     {
         return $this->belongsToMany(RideRequest::class, 'chat_room_ride_request');
+    }
+
+    public function group()
+    {
+        return $this->belongsTo(Group::class);
     }
 }
