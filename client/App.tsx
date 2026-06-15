@@ -122,7 +122,7 @@ function AppContent() {
 
           {/* ✅ Add new routes */}
           {/* <Route path="rides" element={<RideGroupsPage />} /> */}
-          <Route path="rides" element={<UpdatedRideGroupsPage />} />
+          <Route path="rides/:tab?" element={<UpdatedRideGroupsPage />} />
           <Route path="chat/:roomId" element={<ChatPage />} />
 
           {/* protected routes */}

@@ -67,25 +67,37 @@ export const OrderSection = () => {
           <ol className="mb-6 space-y-6 border-l-2 border-brand ml-4">
             <li className="relative pl-8">
               <span className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-brand-dark border-4 border-white shadow-sm"></span>
-              <p className="text-gray-800 font-medium">Signup or Login</p>
+              <p className="text-gray-800 font-medium">
+                <span className="font-extrabold">1. </span>{" "}
+                <span className="font-extrabold">Create your Profile-</span>{" "}
+                Signup or login to get started.
+              </p>
             </li>
             <li className="relative pl-8">
               <span className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-brand-dark border-4 border-white shadow-sm"></span>
+
               <p className="text-gray-800">
-                Enter desired pickup & dropoff locations and departure time.
+                {" "}
+                <span className="font-extrabold">2. </span>{" "}
+                <span className="font-extrabold">Set your Route-</span> Enter
+                pickup, drop-off, and departure time.
               </p>
             </li>
             <li className="relative pl-8">
               <span className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-brand-dark border-4 border-white shadow-sm"></span>
               <p className="text-gray-800">
-                We match you with others near you headed to the same
-                destination.
+                <span className="font-extrabold">3. </span>{" "}
+                <span className="font-extrabold">Get Matched-</span> We'll find
+                nearby riders heading your way
               </p>
             </li>
             <li className="relative pl-8">
               <span className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-brand-dark border-4 border-white shadow-sm"></span>
               <p className="text-gray-800">
-                Join a chat to arrange a ride share
+                {" "}
+                <span className="font-extrabold">4. </span>{" "}
+                <span className="font-extrabold">Chat and Split-</span> Join the
+                group chat to coordinate your ride and split the cost.
               </p>
             </li>
           </ol>

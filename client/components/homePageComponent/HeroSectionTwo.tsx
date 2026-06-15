@@ -90,8 +90,8 @@ export const HeroSectionTwo = () => {
                   Slash Ride share fares by as much as 66%
                 </p>
                 <p className="text-sm sm:text-lg md:text-xl text-white/90 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
-                  We help you find others near you, headed to the same
-                  destination to help you save ride share costs.
+                  We connect you with riders heading your way so you can split
+                  the cost.
                 </p>
               </div>
 
@@ -104,7 +104,29 @@ export const HeroSectionTwo = () => {
                   onClick={() => navigate("/request")}
                   className="group relative px-7 py-3.5 sm:px-8 sm:py-4 bg-white text-brand-dark font-bold rounded-full shadow-2xl flex items-center gap-3 uppercase tracking-wider text-xs sm:text-sm transition-colors hover:bg-stone-50"
                 >
-                  <span>Book a ride</span>
+                  <span>Meet Riders</span>
+                  <div className="bg-brand/10 p-1.5 rounded-full group-hover:bg-brand/20 group-hover:translate-x-1 transition-all">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  onClick={() => navigate("/rides/groups")}
+                  className="group relative px-7 py-3.5 sm:px-8 sm:py-4 bg-white text-brand-dark font-bold rounded-full shadow-2xl flex items-center gap-3 uppercase tracking-wider text-xs sm:text-sm transition-colors hover:bg-stone-50"
+                >
+                  <span>Join Your Group/Organization</span>
                   <div className="bg-brand/10 p-1.5 rounded-full group-hover:bg-brand/20 group-hover:translate-x-1 transition-all">
                     <svg
                       width="18"
