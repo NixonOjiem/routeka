@@ -4,6 +4,7 @@ import { apiService, RideGroup, User } from "../services/api";
 import { toast } from "react-toastify";
 import { useSelector, useDispatch } from "react-redux";
 import { removeRideRequest } from "@/redux/slices/rideGroupsSlice";
+import { useParams } from "react-router-dom";
 import {
   fetchUserGroups,
   createGroupRequest,
@@ -81,7 +82,7 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
   const [chatRooms, setChatRooms] = useState<any[]>([]); // optional, keep if needed elsewhere
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>("matched_rides");
+  // const [activeTab, setActiveTab] = useState<TabType>("matched_rides");
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -96,6 +97,25 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDescription, setNewGroupDescription] = useState("");
+  const { tab } = useParams<{ tab?: string }>();
+
+  const tabMap: Record<string, TabType> = {
+    matched: "matched_rides",
+    pending: "pending_rides",
+    popular: "popular_rides",
+    groups: "my_groups",
+    // you can also keep 'all_rides' if you want /rides/all
+  };
+
+  const tabRoutes: Record<TabType, string> = {
+    matched_rides: "matched",
+    pending_rides: "pending",
+    popular_rides: "popular",
+    my_groups: "groups",
+    all_rides: "all",
+  };
+
+  const activeTab: TabType = tab && tabMap[tab] ? tabMap[tab] : "matched_rides";
 
   useEffect(() => {
     if (activeTab === "my_groups" && user) {
@@ -783,11 +803,13 @@ export const UpdatedRideGroupsPage: React.FC<RideGroupsPageProps> = () => {
             else if (tab.id === "pending_rides") count = pendingCount;
             else if (tab.id === "popular_rides") count = popularCount;
             else if (tab.id === "all_rides") count = allCount;
-
+            const route = tabRoutes[tab.id as TabType];
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as TabType)}
+                // onClick={() => setActiveTab(tab.id as TabType)}
+                onClick={() => navigate(`/rides/${route}`)}
+                // onClick={() => setActiveTab(tab.id as TabType)}
                 className={`group relative flex items-center justify-center md:justify-start px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 w-full md:w-auto ${
                   isActive
                     ? "bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-200"

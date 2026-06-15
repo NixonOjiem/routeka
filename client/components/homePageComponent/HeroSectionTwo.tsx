@@ -123,7 +123,7 @@ export const HeroSectionTwo = () => {
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
-                  onClick={() => navigate("/rides")}
+                  onClick={() => navigate("/rides/groups")}
                   className="group relative px-7 py-3.5 sm:px-8 sm:py-4 bg-white text-brand-dark font-bold rounded-full shadow-2xl flex items-center gap-3 uppercase tracking-wider text-xs sm:text-sm transition-colors hover:bg-stone-50"
                 >
                   <span>Join Your Group/Organization</span>
