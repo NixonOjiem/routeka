@@ -118,65 +118,6 @@ export const OrderSection = () => {
         </motion.div>
 
         {/* RIGHT COLUMN – Simplified card (image + button) */}
-        <motion.div
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-          className="relative flex justify-center lg:justify-end"
-        >
-          <div className="relative w-full max-w-md">
-            {/* Background glow */}
-            <div className="absolute -inset-4 bg-linear-to-r from-brand-200/40 to-brand-300/40 rounded-[3rem] blur-2xl" />
-
-            {/* Card */}
-            <div className="relative bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white/30 p-6 space-y-6">
-              {/* Image */}
-              <div className="aspect-video w-full overflow-hidden rounded-2xl">
-                <img
-                  src="/images/bmw-white.jpg"
-                  alt="Premium car"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              {/* Request Ride Button (links to /rides) */}
-              <Link to={"/request"}>
-                <button className="w-full py-4 bg-stone-900 text-white font-semibold rounded-xl hover:bg-stone-800 transition-colors flex items-center justify-center gap-2 text-lg">
-                  <span>Request ride</span>
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </Link>
-
-              {/* Animated dots (optional) */}
-              <div className="flex justify-center gap-1.5 pt-2">
-                <motion.div
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.5, delay: 0 }}
-                  className="w-2 h-2 rounded-full bg-brand-500"
-                />
-                <motion.div
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }}
-                  className="w-2 h-2 rounded-full bg-brand-400"
-                />
-                <motion.div
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.5, delay: 0.4 }}
-                  className="w-2 h-2 rounded-full bg-brand-300"
-                />
-              </div>
-            </div>
-          </div>
-        </motion.div>
       </div>
 
       {/* Decorative bottom edge */}
