@@ -59,6 +59,8 @@ class AuthController extends Controller
             'password' => $password,
         ];
 
+        Log::info("Attempting login with credentials: " . json_encode($credentials));
+
         // 4. Attempt login
         if (!$token = auth('api')->attempt($credentials)) {
             return response()->json(['message' => 'Unauthorized. Check your credentials.'], 401);
