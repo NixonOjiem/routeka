@@ -38,6 +38,7 @@ class AuthController extends Controller
         ]);
 
         // trigger event to send email
+        Log::info("User registered successfully: " . $user->id . " - " . $user->email);
 
         event(new Registered($user));
         return response()->json(['message' => 'Registration successful. Please verify your email before logging in.'], 201);
@@ -58,6 +59,8 @@ class AuthController extends Controller
             $loginField => $loginData,
             'password' => $password,
         ];
+
+        Log::info("Attempting login with credentials: " . json_encode($credentials));
 
         // 4. Attempt login
         if (!$token = auth('api')->attempt($credentials)) {
@@ -156,6 +159,10 @@ class AuthController extends Controller
                     // Or manually: $user->update(['email_verified_at' => now()]);
                 }
 
+                if (!$user->hasRole('user', 'api')) {
+                    $user->assignRole('user');
+                }
+
             } else {
                 // Create new user
                 $baseUsername = Str::slug($googleUser->getName());
@@ -178,6 +185,8 @@ class AuthController extends Controller
                     'password' => Hash::make(Str::random(16)),
                     'email_verified_at' => now(), // Set verified immediately
                 ]);
+
+                $user->assignRole('user');
             }
 
             $token = auth('api')->login($user);
