@@ -1,4 +1,6 @@
----
+# 🚖 Route Ka — Traveler Matching Platform
+
+**Route Ka** is a real-time matching engine designed to help travelers using ride services (Uber, Bolt, etc.) connect with others on similar routes. By matching users within a 1-mile radius, Route Ka facilitates ride-sharing to significantly reduce travel costs and urban congestion.
 
 ## 🚀 Core Features
 
