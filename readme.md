@@ -1,12 +1,3 @@
-# 🚖 Route Ka — Traveler Matching Platform
-
-[![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org)
-[![TailwindCSS](https://img.shields.io/badge/Tailwind-3.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-
-**Route Ka** is a real-time matching engine designed to help travelers using ride services (Uber, Bolt, etc.) connect with others on similar routes. By matching users within a 1-mile radius, Route Ka facilitates ride-sharing to significantly reduce travel costs and urban congestion.
-
 ---
 
 ## 🚀 Core Features
